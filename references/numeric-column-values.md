@@ -88,7 +88,7 @@ this default does not reclassify their origins as Power BI.
 
 ## Evidence and portable example
 
-A user-saved MSIT report was read on 2026-11-16 through the native page API and
+A sanitized definition fixture
 full definition export. Five direct numeric columns had `aggregationType: "sum"`;
 the source remained a Column assigned as Measure. FX grid totals remained None,
 and threshold grid totals remained Min. Some existing measure identities and

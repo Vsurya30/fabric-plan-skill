@@ -470,8 +470,7 @@ Related: F18, F05, F15, FORMULAS.
 Read [anchor-measures.md](anchor-measures.md) for business grain, visibility
 without deleting leaf formula values, native keys and executable scope.
 [anchor-business-cases.md](anchor-business-cases.md) covers all ten PPT cases and
-additional functional patterns; [anchor-ppt-source.md](anchor-ppt-source.md)
-retains the full supplied slide text and speaker notes.
+additional synthetic functional patterns and transfer rules.
 
 Use per-measure `anchor` options in new base reports, `construct-native anchor`
 for a scoped local candidate, and `builder-api anchor-apply` for an authorized

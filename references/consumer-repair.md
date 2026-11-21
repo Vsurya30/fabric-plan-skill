@@ -1,6 +1,8 @@
 # Filters, KPI consumers and Fabric SQL connections
 
-This addition records an API comparison of authorized DXT and MSIT reference Plans on 2026-11-13. References were used to establish contracts during skill development; future creation uses the bundled constructors and the new destination's live catalogs. No reference Plan, source checkout or manual JSON repair is required.
+This contract describes preservation and identity checks for generated and
+updated Plans. Future creation uses the bundled constructors and the destination's
+current catalogs. No reference Plan, source checkout or manual JSON repair is required.
 
 ## Resolve the model and destination first
 
@@ -41,7 +43,11 @@ Never use a Planning input-record primary key as an InfoBridge output column ID.
 
 Example with synthetic IDs: input record `id:"11", measureGuid:"18446744073709551614"` can yield query output `7[18446744073709551614]`, not `7[11]`. Column names alone cannot resolve identity. Generated transformation fields can have nonnumeric IDs; do not force every output suffix into u64.
 
-Read `/v2/ib/query/{queryGuid}/meta/`, source inventory and ordered transformations. Use final `selectedDimensions`, `selectedColumns`, `selectedMeasures` where present; they can differ from the base source catalog after Add/Remove/Pivot. Preserve explicit empty selections. Query status 400 or a null output file means the selected catalog is configuration evidence, not successful materialization. Do not relabel it as verified data output. Reconcile again after materialization if the service enriches the schema.
+Read the external adapter's query metadata, source inventory and ordered
+transformations. Use final `selectedDimensions`, `selectedColumns`, and
+`selectedMeasures` where present; preserve explicit empty selections. A query
+error or null output means configuration evidence only, not successful
+materialization.
 
 `runtime/consumer_bindings.py` supplies `output_catalog`, `resolve_assignment` and `assert_resolved`. Match the intended query first, then its proven output ID, then assert name/type/aggregation consistency. Do not accept a matching label, an ordinal, or an ID copied from another Plan. Resolve portable-to-native prefixes after import. Numeric query prefixes are not automatically valid in GUID-based metadata routes.
 
@@ -51,7 +57,10 @@ For an existing Planning owner, its measureGuid can be referenced by input defau
 
 ## Reconcile identities after every ALM import
 
-A same-item update that submitted unchanged visual parts nevertheless rewrote several valid InfoBridge output suffixes to Planning input-row IDs in the observed DXT service. This also affected nested chart filter assignments and their sort keys. Byte-preserving publication and a matching chart/filter pair alone therefore do not prove that the IDs resolve.
+A same-item update can rewrite unchanged InfoBridge output suffixes to Planning
+input-row IDs. This can also affect nested chart filter assignments and sort
+keys. Byte-preserving publication and a matching chart/filter pair alone do not
+prove that the IDs resolve.
 
 Retain the current deployment's intended native properties before publication, then fetch fresh native pages and query metadata after it. `audit_visual_consumers(properties, queriesByNativeSqlPk)` checks every top-level and ordinary-filter InfoBridge assignment against the current output catalog, then audits chart filter coverage. Preserve existing Planning `measureGuid` aliases. Metadata with failed/pending query status remains configuration evidence only.
 

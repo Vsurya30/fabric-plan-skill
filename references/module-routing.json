@@ -2722,11 +2722,6 @@
           "command": "python plan.py reference anchor-business-cases.md"
         },
         {
-          "file": "anchor-ppt-source.md",
-          "heading": null,
-          "command": "python plan.py reference anchor-ppt-source.md"
-        },
-        {
           "file": "feature-contracts.md",
           "heading": "Anchor Assumption Authoring",
           "command": "python plan.py reference feature-contracts.md --heading \"Anchor Assumption Authoring\""

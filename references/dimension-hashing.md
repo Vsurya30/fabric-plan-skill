@@ -1,8 +1,7 @@
 # Native dimension IDs and anchor layout hashes
 
 Use for anchors, first-anchor creation, `dimension_hash`, current Pivot order,
-dimension identity and portability. Discover **F20**. The supplied sample resolves
-the hash gap that temporarily disabled authoring in v42; v43 re-enables it.
+dimension identity and portability. Discover **F20**.
 
 ## Exact contract
 
@@ -60,7 +59,7 @@ disable/reset serialization and partial-pivot input enforcement remain separate
 contracts. The local SHA-256 context signature only detects concurrent/context
 changes; it is never used as the native `dimension_hash`.
 
-## Source, implementation and evidence
+## Implementation and evidence
 
 - [Supplied README](dimension-hash-source/README.md), [JavaScript implementation](dimension-hash-source/dimension-utils.js),
   [tests](dimension-hash-source/dimension-utils.test.js) and [package metadata](dimension-hash-source/package.json)

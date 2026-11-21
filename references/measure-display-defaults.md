@@ -37,7 +37,7 @@ compatible alias. Registration and filtering are separate operations.
 
 ## Numeric Planning measures use per-measure Auto
 
-The user-selected MSIT reference contains this operation for all four numeric
+The sanitized numeric fixture contains this operation for all four
 measures (two DAX, one input and one formula):
 
 ```json
@@ -70,7 +70,7 @@ globalStyles object with a fragment.
 
 This observed wire shape is **Matrix/Planning-specific**. For a Charts/KPI numeric
 display use its own `hiddenProperties_!!!_numberFormatting` contract in A02 of
-`audit-contracts.md`, with Auto for amount roles and percentage for percentage
+`planning-integrity.md`, with Auto for amount roles and percentage for percentage
 roles; preserve its encoding and full required state. Never copy Matrix property
 13 into a Charts store or use the chart `percentage` scaling token in Matrix.
 

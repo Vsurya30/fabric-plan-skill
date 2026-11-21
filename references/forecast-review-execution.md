@@ -19,12 +19,9 @@ The convenience `provision` command does not compose this phase automatically.
 Do not report these features as missing or silently drop them: the post-import
 implementation is shipped in `runtime/forecast_review.py` and exposed in CLI help.
 
-The previous Copilot package contained the base constructors, but the last MSIT
-deployment used task-local Python for the direct sheet link, conditional-format
-rule and comparison chart. Its formatter also read a local reference export.
-That was a distribution gap, not a special Codex tool. This release includes the
-actual implementation and a parameterized native rule fixture, with no old-report
-path or Codex session dependency. It also removes the old timezone exception.
+This release includes the direct sheet link, conditional-format rule and
+comparison-chart implementation as parameterized constructors. No old-report
+path or agent-session dependency is required.
 
 ## Dependencies and API boundary
 
@@ -81,11 +78,10 @@ job completion contract. Do not claim it succeeded or blindly repeat creation.
 
 ## Exact operations and identity domains
 
-1. Use `session.entities` then `session.page`: the verified SQL profile uses
-   `GET /v1/workload/entity/` and `/v1/workload/entity/{id}/properties/`; OneLake
-   uses the validated alternate profile described in metadata-backend-routing.md.
-   resolve current numeric owners and visuals. Embedded grids retain their owner;
-   dashboard placement belongs in page-local `reactiveVisualProperties`.
+1. Use `session.entities` then `session.page` with the externally supplied SQL
+   or OneLake route profile. Resolve current owners and visuals. Embedded grids
+   retain their owner; dashboard placement belongs in page-local
+   `reactiveVisualProperties`.
 2. Use `session.columns` with the resolved numeric source visual. It scopes the
    catalog and selects the documented SQL/OneLake column-read profile.
 3. `from_sheet_assignment` uses `sheet_column_id`: the SQL source record id, or
@@ -97,8 +93,7 @@ job completion contract. Do not claim it succeeded or blindly repeat creation.
    Do not substitute an ALM GUID or guess column ordinals. The selected route
    supports numeric SUM at the same/subset dimension grain. Target quarter fields
    must be the matching prefix of the source Year/Quarter/Month hierarchy.
-4. `POST /v1/visual/datainput/column/` in the target context, JSON bytes with
-   `application/octet-stream`, creates the Native `FCMeasure` companion, a LongText
+4. The external `column-create` operation creates the companion, LongText
    DataInput measure (`visual_column=False`) and Formula measure. Commentary is
    repeated at the target's quarterly grain; it is not an outside-axis VisualColumn.
 5. Variance formula uses native target IDs: `M_<forecastId> - M_<actualId>` through
@@ -114,8 +109,8 @@ job completion contract. Do not claim it succeeded or blindly repeat creation.
    though it is not a separate grouped-bar config entry. Read integrated-variance.md.
    Labels identify Actuals as baseline: the result is Forecast minus Actuals, not a
    previous-year claim. Ordinary filter cards are reconciled to the assigned fields.
-8. Save through `POST /v1/workload/properties/batch/` with current visual/entity
-   ETags. A successful response establishes submission/persistence only.
+8. Save through the external `properties-batch` operation with current
+   visual/entity ETags. A successful response establishes persistence only.
 
 These factories can also be imported individually by another Python orchestrator:
 `from_sheet_assignment`, `negative_variance_rule`, `apply_negative_variance`,
@@ -144,12 +139,12 @@ remapping/reconstruction; they are not copied blindly. Preserve the reference sh
 
 ## Evidence boundary
 
-The task-local operations returned successful save responses in MSIT. The new
-module packages those execution paths; its presence does not prove Copilot has
-been installed or that all calculations/formatting render correctly. Forecast
-defaults below derive from the user's working sheet. Honor a request to skip
-report validation; necessary identity/ETag reads and operation polling are not
-post-save validation. Do not claim runtime checks passed when they were skipped.
+The module packages these execution paths behind an external service adapter; its
+presence does not prove authentication or that calculations and formatting
+render correctly. Forecast defaults derive from the current requested working
+sheet. Honor a request to skip report validation; necessary identity/ETag reads
+and operation polling are not post-save validation. Do not claim runtime checks
+passed when they were skipped.
 
 
 ## Measure source binding (v10)

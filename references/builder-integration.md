@@ -37,7 +37,9 @@ older comparison examples; original supplied documents remain preserved.
 
 # Standalone builder contract integration
 
-Integrated 2026-11-13 from the user-supplied `builder-implementation-contracts-standalone.md`. The source is bundled as a standalone reference. Its repository paths identify provenance only. Execution does not read those paths, another report or an external source checkout. Existing business use cases and property explanations remain intact.
+The offline factories and optional service adapters are bundled directly in the
+runtime. Service endpoints and authentication details are intentionally not
+bundled; execution requires an organization-approved external profile.
 
 The attachment supplies implementation evidence rather than live deployment evidence. This integration implements the closed portions as local factories and API adapters. It does not turn unresolved contracts into supported features or rename persistence as calculation. No live API calls were made for this integration.
 
@@ -54,7 +56,10 @@ The attachment supplies implementation evidence rather than live deployment evid
 | Navigator | Complete supplied state, new product/type 203 registration, fresh ETags, geometry and state readback, preservation of neighbors | Target compatibility, owner registration behavior and navigation/rendering have not been checked live |
 | Home | Multipart PNG/JPEG/SVG upload, scoped asset metadata readback, fileId-to-imageConfig mapping, explicit PUT/POST provider choice, role-order PATCH and effective layout GET | Route compatibility, effective audience policy, asset rendering, rich Lexical/legacy migration branches |
 
-The broad statement that all these route contracts are missing is now obsolete. The narrower boundaries above remain real. `api-contract-gaps.json` is the machine-readable inventory; `implementation-status.json` distinguishes prior live evidence from this integration's offline evidence.
+The broad statement that all these route contracts are missing is now obsolete.
+The narrower boundaries above remain real. `api-contract-gaps.json` is the
+machine-readable inventory; `implementation-status.json` records the sanitized
+offline evidence and the external adapter boundary.
 
 ## Runtime files and CLI
 
@@ -121,7 +126,7 @@ This is syntax documentation using invalid placeholder endpoints; never submit i
 
 | Contract difference | Explicit treatment |
 |---|---|
-| Home content method | Prior DXT POST remains the default for its tested profile. The supplied provider uses PUT. Set `homeWriteMethod` deliberately; never retry the other verb after an ambiguous mutation. |
+| Home content method | The selected external profile defines the supported method. Set `homeWriteMethod` deliberately; never retry another verb after an ambiguous mutation. |
 | Native context binding | Inner `bound_to_filter_context` is Boolean. The implemented outer profile is 10=true, 20=false. Legacy 0/1 polarity was not established; that profile rejects instead of guessing. |
 | Column create versions | V31 checks the documented V1/V2 column catalogs independently, then uses the selected documented column writer. Explicit versions are strict; no mutation fallback. Readback uses the same selected version. Read success alone does not prove write capability. Async column jobs are pending, not InfoBridge jobs. |
 | PowerTable URL | `version` must be v3/v4 and `route_shape` must be `source-qualified` or `context-only`. The frontend and validator forms are separate evidence; no automatic fallback rewrites. |

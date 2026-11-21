@@ -59,10 +59,15 @@ When query identities are resolved after import, reconcile nested filter assignm
 
 The audit checks one ordinary visible filter per assignment, matching nested identities, role flags, type, bucket and evaluation grain. It detects a dimension that appears only inside a measure filter, hidden or duplicate registrations, and stale query/sort identities. Preserve extra intentionally authored filters rather than treating them as unwanted fields.
 
-DXT ALM can add `customSource:true` to a top-level PowerBI semantic-measure assignment while leaving its ordinary filter assignment without that flag. This observed enrichment does not change field identity. The audit normalizes only this true-versus-absent case for PowerBI measures; explicit false, InfoBridge flags, source IDs, buckets, types and evaluation grain remain significant. Do not rewrite or discard a correct filter solely for this difference.
+Some service versions can add `customSource:true` to a top-level semantic-measure
+assignment while leaving its ordinary filter assignment without that flag. The
+audit normalizes only this true-versus-absent case; explicit false, InfoBridge
+flags, source IDs, buckets, types and evaluation grain remain significant.
 
 Save using fresh ETags, reread native properties, and compare all unrelated visual/page properties for preservation. Export and audit the portable definition too. Persisted filter metadata does not prove that the pane renders, that changing a threshold works, or that an InfoBridge query has successfully refreshed. Do not attribute an InfoBridge query-not-found error solely to missing filter registration.
 
 ## Evidence boundary
 
-On 13 November 2026, a fresh DXT `Intelligence 1` native page showed a numeric InfoBridge measure filter whose complete constructor output matched exactly after excluding the newly generated filter ID. The generated target had chart assignments but empty ordinary filter lists. A saved MSIT export independently supplied semantic DAX-measure and category/comparison examples. These comparisons established construction contracts; they are not dependencies for future authoring. Offline tests cover the additional cases. Native visual behavior remains a separate acceptance step when UI verification is permitted.
+Synthetic fixtures cover numeric InfoBridge filters, semantic measure filters,
+and category/comparison examples. Offline tests verify the identity normalization;
+native visual behavior remains a separate acceptance step.

@@ -8,7 +8,7 @@ Discover with `python plan.py discover --module INFOBRIDGE-MAPPING` or F18.
 
 ## Why this belongs in construction
 
-A generated MSIT graph omitted explicit source-measure lineage in its catalogs
+A generated graph can omit explicit source-measure lineage in its catalogs
 and transformation descriptors. Portable unsigned-64 measure IDs remained in
 native selector positions; export failed with a signed-integer-range error marked
 non-retriable. Adding the mappings and resolving consumers from current query

@@ -6,9 +6,10 @@ from business requirements and a Power BI semantic model. An AI coding agent
 `SKILL.md`, routes the request to the right guide, and uses the bundled Python
 runtime to construct, validate and deploy Plan content.
 
-> This is a community project, not an official Microsoft product. Some features
-> call Plan service endpoints that are not part of the public Fabric REST API;
-> they can change without notice. Test in a non-production workspace first.
+> This is a community project, not an official Microsoft product. The repository
+> documents and uses only public Plan lifecycle endpoints. Optional
+> product-specific service adapters require an externally supplied, organization-
+> approved profile; private routes and authentication recipes are not bundled.
 
 ## What it does
 
@@ -62,7 +63,7 @@ agent's skills directory; the default clone folder already has the right name.
 For example, for GitHub Copilot:
 
 ```text
-git clone https://github.com/Vsurya30/fabric-plan-skill.git ~/.copilot/skills/fabric-plan-skill
+git clone https://github.com/lumeltech/fabric-plan-skill.git ~/.copilot/skills/fabric-plan-skill
 ```
 
 Start a new agent session, then ask, for example:
@@ -110,7 +111,9 @@ python -m unittest discover tests
 ## Safety
 
 - Workspace writes need an explicit destination file that names the workspace,
-  the allowed hosts and `authorizedMutation`; local commands never write.
+  the allowed public hosts and `authorizedMutation`; local commands never write.
+- External service adapters must be supplied outside the repository with
+  approved route mappings and process-scoped credentials.
 - Credentials come only from environment variables; none are stored.
 - Do not commit exported Plan definitions that contain customer data.
 

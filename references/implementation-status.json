@@ -72,7 +72,7 @@
   },
   "priorReleaseLiveDeployment": "New DXT Plan; registration/persistence subset. No new live claims from this integration.",
   "builderContractIntegration": {
-    "source": "references/builder-implementation-contracts-standalone.md",
+    "source": "builder implementation contract (not bundled)",
     "sourceSha256": "a91a5d439f7feef07dc83fc29f7d2c716e09219d08640f7ce726b10a9a11521b",
     "sourceEvidence": "provided implementation contract; not live verification",
     "offlineTestsAdded": 27,

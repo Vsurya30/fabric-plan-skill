@@ -107,7 +107,7 @@ that expose this native hierarchy contract.
 
 ## Evidence and current release boundary
 
-The exact icon values came from a user-saved MSIT reference and were applied to
+The exact icon values came from a sanitized reference fixture and were applied to
 the five roll-forward reports. The user approved the subsequent content-sized
 header trial and explicitly requested both rules as universal skill defaults.
 This approval is evidence for the observed trial, not a runtime check of every

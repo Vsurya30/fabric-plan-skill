@@ -1,62 +1,29 @@
 {
-  "release": "v35",
-  "earlierColumnEvidence": {
-    "release": "v30",
-    "capturedOn": "2026-11-16",
-    "evidenceType": "native page properties plus completed Fabric getDefinition",
-    "reference": "https://msit.powerbi.com/groups/e8aac6b0-39eb-45e9-babe-ae6396edf476/plans/b82a68d6-b7a1-4609-ae9b-a3b118f684b2?experience=power-bi",
-    "sheet": "allocationrules",
-    "rule": "distribute_defaults",
-    "nativeAndExportMatch": true,
-    "confirmedProfile": {
+  "release": "synthetic-contract-fixtures",
+  "evidenceType": "offline constructor and round-trip fixtures",
+  "profiles": [
+    {
       "axis": "Column",
       "dimensions": "All",
       "reference": "MeasureIdWithReference",
       "target": "datainputmeasure",
-      "weight": "Sum of BD LC Amt",
-      "sourceRow": "Use Self: no row member"
+      "weight": "selected numeric source measure",
+      "sourceRow": "Use Self"
     },
-    "captureSha256": {
-      "allocation-page.json": "713211ee31bb1dca127f8ffd3b7eccaff59864c15a7a42cdd249d89359174175",
-      "definition.json": "ef0c34e0c634abc0625f8c814d5c841d8e270dd02540fa8e398c2eb91475806f"
-    },
-    "fixtureSanitization": "Names, account data, timestamps and IDs replaced; exact rule structure retained. Distinct logical/persisted IDs test identity handling.",
-    "nativeColumnCatalog": "HTTP 500 repository unavailable; no dependent native writes attempted",
-    "liveReportWrites": 0,
-    "allocationExecution": "not-tested",
-    "generatedRulePersistence": "not-tested",
-    "remaining": [
-      "Row measure-reference profile",
-      "Column selected-dimension/source-row/period/range profiles",
-      "engine mount/auth per destination",
-      "period/scenario and lock execution",
-      "rounding and total preservation",
-      "bookmark capture and restore"
-    ]
-  },
-  "rowEvidence": {
-    "capturedOn": "2026-11-17",
-    "reference": "MeasureIdWithReference",
-    "evidenceType": "fresh native Planning page properties after user save",
-    "ruleName": "distributionrule",
-    "owner": "Planning",
-    "axis": "Row",
-    "weightPeriod": "CurrentYear",
-    "captureSha256": "4d2e1c777c76c3a35d0b2ff1228908bf383a26398b29006a0a5060607972230e",
-    "referenceWrites": 0
-  },
-  "newConstruction": {
-    "owners": 3,
-    "savedStateReadback": "passed",
-    "route": "existing full visual-properties batch, ETags, exact readback",
-    "recordIds": "fresh authored IDs, not claimed engine-generated",
-    "runtimeExecution": "not-tested"
-  },
+    {
+      "axis": "Row",
+      "reference": "MeasureIdWithReference",
+      "weightPeriod": "CurrentYear"
+    }
+  ],
+  "recordIds": "Fresh synthetic IDs",
+  "savedStateReadback": "mocked",
+  "liveReportWrites": 0,
+  "runtimeExecution": "not-tested",
   "remaining": [
     "additional period/reference profiles",
     "destination period/scenario isolation",
     "eligibility and lock exclusion during redistribution",
     "zero/missing/negative weights, rounding and total preservation"
-  ],
-  "bookmarks": "optional separate requirement; not needed for Planning allocation"
+  ]
 }

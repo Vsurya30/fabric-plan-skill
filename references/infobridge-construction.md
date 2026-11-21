@@ -2,9 +2,15 @@
 
 # InfoBridge: construction and consumption contracts
 
-This supplement is limited to InfoBridge. It supersedes incomplete InfoBridge construction advice in earlier bundled references; all other feature guides remain applicable. It is based on a 22:56 instructional recording, fresh DXT and MSIT definition exports on 2026-11-13, and read-only native metadata/transformation responses for all 11 DXT queries. The constructors and regression tests are bundled. Neither reference report, its IDs, a source checkout nor the recording is needed for ordinary use.
+This supplement is limited to InfoBridge. It supersedes incomplete InfoBridge
+construction advice in earlier bundled references; all other feature guides
+remain applicable. The constructors and synthetic regression tests are bundled;
+no reference report, tenant IDs, source checkout or recording is needed.
 
-The recording demonstrates functional operations and output values. Definition exports establish persisted payloads. Native DXT reads establish execution identity translations and current stored query metadata. These are different evidence levels. New constructor payloads have offline tests; this study did not import a new graph or edit either reference report. Existing native status 200 is not proof of a new input-triggered refresh. MSIT native authentication returned 403; its comparison uses its successful fresh ALM export.
+Definition fixtures and mocked metadata responses establish the bundled payload
+contracts. They are distinct from calculation and refresh evidence. New constructor
+payloads have offline tests; a successful read is not proof of an input-triggered
+refresh.
 
 ## Start with the business flow and row grain
 
@@ -103,7 +109,12 @@ CASE
 END
 ```
 
-That screenshot is evidence of the displayed expression/result, separate from the earlier DXT export; do not falsely label the new conditional field as present in that earlier saved definition. The million-unit threshold and labels are sample business logic. This is a type-130 operation even though its result is text. Preserve the operation role and infer/verify the result type independently. `Query.add(...,kind='measure',output_type='VARCHAR')` constructs a provisional text-result catalog without a numeric SUM default. Numeric expressions can use `output_type='DOUBLE'`. Reconcile actual execution types and field IDs before consumption. A text label must not be coerced to a numeric P&L input or summed because it was created through Add Measure.
+The example is synthetic business logic, not a copied tenant definition. The
+million-unit threshold and labels are illustrative. This remains a type-130
+operation even though its result is text. `Query.add(...,kind='measure',output_type='VARCHAR')`
+constructs a provisional text-result catalog without a numeric SUM default.
+Numeric expressions can use `output_type='DOUBLE'`. Reconcile execution types and
+field IDs before consumption.
 
 For a conditional dimension, a reusable example is:
 
@@ -140,17 +151,32 @@ The observed renamed field has a different final output ID. The skill must recon
 
 APPEND source and owned query metadata use `queries:["<upstream-Q-id>", ...]`. Initial step type is 140 with `{}` value. Create one `linkedQueries` edge per upstream, with its query ID, the **new dependent source GUID**, and upstream visual ID (null for sources without a visual). Keep graph references and metadata lists consistent.
 
-The DXT sample appends two inputs with the same Account/Region/YearMonth dimensions, but only one has `variance`. The output contains the union of three measures; the video shows **null** variance on rows from the branch without it. Therefore identical measure sets are not a universal product prerequisite. Use `append_queries(...,allow_measure_union=True)` only when missing measures are intentionally optional; inspect the returned missing-measure contract. Do not change missing values to zero silently.
+An append can combine inputs with the same Account/Region/YearMonth dimensions
+when only one has `variance`. Missing optional measures remain null. Use
+`append_queries(...,allow_measure_union=True)` only when missing measures are
+intentionally optional, and do not change them to zero silently.
 
-For a finance consolidation, use the stricter `financial=True` path and `contribution` factory. Normalize all branches to a deliberate common set of dimensions, roles/order, types, period, scenario, currency and sign conventions. Add missing **business classifications** with valid constants or mappings, rename mismatched columns, aggregate away excess detail with Pivot, then project the same additive metrics. Supply zero only for a metric that truly contributes nothing on that branch. Cast numeric contributions consistently (e.g. DOUBLE); the MSIT snapshot mixes DOUBLE with DECIMAL(2,1) from `0.0`, so it is evidence of numeric widening, not an exactly normalized template.
+For a finance consolidation, use the stricter `financial=True` path and
+`contribution` factory. Normalize all branches to a deliberate common set of
+dimensions, roles/order, types, period, scenario, currency and sign conventions.
+Add missing business classifications, rename mismatched columns, aggregate away
+excess detail with Pivot, then project the same additive metrics. Cast numeric
+contributions consistently; do not treat a sample literal as a complete template.
 
-The MSIT P&L pattern uses RegionName, ScenarioName, PNLGroup, AccountName and YearMonth, with seven additive metrics: Plan Gross Revenue, Plan Net Revenue, Plan COGS, Plan Compensation, Plan Other Opex, Plan Depreciation, Plan Units. Expense dimensions appear in another order in its snapshot. New generation should align this order explicitly.
+A synthetic P&L pattern uses RegionName, ScenarioName, PNLGroup, AccountName and
+YearMonth, with seven additive metrics: Plan Gross Revenue, Plan Net Revenue, Plan
+COGS, Plan Compensation, Plan Other Opex, Plan Depreciation and Plan Units. Align
+the requested dimension order explicitly.
 
 Gross sales contribute Gross Revenue to both gross and net columns; a separate Discounts branch contributes `Net revenue USD - Gross revenue USD` to net only. Summing both yields net revenue without double-counting discounts. Additive consolidation formulas then calculate gross profit, total opex, EBITDA, operating income and signed amount. Adapt the metrics to the current business request; this is a recipe, not required field names for every application.
 
-### Applying the DXT building blocks to the MSIT finance flow
+### Applying transformation building blocks to a finance flow
 
-The DXT examples teach the individual operators; MSIT composes those operators into a finance application. Its five contributions use this sequence: load the relevant Planning output, apply any business-scope filter, Pivot to the required reporting grain, add only missing classifications, construct the common measure set, and remove superseded source measures. Consolidation then stacks the contributions with Append and adds financial formulas. A sibling Drivers query and a P&L contribution can independently read the same Planning source; do not invent a dependency from the contribution to Drivers merely because their names are related.
+Compose the operators into a finance application in this order: load the relevant
+Planning output, apply the business-scope filter, Pivot to the reporting grain,
+add missing classifications, construct the common measure set, and remove
+superseded source measures. Consolidation stacks contributions with Append and
+adds financial formulas.
 
 | Contribution | Detailed source grain | Pivot retained grain | P&L classifications | Nonzero contribution measures |
 |---|---|---|---|---|
@@ -177,7 +203,9 @@ MERGE metadata uses **objects**, unlike Append:
 ]}
 ```
 
-Initial step 150 has `{}` value. Resolve each selection from that upstream query's current catalog; do not reuse one query's derived-field hash for another. Matching names do not make IDs identical. The DXT native selector for salary adj was `"2"` while its portable Planning measure ID was an unsigned-64 string. Derived finalsalary had different IDs in the two sources. `merge_queries` preserves supplied selector descriptors and checks names/order/numeric types/grain. `reconcile_meta` optionally maps measure IDs independently from query IDs.
+Initial step 150 has `{}` value. Resolve each selection from that upstream query's current catalog; do not reuse one query's derived-field hash for another. Matching names do not make IDs identical. Runtime selectors and portable
+Planning measure IDs occupy different identity domains. `merge_queries` preserves
+supplied selector descriptors and checks names, order, numeric types and grain.
 
 ## Join and PowerTable reference data
 
@@ -203,17 +231,24 @@ PowerTable source type is `EDITABLE`, not `PLANNING`, with source metadata:
 
 Its initial query uses load step 10. `editable_source` constructs this branch using real existing PowerTable identities; it does not initialize SQL storage or configure database lookup columns. Do not default its source/destination IDs equal merely because the sample uses the same value. Use prior bundled PowerTable initialization contracts if creation is needed.
 
-The video first uses an Excel reference and Join Query #1, then demonstrates the equivalent reference coming from a PowerTable in Join Query #2. The Excel source, first Join and temporary USD formula are absent from the final DXT export. The saved PowerTable Join has only Join + Pivot. Preserve the distinction between a transient video demonstration and persisted definition; do not invent a saved USD calculation or a file-source API contract.
+Keep transient demonstrations distinct from persisted definitions. Do not invent
+a saved calculation or file-source API contract that is not present in the current
+authorized graph.
 
 ## SQL references, date inference and identity translation
 
-SQL_SOURCE metadata contains `sql` and `queries`. The sample selects from Append and filters Germany. Portable text uses `{{query_id:Q...}}`; native DXT metadata uses `{{query_id:5}}` for that same upstream and `queries:[5]`. The native query record exposes both `id`/`queryGUID` and `sqlPk`. Build an explicit mapping with `execution_map`, not array position or a guessed ID algorithm.
+SQL_SOURCE metadata contains `sql` and `queries`. Portable query tokens and
+runtime query records occupy different identity domains. Build an explicit mapping
+with `execution_map`, not array position or a guessed ID algorithm.
 
 The same translation applies to scalar Append lists, Merge `queries[*].id`, and Join `queries[*].sourceId`. Update both source and query metadata when preparing the corresponding writer payload. `reconcile_meta`/`reconcile_graph_execution` touch only known reference slots and SQL tokens; they do not globally substitute GUIDs, change business literals, or rewrite labels. A native-execution view is not an ALM graph: structural owner/query/edge IDs must remain in their own domains. Re-export after import and rebuild consumer bindings from the actual final catalog.
 
 SQL can infer YearMonth as DATE and expose generated Year, Quarter Name and Month Name columns. The source Planning query may have only text YearMonth. Never add `Year` to every Planning extraction because it appears in one SQL result. After every step, track exact field names, roles and types. `audit_step_columns` flags references unavailable in the current source snapshot; `Query.pivot` rejects unavailable columns during construction. Treat missing context in a snapshot as a readback question, not permission to invent a value.
 
-The MSIT SQL sample has portable `queries:["1"]` but a Q-prefixed token in `sql`, with a linked edge to Workforce Drivers. This is a mixed-domain snapshot requiring identity resolution; it is not a universal SQL template. Its two Revenue P&L branches also refer to ScenarioName at Pivot while the current source snapshot omits it. Resolve real external Context/source output before reconstructing those branches. Do not copy a historical scenario name to hide the inconsistency. Saved Revenue Drivers contains a specific Wellness/US East/Stores/2027-01 filter; inherit only requested business scope.
+A mixed-domain graph can contain portable query IDs and a different runtime token.
+Treat it as a reconciliation task, not a universal SQL template. Resolve the
+current external Context and source output before reconstructing branches, and
+inherit only the requested business scope.
 
 ## Receiving Planning sheet and refresh acceptance
 
@@ -221,11 +256,18 @@ Use actual semantic master dimensions in the receiving sheet's Rows/Columns and 
 
 A saved query measure assignment uses `sourceType:"InfoBridge"`, `queryId`, `tableName`, `columnName`, qualified `id`/`sourceId`, `customSource:true`, and a destination `measureGuid`. Use `bridge_consumer` to create its Native input companion and registrations from the **resolved output catalog**. Do not assign InfoBridge output dimensions as substitutes for semantic master dimensions. Check that old field IDs are removed from all consumer assignments after a rename/reimport.
 
-Build topologically. Save source Planning inputs, refresh/materialize sources and dependent queries using the authorized API flow, inspect job completion for the requested query/workload/user, then verify final catalogs and values. MSIT contains a cross-sheet dependency from Revenue Drivers into Supply Cost Planning; an InfoBridge linked-edge graph alone will not represent that Planning consumer dependency. Include it when ordering Revenue -> Supply Cost -> P&L contributions -> Consolidation.
+Build topologically. Save source Planning inputs, refresh/materialize sources and
+dependent queries through the authorized external adapter, inspect job completion,
+and verify final catalogs and values. Include cross-sheet Planning dependencies
+that are not represented by an InfoBridge linked-edge graph.
 
 Use existing bundled API adapters for inventory, metadata, transformations, query reload, targeted notification polling and source Parquet. Successful ALM LRO completion is not connected-worker completion. Verify actual output grain, duplicate business keys, unmatched lookup keys, period/scenario scope, missing-value policy and arithmetic. Ignore preview-only total rows. For a salary delta, compare source compensation, its finance contribution and operating-income delta at the same scope; restore authorized test inputs. A manual reload test does not prove automatic propagation. If the tenant cannot initialize one graph module, report that module and retain independent supported application work.
 
-The read-only DXT inspection used the workload-authenticated routes `GET /v2/workloaditem/{planId}/ib/source/`, `GET /v2/ib/query/{queryId}/meta/`, and `GET /v2/ib/queries/{queryId}/transformations/`. Use `session.py` with the actual environment profile for the workload token and origin; a Fabric access token alone is not interchangeable with workload authentication. All 11 DXT metadata/transformation records were retrieved. For ALM exports use the existing `getDefinition` transport: follow returned Location/Retry-After, wait for terminal success, fetch the operation result, decode parts and verify bytes. These reads do not reload queries or modify planning values.
+Read current inventory, query metadata and transformations only through the
+organization-approved external service profile. Route templates and credentials
+are intentionally not bundled. For public Plan exports, use the documented
+`getDefinition` transport and its bounded polling contract. Metadata reads do not
+reload queries or modify planning values.
 
 ## Bundled callable path
 

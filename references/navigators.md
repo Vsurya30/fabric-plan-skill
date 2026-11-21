@@ -89,7 +89,8 @@ Navigators are native runtime-input visuals that execute button actions or gener
 
 The feature scope includes action targets, four style states, tab layout, page/bookmark selection, collapsible tabs, hierarchical tabs, and shared shape styling. Application source code is not modified by this investigation.
 
-Evidence: Navigator.types.ts, `INavigatorState`; navigatorAiSchemaCompiler.ts, `NAVIGATOR_FIELDS` and `readVisualState`.
+Evidence: bundled synthetic state fixtures and offline construction/readback
+tests for the three supported Navigator variants.
 
 ### Representation Boundary
 
@@ -100,7 +101,9 @@ Evidence: Navigator.types.ts, `INavigatorState`; navigatorAiSchemaCompiler.ts, `
 
 Persisted artifact placement, transport encoding, and deployment requirements are investigated separately below; a native visual-state fragment alone is not a complete deployable artifact.
 
-Investigation date: 2026-11-05. Authority: the product implementation. Coverage is comprehensive for the discovered native Navigator schema, but is not a certification of deployment portability or every renderer's geometry. Section 15 records unresolved boundaries. The required `graft map` command was unavailable and no stored graph directory existed; targeted source investigation was used.
+The bundled fixture defines the documented supported branches, but it is not a
+certification of destination portability or renderer geometry. Section 15
+records unresolved boundaries.
 
 ## 2. Feature Architecture
 

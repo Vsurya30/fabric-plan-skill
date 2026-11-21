@@ -1,8 +1,6 @@
 {
   "contractId": "matrix-formatting-v1-20261114",
   "evidence": {
-    "contractRevision": "5b9ffe2d1256733a3ae585a648d93a8a706ed539",
-    "shellRevision": "3c5d78fb3bc6e26544ebb86ce49f25bab390c64a",
     "basis": "User-supplied source investigation; revisions were not independently checked out during this update.",
     "investigationSha256": "8fd796dd69ebd7a24ff301c04a32e4bc0969a822055f890c8e91d4a81ad30a2e",
     "ruleSeed": "Complete prior bundled native negative-variance record, sanitized and appearance disabled; NOT a byte-exact copy of DEFAULT_RULE_PROPERTIES at the investigated revision.",

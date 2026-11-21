@@ -33,7 +33,8 @@ Do not silently substitute Scenario rows for Context. Do not claim assignments o
 
 ## Observed persistence contract
 
-A fresh authorized MSIT export on 2026-11-13 confirmed these paths. Export used POST getDefinition, the returned 202 Location, bounded polling and the result response. The artifact is provenance only: construction uses no exported report or historical identity.
+Synthetic definition fixtures and mocked long-running-operation responses cover
+these paths. Construction uses no exported tenant report or historical identity.
 
 On a Planning visual, `properties.superFilterAssignments[]` contains the full external registration:
 

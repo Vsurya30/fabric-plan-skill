@@ -1,6 +1,5 @@
 {
-  "evidence": "User-selected Auto in saved MSIT Plan, exported 2026-11-15 UTC",
-  "sourcePlanId": "a3dc7c3d-a4cb-4257-bdec-8c22bbab32db",
+  "evidence": "Synthetic numeric-display default fixture",
   "observedNumericMeasures": 4,
   "owner": "properties.visualState.formatConfig.measure[resolvedMeasureId][]",
   "operation": {

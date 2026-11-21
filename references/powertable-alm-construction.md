@@ -59,7 +59,7 @@ the workload and inspect the item's bound connections. The supplied Power BI tok
 authorizes control-plane operations; it is not itself a reusable SQL connection
 credential. Do not create duplicate connections to work around an unproven error.
 
-In the observed DXT flow, direct source initialization returned PT_WB_9013 while
+If direct source initialization returns PT_WB_9013 while
 the complete ALM four-part source/grid construction subsequently created native
 grids with SQL schemas accessible in their resolved visual context. Treat those as
 different routes/evidence; do not conclude a listed connection was deleted.

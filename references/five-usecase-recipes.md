@@ -69,8 +69,9 @@ python plan.py usecase list
 python plan.py usecase show --case 02-workforce-merit
 ```
 
-For the same MSIT model, copy
-`examples/five-usecases/msit-destination.example.json` to `destination.json`.
+For an authorized destination, copy
+`examples/five-usecases/destination.example.json` to `destination.json` and
+replace every synthetic identity with current metadata.
 It includes the explicit authorized environment/workspace/model/connection
 identities used by the five reports, but no token or old Plan IDs. Check that it
 is the user's intended destination. Set `FABRIC_TOKEN` securely in the process

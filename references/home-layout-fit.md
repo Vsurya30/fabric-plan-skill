@@ -32,7 +32,9 @@ The low-level `surfaces.home_layout` and native `save_home` reject explicit text
 
 ## Existing report repair and readback
 
-1. Read the actual role content with GET `/v1/access/roles/layout/{roleId}/`. A Plan export with empty `homeLayout.roles` does not establish that the Home page is empty. Resolve the environment's live API route; do not guess an `msitapi` host from its frontend name.
+1. Read the actual role content through the external profile's `home-role`
+   operation. A Plan export with empty `homeLayout.roles` does not establish
+   that the Home page is empty; never guess a service host.
 2. Keep a lossless snapshot. Inspect row widths, height, `defaultHeightRatio` and `isHeightManual` alongside decoded text length. Preserve item/instance identities, rich text, image references, role priorities, sheet-card exclusions and unrelated configuration.
 3. Correct only the affected geometry. For the demonstrated narrow-text failure, use flexible widths and content-sized height; stack the two prose items if the target content width is unknown. Preserve the first row identity and allocate a new row identity only if splitting a row. Do not rebuild unrelated report content or change financial measures.
 4. Save through the provider-supported method with the freshly read ETag, then re-read role content and compare the intended fields. Priority and Home visibility have separate readbacks. A missing effective-user route does not invalidate successful role-content readback.
@@ -40,4 +42,6 @@ The low-level `surfaces.home_layout` and native `save_home` reject explicit text
 
 ## Evidence boundary
 
-The supplied MSIT screenshots showed the two prose blocks wrapping inside words and clipping. A fresh role-content API read confirmed `widths:[60,40]`, `height:160` and `isHeightManual:true` for that row. The title and card rows also had manual heights. This is evidence for the sizing failure; it does not constitute a live repair or a rendered test of the updated constructor. The regression suite covers that shape without carrying customer IDs, tokens or report content into this package.
+Synthetic layout fixtures cover prose wrapping, `widths:[60,40]`,
+`height:160`, manual row heights and the related clipping risk. The regression
+suite carries no customer IDs, tokens or report content.

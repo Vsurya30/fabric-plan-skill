@@ -2,7 +2,7 @@
   "status": "incomplete-for-universal-end-to-end-creation",
   "uiFallbackPermitted": false,
   "sourceRepoOrPreviousReportRequired": false,
-  "integratedSource": "builder-implementation-contracts-standalone.md",
+  "serviceAdapterBoundary": "Approved route and authentication profiles are supplied outside the repository.",
   "coverageGuide": "context-intelligence.md",
   "gaps": [
     {
@@ -28,7 +28,7 @@
         "output-acceptance",
         "automatic-propagation"
       ],
-      "have": "Complete no-writeback query records; Planning and EDITABLE PowerTable source factories; load/Pivot/Add Measure/Add Dimension/filter/Find-Replace/Rename/Remove, including conditional SQL and explicit numeric/text result types independent of operation role; strict financial Append and explicit optional-measure union; structured Merge selectors; LEFT_OUTER Join; query-backed SQL. Stage-aware Year checks, operation-specific reference reconciliation and native query ID/sqlPk map. Existing reload/job/RLS/Parquet adapters, additive contribution projection, consumer companions and dependency audits. Full DXT native read-only metadata/transformation comparison and fresh MSIT ALM comparison. v36: verified OneLake and Fabric SQL From Sheets/From Queries consumers, source-aware registered-measure and dashboard reuse, lossless IDs and current-output reconciliation. OneLake missing id/sqlPk is handled by bundled constructors.",
+      "have": "Complete no-writeback query records; Planning and EDITABLE PowerTable source factories; load/Pivot/Add Measure/Add Dimension/filter/Find-Replace/Rename/Remove, including conditional SQL and explicit numeric/text result types independent of operation role; strict financial Append and explicit optional-measure union; structured Merge selectors; LEFT_OUTER Join; query-backed SQL. Stage-aware Year checks, operation-specific reference reconciliation and query ID/sqlPk maps. Reload/job/output adapters, additive contribution projection, consumer companions and dependency audits are covered by offline tests. OneLake missing id/sqlPk is handled by bundled constructors.",
       "missing": "New graph runtime output/value acceptance; source-reload request validator and environment notification profile; additional unobserved operators/file-source construction; general output decoding/catalog registration; automatic edit-trigger downstream execution. OneLake binding serialization is established from current native metadata and covered by offline tests; this is not proof of every new graph runtime result. Initial refresh remains optional.",
       "guide": "infobridge-construction.md"
     },
@@ -60,7 +60,7 @@
         "legacy-migration",
         "effective-audience-acceptance"
       ],
-      "have": "Prior live text/cards/order/visibility; source-derived multipart assets with fileId readback, explicit PUT/POST profiles, priority PATCH and effective-user GET.",
+      "have": "Offline text/cards/order/visibility constructors and multipart asset, priority and effective-home adapters supplied through external service profiles.",
       "missing": "Advanced node/migration contracts; live provider/asset compatibility and effective audience policy acceptance. Asset upload route is no longer missing."
     },
     {
@@ -68,11 +68,11 @@
       "capabilities": [
         "anchor-measures"
       ],
-      "have": "Four-key saved profile; native XXH3 dimension IDs and ordered-pivot hash; first-anchor base construction; current-owner candidate and ETag writer; required entry totals; complete PPT business/design context.",
+      "have": "Four-key synthetic saved profile; XXH3 dimension IDs and ordered-pivot hash; first-anchor base construction; current-owner candidate and ETag writer; required entry totals; concise business cases.",
       "missing": "General disable/reset conversion; cross-layout migration; native propagation, partial-pivot edit enforcement and rendering acceptance.",
       "guide": "anchor-measures.md",
       "authoringEnabled": true,
-      "statusNote": "v43 resolves the first-layout hash producer using the supplied snippet and earlier saved JSON replay. Remaining gaps do not disable supported construction/update operations."
+      "statusNote": "The bundled algorithm and synthetic fixtures cover the first-layout hash producer. Remaining gaps do not disable supported construction/update operations."
     }
   ],
   "policy": "continue-independent-work-with-explicit-alternatives-and-omissions",
@@ -115,7 +115,7 @@
       "negative-variance-format",
       "forecast-actuals-variance-chart"
     ],
-    "evidence": "Task-local execution saved in MSIT; reusable module included; no new runtime/render validation",
+    "evidence": "Reusable module and mocked API cases; no tenant runtime/render evidence is bundled.",
     "limitations": [
       "same/subset dimension grain",
       "SUM numeric source",
@@ -156,7 +156,7 @@
   },
   "metadataReadRecovery": {
     "guide": "metadata-backend-routing.md",
-    "status": "live-read-confirmed",
+    "status": "offline-tested",
     "scope": "Entity/page/column SQL and OneLake handlers",
     "mutationFallback": false,
     "physicalStorageInspected": false

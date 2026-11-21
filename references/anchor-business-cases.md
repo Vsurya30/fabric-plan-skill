@@ -6,7 +6,7 @@ These cases preserve the supplied deck's business logic. They are illustrative
 2027 examples, not dates, percentages, entities, source fields or currencies to
 hard-code into a new report. Formulas below are business arithmetic; compile real
 formulas through the existing native formula contract using the target measures.
-The full slide text and speaker notes are in [anchor-ppt-source.md](anchor-ppt-source.md).
+The concise cases below are self-contained and use synthetic business examples.
 For executable scope, use [anchor-measures.md](anchor-measures.md).
 
 ## Ten worked cases

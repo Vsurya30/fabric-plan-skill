@@ -55,7 +55,7 @@ must not block independent supported settings.
 
 ## Establish the correct contract and evidence boundaries
 
-The supplied source investigation identifies Matrix revision `5b9ffe2d1256733a3ae585a648d93a8a706ed539` and Shell revision `3c5d78fb3bc6e26544ebb86ce49f25bab390c64a`. These are provenance reported by that investigation, not a checkout or deployed-build verification performed by this skill update. See `fixtures/matrix-formatting-v1.json` for the evidence record. Ordinary use requires no private checkout.
+These contracts come from a supplied source investigation, not a checkout or deployed-build verification performed by this skill update. See `fixtures/matrix-formatting-v1.json` for the evidence record. Ordinary use requires no private checkout.
 
 Distinguish:
 - Supported authoring representation.
@@ -89,7 +89,9 @@ Add or improve reusable authoring components for:
 - Widths, row heights and wrapping.
 - Structural validation and requirement coverage.
 
-Bundle sanitized, versioned native defaults and contract metadata. Ordinary skill execution must not require private source checkouts or import private application constants directly.
+Bundle sanitized, versioned defaults and contract metadata. Ordinary skill
+execution must depend only on public documentation, bundled fixtures and code
+owned by this repository.
 
 For new records, construct complete required state from the appropriate versioned defaults.
 

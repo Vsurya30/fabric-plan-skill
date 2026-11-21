@@ -109,10 +109,9 @@ read-only; anchoring neither grants write rights nor supplies YTD logic.
 
 ## Saved JSON contract and executable scope
 
-The supplied 26-slide deck and a fresh saved Plan definition were inspected on
-2026-11-17. The definition has 21 `anchor_config` objects on managed measures,
-including two native Power BI measures. They share one layout hash and have
-`display_at_all_levels: false`. This is saved-configuration evidence, not a UI,
+Synthetic regression fixtures cover `anchor_config` records on managed measures,
+including semantic and input examples. They share one layout hash and use
+`display_at_all_levels: false`. This is construction evidence, not a UI,
 input-save or formula-execution test. `dataInputType: 6` alone does not distinguish
 Native, Formula and DataInput; inspect the typed measure record and assignment.
 
@@ -148,20 +147,18 @@ Bundled `runtime.anchor_measures` provides:
   a local candidate/change list. It preserves input/formula records, aggregation,
   bindings, locks, storage mappings and every unrelated property.
 - `save_anchors(client, entity_id, visual_id, requests, label, ...)`: resolves a
-  fresh native Planning owner, rejects embeds/stale state, and uses the existing
-  ETag-aware `/v1/workload/properties/batch/` writer. No new API is introduced.
-  Reports submission, not rendered behavior or completed post-save verification.
+  fresh Planning owner, rejects embeds/stale state, and uses the external
+  `properties-batch` operation with current ETags. It reports submission, not
+  rendered behavior or completed post-save verification.
 
-**Hash contract (v43):** the supplied `dimension-hash-sample` establishes
-seed-zero XXH3-64 and its exact serialization. The portable implementation uses
+**Hash contract:** the portable implementation uses
 the existing bundled Python XXH3 engine, with no npm dependency or donor report.
 `generate_dimension_id(exact_source_id)` produces an unsigned decimal string;
 `generate_dimension_hash(all_ordered_row_ids, all_ordered_column_ids)` hashes
 `rows.join("-") + "__" + columns.join("-")` and returns lowercase hexadecimal
 without leading zeroes. See [dimension-hashing.md](dimension-hashing.md), the
-unaltered supplied source, its tests and provenance record. Local replay matches
-all six dimension IDs, the saved `f66e5cc9a49071b9` hash and all 21 anchor configs.
-That replay used the earlier exported JSON, not a new live request or UI test.
+bundled synthetic tests. The fixtures verify exact serialization and independent
+anchor instances without an external report or UI test.
 
 No saved anchor is required to create the first one. Existing saved anchors must
 agree with the computed current pivot hash and contain available dimensions. A
@@ -208,9 +205,9 @@ python examples/anchor-measures/example.py --out example-output.json
 The example is a self-contained **synthetic** saved-owner fixture, using the
 observed JSON shape and a hash computed from its remapped ordered dimension IDs. It demonstrates binding,
 preservation and visibility requests; it is not a deployable reference artifact.
-`examples/anchor-measures/saved-profile.json` catalogs all 21 saved selections with
-remapped IDs and provenance checksums. No token, tenant, workspace, artifact or
-private target identity is needed by the example or shipped as configuration.
+`examples/anchor-measures/saved-profile.json` is a synthetic regression profile.
+No token, tenant, workspace, artifact or private target identity is needed by the
+example or shipped as configuration.
 
 For an authorized native update, use `builder-api anchor-apply` with the normal
 application session config and a request containing `entity_id`, `visual_id`,
@@ -253,14 +250,11 @@ package and does not fetch or deploy a report.
 
 Read [anchor-business-cases.md](anchor-business-cases.md) for the ten worked
 business cases, combined workforce math, reporting examples and transfer rules.
-Read [anchor-ppt-source.md](anchor-ppt-source.md) for the full extracted slide text
-and speaker notes, including nuances not repeated in the concise guide. These are
-source material, not authorization or executable product syntax. Deck highlight
-colors illustrate entry semantics; keep the skill's source-role color defaults.
+These examples are design guidance, not authorization or executable product syntax.
 
 The saved profile establishes the four native keys and current ID representation;
-the deck establishes business/design intent. Neither proves partial-pivot writes,
+the cases establish business/design intent. Neither proves partial-pivot writes,
 filter exceptions, new-member behavior, edit enforcement, allocation, disabled
-serialization. The separate supplied snippet establishes hash generation. Collapse/hide is not actual dimension
+serialization. The bundled algorithm tests establish hash generation. Collapse/hide is not actual dimension
 removal and must not clear anchoring or values. Preserve the F20 contract's
 remaining view/removal distinctions. Respect user-requested validation scope.

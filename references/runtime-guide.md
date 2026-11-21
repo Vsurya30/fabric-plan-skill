@@ -78,7 +78,10 @@ The single SKILL.md bundles this runtime, its pinned dependencies, schemas, test
 
 ## Exact completion boundary
 
-The preceding API-only release live-checked blank Plan creation, numeric input/formula registration, saved Pivot construction, artifact-scoped authentication, runtime identity resolution, ETag-protected geometry, Home text/cards content, role priority and workload visibility on a newly created DXT Plan. The current integration adds source-contract factories and adapters described in [builder-integration.md](builder-integration.md), with offline tests and no new live deployment.
+The current release includes offline constructors and public Plan lifecycle
+operations. Optional service-specific adapters are described in
+[builder-integration.md](builder-integration.md) and require an external,
+organization-approved profile.
 
 It does **not** close the entire requested product feature surface. Read `api-contract-gaps.json` before promising completion. A missing request contract is not repaired by passing an arbitrary descriptor, copying an old snapshot or renaming a UI step as an API step. There are no UI fallback actions in this workflow. Complete independent authorized work and report the precise missing API contract when a required capability is blocked. Never silently omit a requested capability.
 
@@ -88,7 +91,10 @@ Construction, public-schema acceptance, native registration, persisted state, na
 
 Python 3.11+ is required. Node 24+ with system CA support is needed for the optional managed-Windows HTTPS adapter and the bundled LZUTF8 role-metadata decoder and PowerTable row encoder. All library code needed by these tools is inside the capsule; no npm/pip installation is needed. Credentials, authorized workspace/model/source access, service availability and actual source data remain runtime prerequisites.
 
-Resolve explicit environment-specific `apiBase` (Fabric API including /v1) and `powerbiApiBase` (Power BI API origin), workspace ID and semantic model ID from the current request and actual metadata. Never derive a private-environment API host by unverified string substitution. The tested DXT roots were `https://dxtapi.fabric.microsoft.com/v1` and `https://dxtapi.powerbi.com`; they are evidence for DXT, not defaults for production/MSIT/Daily.
+Resolve the documented public `apiBase`, workspace ID and semantic model ID from
+the current request and actual metadata. Do not derive or guess service hosts.
+Optional service adapters use `applicationService` and `engineService` profiles
+supplied outside this repository.
 
 Fetch current model metadata/definition and inspect tables, columns, measures, relationships, partitions, keys, periods, scenarios and policy measures. Construct `current-model.json` in the bundled `fixtures/model.json` format using actual identities. The fixture is syntax documentation, uses reserved synthetic IDs and an `.invalid` URL, and must never be deployed. A model's source connection and the workload's semantic connection have distinct identity domains. Resolve an authorized PowerBIDatasets connection and actual model webUrl; do not select by a coincidental position or display name alone. Source SQL credentials need the SQL audience; a Power BI token is not a SQL token.
 
@@ -110,7 +116,6 @@ Configuration uses environment variable names, never token values:
 ```json
 {
   "apiBase": "https://resolved-fabric-api.example.invalid/v1",
-  "powerbiApiBase": "https://resolved-powerbi-api.example.invalid",
   "workspaceId": "actual-workspace-guid",
   "name": "Requested application name",
   "tokenEnvironment": "FABRIC_TOKEN",
@@ -146,7 +151,11 @@ This is a spec fragment, not a complete business application or deployable paylo
 
 ## Expanded builder adapters
 
-Read [builder-integration.md](builder-integration.md) and the bundled [standalone implementation contracts](builder-implementation-contracts-standalone.md) for typed native factories, rule payloads, InfoBridge execution adapters, PowerTable saves, public bookmark persistence, Navigator creation and Home assets. Use `construct-native` and `builder-api` for these explicit phases. The `provision` command remains restricted to its stated subset; no missing orchestration is implied.
+Read [builder-integration.md](builder-integration.md) for typed factories and
+the optional external service-adapter boundary. Use `construct-native` offline;
+`builder-api` requires an approved route/authentication profile supplied outside
+the repository. The `provision` command remains restricted to its stated subset;
+no missing orchestration is implied.
 
 ## Individual construction and lifecycle commands
 
@@ -171,23 +180,15 @@ A version/period policy uses the real model policy measure in a positive conditi
 
 Saved Pivot specs use symbolic `key`, `name`, `rows`, `columns`, optional `measures`, and `hidden`. `pivots.compile_pivots` creates the native All config (xxh3 of `default_pivot`), allocates stable named IDs, resolves axes and rejects invalid cross-axis combinations. Null retains the base axis; [] explicitly removes it. Named configs cannot have both axes null. Pivots change grouping over the same input identities; they do not create another plan or scenario.
 
-## Authenticated native APIs and post-import resolution
+## External service adapters and post-import resolution
 
-`session.native_session` exchanges the current bearer at `/metadata/v201606/generatemwctokenv2` using `workload_token_request`. It constructs the scoped CoreAPI proxy from the returned TargetUriHost/CapacityObjectId, uses `Authorization: MWCToken ...`, `x-ms-workload-resource-moniker` and the tested delegated-token sentinel, and removes the temporary token environment on exit. Returned tokens are not journaled. Do not reuse a public bearer as a workload token or copy a proxy from another tenant.
-
-Verified native read routes:
-
-| Purpose | CoreAPI-relative route |
-|---|---|
-| Complete entity catalog | GET `/v1/workload/entity/` or validated `/v2/workload/entity/` |
-| Page/owner properties | GET `/{selectedEntityVersion}/workload/entity/{resolvedNumericEntityId}/properties/` |
-| Native measure records | GET `/{selectedColumnVersion}/visual/datainput/column/?order=ASC&take=-1` with `x-target-visual` |
-| Home role content | GET `/v1/access/roles/layout/{roleId}/` |
-| Home role metadata | GET `/v1/access/roles/layout/` |
-| Property mutation | POST `/v1/workload/properties/batch/` |
-| Home role content write | POST `/v1/access/roles/layout/{roleId}/` |
-
-GUIDs from ALM are not valid numeric entity IDs for the page reader. `resolve_planning` uses the entity catalog, exact authored assignments and complete native measure identities to establish one-to-one mappings. It does not derive IDs from order. Missing, duplicate or ambiguous matches fail.
+`session.native_session` accepts a caller-owned service profile containing a
+base URL, token environment name, authentication scheme, static headers and
+symbolic route templates. It performs no token exchange or host discovery.
+Profiles, route paths and service-specific credentials are intentionally not
+bundled. `resolve_planning` uses the resolved entity catalog and authored
+assignments to establish one-to-one mappings; missing, duplicate or ambiguous
+matches fail.
 
 ```text
 python plan.py native verify --config target-config.json --input run/build/raw.json --run run/verify --label registrations
@@ -196,7 +197,11 @@ python plan.py native place --config target-config.json --input placement-reques
 python plan.py native pivot --config target-config.json --input pivot-request.json --run run/pivot --label summary-view
 ```
 
-Native request inputs are generated by the agent from the current registry: Home `{roleId,layout,order,show?}`; placement `{entityId,visualId,rectangle:{x,y,width,height},gap?}`; Pivot `{entityId,visualId,pivotId}`. `pivotId:null` selects All. The pivot API action persists properties and reads them back; it does not claim an interactive controller reset or engine calculation occurred.
+Service request inputs are generated from the current registry: Home
+`{roleId,layout,order,show?}`; placement
+`{entityId,visualId,rectangle:{x,y,width,height},gap?}`; and Pivot
+`{entityId,visualId,pivotId}`. `pivotId:null` selects All. A persisted-property
+result does not claim that a controller fired or that an engine calculation ran.
 
 ## Home content, priority and visibility
 
@@ -204,7 +209,13 @@ Use `surfaces.home_item` with `home_fit.readable_home_layout` for new Home conte
 
 Absent V2 content is a successful `{data:null,etag:null}` response, not necessarily HTTP404. Existing content requires its current ETag. Save `{homeLayoutOrder,data,etag?}`, read exact content/ETag back, then read role metadata separately to verify priority and content-enabled state. The list response uses LZUTF8/Base64 in the tested environment. Its MIT decoder is pinned and included in `vendor/lzutf8`; no package fetch is needed.
 
-Visibility belongs to `planProperties.json.properties.homeLayout.show`. `home_api.visibility_via_alm` freshly exports, changes that one subtree, preserves unrelated payload bytes, updates, polls and re-exports. Home role content and visibility are separate storage paths. The `native home` command executes both when `show` is supplied. Content-only readers do not verify priority or visibility. `assets_api.py` now implements the supplied multipart upload and opaque fileId contract. Home content supports an explicit PUT provider profile alongside the previously verified DXT POST profile; priority PATCH and effective-user GET are available through `home_api.py`. See `builder-integration.md` for configuration and acceptance. Advanced Lexical nodes and legacy migration remain unclosed; no native editor fallback is permitted.
+Visibility belongs to `planProperties.json.properties.homeLayout.show`.
+`home_api.visibility_via_alm` freshly exports, changes that one subtree,
+preserves unrelated payload bytes, updates, polls and re-exports. Home role
+content and visibility remain separate paths. Optional content, asset, priority
+and effective-audience operations resolve through an external service profile;
+see [builder-integration.md](builder-integration.md). Advanced nodes and legacy
+migration remain unclosed.
 
 ## Geometry and ownership
 
@@ -216,7 +227,12 @@ The full page response carries direct visual ETags at `visual.properties.etag` a
 
 ## Connected planning and maintenance contracts
 
-Read `references/infobridge-construction.md` for the video-to-definition construction contracts and the MSIT rollup/classify/contribute/append recipe. Treat InfoBridge as a general transformation/delivery utility, with conditional SQL for both numeric and text results; P&L is one example. Use `bridge.py`, `bridge_operations.py` and `plan.py construct-bridge` for Planning/PowerTable sources, Pivot, Add Measure/Dimension, Filter, Find/Replace, Rename, Remove, Append, structured Merge, left Join and query-backed SQL. Check every Year/date reference at its actual stage. Normalize financial contribution names/types/roles/order/grain/period/version/currency/signs before append; optional-measure union requires explicit policy and retains nulls. Expense classifications may already exist while workforce classifications need to be added. Ignore preview-only totals; do not infer a consolidation defect or change source flags from preview rows. Query field catalogs, source selectors, portable query IDs and native sqlPk have separate reconciliation rules. Never invent caches, materialized paths or successful jobs.
+Read `references/infobridge-construction.md` for synthetic construction
+contracts. Treat InfoBridge as a general transformation/delivery utility, with
+conditional SQL for numeric and text results. Use the offline constructors for
+Planning/PowerTable sources and query operations, and use an external profile for
+execution. Reconcile field catalogs, source selectors and portable/runtime IDs;
+never invent caches, materialized paths or successful jobs.
 
 A registered graph is not executed data. `builder_api.py` now implements query reload, targeted job notification polling and scoped binary output retrieval, including RLS preparation responses. Use explicit returned job identities and verified status-field mappings. The demonstrated persisted transformation branches now have constructors. Additional unobserved operators, generated import acceptance, output decoding/registration and edit-trigger propagation remain unverified. Do not label a local arithmetic demonstration as native output.
 

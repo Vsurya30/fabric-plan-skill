@@ -17,5 +17,5 @@
     "liveDeployment": "not run",
     "runtimeUI": "not run"
   },
-  "evidenceBoundary": "Earlier scoped MSIT metadata repair restored source/query initialization and export. Generalized builder checked offline; no new live deployment in this release."
+  "evidenceBoundary": "Synthetic graphs and mocked readback validate reconciliation; no tenant deployment evidence is bundled."
 }

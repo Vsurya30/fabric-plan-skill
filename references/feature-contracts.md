@@ -19,7 +19,7 @@
 
 > Standalone edition: read [runtime-guide.md](runtime-guide.md) for construction and deployment. Source checkout and historical task links below are optional provenance, not runtime prerequisites. Original feature explanations are preserved; the API-only runtime guide and gap inventory distinguish implemented APIs from blocked contracts. Historical UI steps are not execution instructions.
 
-# Fabric Plan Supporting Feature Contracts: Internal
+# Fabric Plan Supporting Feature Contracts
 
 > Current module routing: use [module-routing.md](module-routing.md) or
 > `python plan.py discover --module <ID>` for all F01-F30 and cross-cutting workflows.
@@ -1186,7 +1186,11 @@ These are first discriminating checks, not asserted root causes or universal rep
 
 #### Initialization and Native Request Failures
 
-URL repair has a verified create-versus-update boundary. The inspected semantic-model importer skips model/property creation for an existing WORKLOAD binding; its `url` write is inside that skipped block. An authorized same-item URL-only update completed but readback still omitted the URL, with no other candidate differences. Do not retry the same definition update, discard the failed readback, remove the binding or recreate the Plan automatically. Use a verified native model-property update route when its authentication/context is available, or obtain authorization for fresh creation with the URL present initially. The shell's native route uses an MWCToken from the Fabric workload context; Azure CLI Fabric bearer authentication is not interchangeable. Do not request tokens in chat or bypass a CLI-only constraint. The importer supports writing the URL on initial creation, but a newly created artifact still requires saved and native acceptance checks.
+URL repair has a create-versus-update boundary. Do not retry a failed readback,
+remove a binding or recreate the Plan automatically. Use only an approved
+external service profile when a fresh property operation is required; if none is
+available, obtain authorization for a supported create path. A saved definition
+still requires independent acceptance.
 
 Validate the semantic-model runtime handoff, not only model/workspace IDs. The shell callback returns stored/cached model details without filling a missing URL. FabricHost forwards `semanticModelDetails.url`, while native SemanticModelDetails requires a string `url` without a deserialization default. An undefined JavaScript value is omitted on JSON serialization; the WASM constructor parses the request and panics on a parse error before initialization/fetching. A generated Plan missing `semanticModelReference.url` is therefore a concrete startup-contract defect, even if its model IDs and public definition schema pass. Resolve the real model URL through approved metadata or authorized evidence for the same verified model/workspace; reject missing/null/invalid URLs before publishing, do not fabricate one or use an empty-string placeholder. A URL-only repair must preserve binding identities, connections and unrelated content. The observed omission and inspected failure path are not native-runtime recovery proof; verify the saved repair and actual affected visual afterward.
 
@@ -1309,21 +1313,14 @@ Before every visual addition or embed, run [CLI Visual Placement](#cli-visual-pl
 
 **Must:** fetch all visuals fresh, resolve the saved geometry and bounds, preserve the requested dimensions, include all visual families and reservations, calculate free space, create/embed and save that geometry, then refetch and check. **Prefer:** aligned edge candidates and the existing page's spacing in its native units. **Avoid:** cached inventories, filtering to charts only, missing-geometry guesses, arbitrary scaling, moving/shrinking old visuals, unchecked overflow, and the UI's overlapping no-fit fallback.
 
-**1. Resolve transport and fetch the inventory.** Required inputs are the resolved native `backendUrl`, target page/entity ID, Plan workload context and the target's guarded entity API version. The route selector uses `getGuardedApiPath('/workload', isPlanningOneLakeApiChangesEnabled())`; use the resolved `/v1/workload` or `/v2/workload`, never infer the version from visual type. Call:
-
-```http
-GET {backendUrl}/{v1-or-v2}/workload/entity/{pageId}/properties/
-```
-
-This endpoint returns the page's `payload.visuals` array and page properties, not a filtered visual-type query. Require HTTP success and `statusCode: 200`, and consume the entire array; if a target build adds continuation, exhaust it before layout. Request a new server response before every addition and after saving; do not reuse the five-minute React Query cache. `byPassQueryCache: true` is the client option, not an invented HTTP query parameter.
-
-BaseRequestProvider supplies `Content-Type: application/json`, `Authorization: MWCToken <approved-token>`, `x_request_cws: <tenantId>`, `x-timezone`, `x-ms-parent-activity-id` and, outside standalone mode, `X-Ms-Workload-Resource-Moniker: <workloadObjectId>`. Resolve these from approved target metadata and a CLI-capable workload-token provider. Never copy a captured token, ask for a secret in chat, use MCP when prohibited, or substitute an Azure CLI Fabric bearer token for MWCToken. The inspected UI token provider is not a headless token-acquisition recipe. A CLI client can perform the calls once an approved provider supplies the native token; if none is available, report native authentication blocked without requesting browser login or claiming execution. Every separate public Fabric API call still carries `x-ms-fabric-skill: fabric-plan-skill` and uses its correct bearer audience.
-
-**Approved CLI token/routing path:** the Planning integration infrastructure supplies a concrete headless route in MwcTokenOperations. Acquire the user Power BI token using approved Azure CLI authentication with resource `https://analysis.windows.net/powerbi/api`; discover the workspace's trusted `home-cluster-uri` through public Fabric metadata using its separate Fabric bearer token and attribution header. POST to the resolved cluster's `/metadata/v201606/generatemwctokenv2` with `{type:'[Start] GetMWCTokenV2', workspaceObjectId, workloadType:'Planning', artifacts:[{artifactType:'Planning', artifactObjectId:planId}], asyncId:<new UUID>, iframeId:<new UUID>}`. Validate `Token`, `TargetUriHost`, `CapacityObjectId` and trusted HTTPS routing without printing/storing tokens. This is token issuance, not Plan creation; never fabricate a token or try different credentials after denial.
-
-**Daily fallback:** when verified Daily workspace metadata omits `home-cluster-uri`, use only the environment's configured Power BI public base, `https://dailyapi.powerbi.com`, established by ProdDaily rollout parameters. The same token-exchange path succeeded through that base in an authorized Daily run, followed by native sheet/page reads, embed placement saves and date-role saves. Disable automatic redirects for token issuance, validate the returned native origin before forwarding credentials, and retain the separate Power BI token audience. Missing routing metadata is not itself an authentication denial. This observed fallback does not establish access in other environments or certify rendering, financial materialization, maintenance writes or edit propagation.
-
-ArtifactContext constructs the native base as `https://{TargetUriHost}/webapi/capacities/{CapacityObjectId}/workloads/Planning/PlanningProxy/Automatic/workspaces/{workspaceId}/artifacts/{planId}/CoreAPI`. The CLI infrastructure handler sends `Authorization: MWCToken <issued token>`, `x-ms-workload-resource-moniker: <planId>`, `x-delegated-token` and `x-ms-session` carrying the user Power BI token, and its documented `x_request_cws: 1`. This is a distinct supported client context from the frontend's tenant-valued header; do not mix contexts by guessing. Retain normal TLS, use only the exact authorized artifact, and keep credentials in process memory. CLI issuance and native sheet/page reads succeeded in an authorized test-workspace run on 2026-11-11 without MCP/browser authentication; this does not guarantee access for every tenant, role or environment. Native writes and final placement need their own result checks.
+**1. Resolve transport and fetch the inventory.** Use the organization's
+approved external service profile to resolve the current page inventory. The
+profile supplies the trusted base URL, process-scoped credential name, required
+headers and symbolic route templates outside this repository. Require a complete
+page and visual inventory, and fetch it again before and after every mutation.
+Never disclose route templates, derive hosts, request credentials in chat, or
+forward credentials to redirects. If an approved profile is unavailable, stop
+that service-specific phase and continue independent supported work.
 
 **2. Extract complete occupied rectangles.** The user term `visualProperty.position` refers to parsed visual geometry, not a wire field named `visualProperty`. parseVisualResponse reads:
 
@@ -1370,32 +1367,20 @@ Paths above are relative to `fabric-agentic-creation-skills`. `reservedAreas` co
 
 **5. Handle no fit explicitly.** The inspected search has no safe automatic overflow mode; canvas base styles use `overflow: hidden`. Never put a visual outside those bounds and call it scrolling. The custom-dimension handler supports changing canvas width/height, with UI ranges of 100-8000 pixels. Within authorized layout scope, a CUSTOM pixel canvas can grow just enough for a new row: proposed height = maximum occupied bottom + gap + requested height + margin, keeping width and all old rectangles unchanged. Save the preserved `canvasStyle` with only the height change through the page batch writer, refetch actual bounds, and retry the helper; do not create before confirming space. These UI ranges are not a claim about every server version. No automatic expansion is authorized by this helper. Fractional expansion changes existing rendered sizes; do not silently rescale/rewrite existing visuals to enable it. If safe supported expansion is unavailable, stop the addition with `no-fit` and report the needed layout choice.
 
-**6. Create/embed and persist the calculated geometry.** createVisual sends only these identity/type fields; `position` is not accepted by this inspected constructor:
+**6. Create/embed and persist the calculated geometry.** Use the approved
+external profile's visual-create or sheet-embed operation with resolved
+identities. Do not create another Planning owner. Resolve the returned visual
+through a fresh inventory; if the result is ambiguous, stop without another
+create.
 
-```http
-POST {backendUrl}/{v1-or-v2}/workload/entity/{pageId}/visual/
-Content-Type: application/json
-
-{"product":"<resolved PRODUCT_CODES value>","visualGuid":"<new authorized visual GUID>","visualType":"<resolved EVisualType value>"}
-```
-
-For an existing same-Plan source sheet use embedSheet: `POST {backendUrl}/{v1-or-v2}/workload/entity/{pageId}/embed/sheet/` with `{"embedSheetsIds":["<sourceSheetId>"]}`. Do not create another Planning owner. Use the returned record(s) and a fresh inventory to resolve the added visual by actual identity. This is ordinary API creation, not ID remapping. If the result is ambiguous, stop without issuing another create.
-
-The UI creation hook adds geometry after creation and permits `partialVisual.position/dimension` overrides before save. A CLI performs the equivalent **planned** property-save step, not that React hook. Refetch after create for current properties/ETags, reconcile any concurrently added obstacles, and calculate again if necessary. A just-created unsaved record may have no geometry yet: retain its returned identity and intended rectangle; exclude **only that known new record** while extracting the other obstacles for this reconciliation, never filter it out of final verification or ignore a pre-existing incomplete record. Persist before considering the addition complete. For a direct visual, clone its freshly fetched property object, preserve its initialized feature settings (or construct them through the selected visual's supported feature contract if not yet saved), set `position` and `dimension`, and send:
-
-```http
-POST {backendUrl}/v1/workload/properties/batch/
-Content-Type: application/json
-
-{
-	"visuals": {"<createdVisualId>": {"schema":"0.0.1","properties":{"position":{"x":50,"y":5},"dimension":{"width":40,"height":40},"<other initialized keys>":"<preserved values>"}}},
-	"workloadEntities": {},
-	"workload": {},
-	"etags": {"visuals":{"<createdVisualId>":"<fresh visual.properties.etag>"},"workloadEntities":{"<pageId>":"<fresh payload.etag>"}}
-}
-```
-
-The placeholders demonstrate required preservation; do not send literal placeholder keys. For an embed, leave `visuals: {}` so its source geometry/settings are untouched. Preserve the full freshly loaded page property object, upsert only this instance's entry in `reactiveVisualProperties`, and send it under `workloadEntities[pageId] = {schema:'0.0.1', properties: preservedPage}`. PropertiesManager defines the embedded entry:
+Refetch current properties and ETags after creation, reconcile any concurrent
+obstacles, and calculate again when necessary. Retain a known new identity but
+do not treat it as verified geometry until the intended position has persisted.
+For a direct visual, clone its current property object, preserve initialized
+settings, then submit only position/dimension changes through the external
+profile's `properties-batch` operation. For an embed, keep source settings
+untouched and update only the page-local placement entry in the current page
+object. The embedded entry includes:
 
 ```javascript
 const embeddedEntry = {
@@ -1413,32 +1398,10 @@ const embeddedEntry = {
 
 Resolve the existing/default style and interaction values from the source's supported feature contract, not fabricated empty settings; preserve existing instance siblings. Include the fresh page ETag. preparePropertiesForSave supplies the `schema/properties` envelope; updateBulkVisualProperties strips client-only `visualEntityIds`, which must not appear in the HTTP body. Do not copy the GET response wrapper into POST. A 409 is a conflict, even if a client promise resolves: refetch, recompute against the latest inventory and merge the scoped property change; never use `force` to bypass it. Do not assume the two requests are atomic. If creation succeeded but save failed, retain the created identity and resume that save rather than duplicating creation.
 
-**CLI transport example** for a configured, authorized native endpoint and secure externally supplied token (Node 18+):
-
-```javascript
-async function nativeRequest(url, method = 'GET', body) {
-	const token = process.env.PLANNING_MWC_TOKEN;
-	if (!token) throw new Error('Approved CLI workload token unavailable');
-	const response = await fetch(url, {
-		method,
-		headers: {
-			Authorization: `MWCToken ${token}`,
-			'Content-Type': 'application/json',
-			x_request_cws: process.env.PLANNING_TENANT_ID,
-			'X-Ms-Workload-Resource-Moniker': process.env.PLANNING_WORKLOAD_OBJECT_ID,
-			'x-timezone': 'UTC',
-			'x-ms-parent-activity-id': crypto.randomUUID()
-		},
-		...(body !== undefined && {body: JSON.stringify(body)})
-	});
-	if (!response.ok) throw new Error(`Native request failed: ${response.status}`);
-	const result = await response.json();
-	if (result.statusCode !== 200 && result.statusCode !== 201) throw new Error('Native operation did not succeed');
-	return result;
-}
-```
-
-Validate all context inputs and the trusted HTTPS endpoint before calling; never log headers/tokens or persist them in fixtures. This demonstrates transport with externally provided credentials, not a new token issuance route. Omit the resource-moniker header only for verified standalone mode as the source does. Resolve operation-specific response contracts; do not interpret an asynchronous acceptance as completed persistence.
+Use the bundled transport only with an external profile supplied and approved by
+the destination owner. Validate the HTTPS origin, never log credentials, and do
+not persist route/authentication details in fixtures. Resolve operation-specific
+response contracts; asynchronous acceptance is not completed persistence.
 
 **7. Verify from a new GET.** Match the actual created ID, extract the authoritative direct or embedded geometry again, and compare all four values with intended placement (only a small floating-point tolerance, not relaxed layout tolerances). Check bounds and clearance against **every** current visual plus reserved areas; compare old rectangles and page/filter/source configuration with the baseline to detect unintended changes. The helper's `mode:'verify'` input accepts `{response, id, intended:{position,dimension}, bounds, gap, reservedAreas}` and reports only `passed-persisted-geometry`; include the same reserved areas used for placement. Report any pre-existing overlaps without relocating them. API success or local candidate output alone is not verification. Record requests without credentials and separate persisted geometry from native rendering, grid readability and functional/query acceptance, which are not certified by this offline skill update.
 
@@ -1506,7 +1469,10 @@ The linked current exporters/importers establish bounded envelope and transforma
 
 ### Route Selection
 
-Resolve the target Fabric environment before treating `WorkspaceNotFound` as an authentication or permission failure. The inspected environment policy names `dailyapi.fabric.microsoft.com` for Daily. An authorized Daily-model investigation verified workspace/item discovery, model definition export and read-only model queries on that host using Azure CLI; the standard host could not resolve the same workspace. Keep the Fabric token audience separate from the API host, carry skill attribution, and restrict discovery, pagination, LRO/result and native workspace lookup to the verified environment's trusted HTTPS origins. Never rewrite arbitrary supplied hosts, transfer credentials to redirects, change tenant/permissions automatically or request another browser login. A metadata-route success does not establish native artifact/runtime acceptance.
+Resolve the documented target API from trusted current metadata before treating
+`WorkspaceNotFound` as an authentication or permission failure. Never guess or
+rewrite hosts, forward credentials to redirects, change permissions or request a
+browser login. A metadata-route success does not establish runtime acceptance.
 
 For a different semantic model, re-resolve tables, measures, expressions, periods, eligibility, OneLake source artifact and accessible connections before reusing a serializer. Historical helper names are not dependencies the new model must acquire: use explicit bindings to inspected existing measures only when their actuals/forecast, account, currency and grain semantics satisfy the request, preserving required source filters. Generic OAuth `FabricSql` connections and path-bound `SQL` connections are different branches; resolve their credential reader and explicit database-artifact target rather than copying an old database/connection or selecting the first name match. Read-only SQL schema access and a generated binding do not prove native maintenance write access; do not mutate master data to manufacture that evidence.
 
@@ -1530,7 +1496,9 @@ Build each eligible source from its own verified workspace, database artifact, s
 
 The inspected [public root schema](https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/Definition/1.0.0/schema.json) requires a connection for its legacy semantic-model-reference alternative and lists only `POWERTABLE`, `PLANNING` and `INFO_BRIDGE` in visual declarations. These constraints differ from two scoped observations: ALMImportHandler accepts model identity plus source type without a connection, and importSemanticModel documents caller MWC-token access with connection binding skipped. Supplied exports also declare `BI_TEXT`, `SUPER_FILTER` and `ANALYTICS_PLUS` for Intelligence visuals. Missing connection does not mean automatic connection provisioning; an observed visual name does not certify target-import support. Preserve exact discrepancies in validation evidence, resolve the selected route, and verify saved bindings. Do not fabricate a connection ID, relabel every visual `PLANNING`, or disable an entire schema check to hide the conflict.
 
-ALMExportHandler.ts computes `isOneLakeEntitiesMigrationDoneForArtifact(ctx)` and uses that decision when selecting SQL `getExportDataForPlanning` or OneLake `getExportDataForPlanningV2`. The same migration decision controls Connected Planning export. Resolve the actual artifact state; never select a route merely because its filename contains `V2`.
+Resolve the artifact's current storage mode from current supported metadata
+before selecting a SQL or OneLake representation. Never select a route merely
+because a filename or version marker contains `V2`.
 
 **Independent new-run evidence:** a separately authorized, independently built Daily run using the corrected hostname-only bindings returned HTTP/envelope 200 for all four eligible dimension PowerTable config readers. Fresh responses matched the intended SQL artifact/workspace, connection, database, hostname and physical schema/table, declared read access and supplied nonempty column metadata. Those first read-only checks ran while dashboard pages were still importing; native config success alone did not certify whole-Plan creation. Creation subsequently succeeded with 17 sheets, native completion verified five persisted embed placements, and the single final export succeeded with 182 parts. Scoped saved-definition checks passed model/default/identity/header/date/ownership requirements, and all four saved SQL source bindings matched the verified targets and successful native responses. These checks do not certify rendered grids, maintenance writes, financial/input propagation or an older Plan's recovery. No source or input data was written. Keep operation completion, native placement and final export/readback as separate gates.
 
@@ -1538,7 +1506,9 @@ ALMExportHandler.ts computes `isOneLakeEntitiesMigrationDoneForArtifact(ctx)` an
 
 ### Native Properties Load and Batch Save
 
-The VisualAPIService routes separate entity-level `GET .../entity/{entityId}/properties/` from `POST /v1/workload/properties/batch/`. The GET base path is selected by `getBaseEntityPath()` and the guarded OneLake API flag. These are native application routes under the configured backend, not public Fabric item-definition endpoints or a complete request reconstructed from a curl URL.
+Entity-property reads and property-batch saves are separate symbolic operations
+under an external service profile. They are not public Fabric item-definition
+endpoints, and this repository does not ship their route templates.
 
 IPageSavePayload declares client `visualEntityIds: string[]`, required `visuals`, `workloadEntities` and `workload` maps (`Record<string, any>`), optional `etags` and optional boolean `force`. ETags contain optional `workload: string`, `workloadEntities: Record<string,string>` and `visuals: Record<string,string>`. Open map types do not define every accepted property, map-key namespace or patch/delete behavior; use the page-save constructor and feature owners before constructing a request.
 
@@ -1590,7 +1560,9 @@ The actual cleanupVisualStateForExport body deletes `properties.visualState.lock
 | `dataInput.json` | Emits only when columns exist; removes `sqlPk`, uses `columns`. | Public page marks this part required, but the inspected exporter can omit it. |
 | `insertRows.json` | Emits only when rows exist, using `rows` and the audit-field cleanup helper. | Native inserted rows require record/reference conversion. |
 
-Evidence: planningExportDataV2.ts, inspected lines 195-365. Exact import selection, full rewire definitions, companion records, and round-trip behavior require feature-specific closure.
+Bundled synthetic fixtures establish the listed saved-shape relationships.
+Exact import selection, rewire definitions, companion records and round-trip
+behavior still require feature-specific validation against the current contract.
 
 ### Mixed-Visual Part Completeness
 
@@ -3033,7 +3005,7 @@ For pivots, evaluate the effective view: an empty axis selector may inherit all 
 
 The supplied UI design uses Enable Anchor Measure, Row Dimension and Column Dimension multi-selects, and Display measure across all levels. The Manage Columns/Show Columns anchor-only popup identifies the measure and edits the same configuration with Apply/Cancel. The entry-point choice between a menu, direct icon and status column was not finalized. The discussion's misspelled `display_at_non_achored_level` is conceptual, not a substitute for the source-backed `display_at_all_levels`; keep UI `is_enabled` distinct from the native subtree.
 
-These are illustrative arithmetic expectations, not native formula syntax, defaults or executed product tests. Rate/factor examples assume the applicable existing copy distribution. The updated 26-slide deck was read in v41; its complete extracted text and notes are bundled in anchor-ppt-source.md. Worked business arithmetic remains illustrative, not executed native behavior.
+These are illustrative arithmetic expectations, not native formula syntax, defaults or executed product tests. Rate/factor examples assume the applicable existing copy distribution. Worked business arithmetic remains illustrative, not executed native behavior.
 
 | Business assumption | Anchor grain | Illustrative calculation |
 | --- | --- | --- |
@@ -3769,7 +3741,7 @@ Keep item-definition export/import, role-layout service content and role securit
 
 | Guide observation | Reusable interpretation | Existing knowledge or remaining boundary |
 | --- | --- | --- |
-| Report-scoped POST to `/CoreAPI/v1/access/roles/layout/__everyone__/` | The guide identifies `__everyone__` as reserved Item Baseline; role identity is a route argument, not an added body field. | Resolve custom-role IDs from the target's supported provider; do not use display names in the route. This is not an interchangeable public Fabric REST endpoint or permission to replay captured credentials. |
+| Baseline Home role operation | `__everyone__` is a reserved baseline role identity; role identity is an operation argument, not an added body field. | Resolve custom-role IDs from the approved external profile; do not use display names. This is not a public Fabric REST endpoint or permission to replay captured credentials. |
 | Body contains `homeLayoutOrder`, `data.items`, `data.rows`, `etag` | Content uses the shared layout; the token is opaque, not a timestamp or identity to calculate. | Retain the [mode-specific save contracts](#home-storage-and-save-boundaries), including fresh ETags, separate order/visibility operations and explicit conflict decisions. A single order value does not prove ranking direction, tie behavior or omitted-role handling. |
 | Empty exported roles array versus populated service body | Exported workload metadata is not necessarily a complete backup of service-owned Home content. | Do not insert the entire role-layout body into `roles[]`; legacy role layout and V2 data have distinct envelopes. Import restoration remains unverified. |
 | Hero/text titles and descriptions contain encoded JSON | Parse the outer body, then the selected rich-text string; serialize the edited document back to a string. | Preserve paragraphs, formatting, node types/version fields and unrelated nodes. The guide's single-paragraph replacement function is fixture-only and must reject other shapes, not flatten real rich content. |
@@ -3802,7 +3774,8 @@ These are authoring and acceptance instructions, not new native authorization ev
 
 ### F25 Security
 
-Intent: invoke Planning/PowerTable security and RLS governance controls, not author an ACL from toolbar props. Security.tsx is a gate/forwarder.
+Intent: invoke Planning/PowerTable security and RLS governance controls, not
+author an ACL from presentation properties.
 
 | Inspected state / branch | Consequence |
 | --- | --- |
@@ -3820,7 +3793,7 @@ For [approval workflows](#approval-workflow-authoring), protect decision, policy
 
 #### Security Authoring
 
-Use Security to translate business responsibilities into explicit sheet and planning-action permissions. This guidance incorporates the supplied Security Enterprise Guide v4: 56 slides, 56 speaker-note pages and five embedded documentation screenshots. Its October 22, 2026 review cites Shell revision `572b7aa8b7` and Matrix revision `9bd7ceac`; those underlying reports and revisions were not independently re-audited here. Screenshot settings are documentation examples, not the finished business profiles. The deck explicitly reports no backend or runtime verification. Its signed-in-user MWC identity and Power BI-equivalent Build/RLS behavior are forward-looking product direction, not proof that a target deployment uses that path.
+Use Security to translate business responsibilities into explicit sheet and planning-action permissions. This guidance incorporates the supplied Security Enterprise Guide v4: 56 slides, 56 speaker-note pages and five embedded documentation screenshots. Its October 22, 2026 review was not independently re-audited here. Screenshot settings are documentation examples, not the finished business profiles. The deck explicitly reports no backend or runtime verification. Its signed-in-user MWC identity and Power BI-equivalent Build/RLS behavior are forward-looking product direction, not proof that a target deployment uses that path.
 
 ##### Separate the Access Layers
 

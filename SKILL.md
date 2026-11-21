@@ -276,8 +276,8 @@ reuse. From Sheets and InfoBridge retain their own source identities.
 Discover `NUMERIC-COLUMN-VALUES`, "implicit measure", "direct column assignment"
 or "default sum". Read [numeric-column-values.md](references/numeric-column-values.md).
 The isolated example at `examples/numeric-column-values/build.py` needs no old
-report, chat or task script. The user-saved Sum shape was read from current MSIT
-JSON; package checks do not establish runtime calculation. All prior fixes remain.
+report, chat or task script. The synthetic Sum fixture covers the saved shape;
+package checks do not establish runtime calculation. All prior fixes remain.
 
 ## Mandatory Page Navigator on every Intelligence dashboard (v27)
 
@@ -659,8 +659,8 @@ registration, dynamic time-extension grain, reference/UTC dates, filter cards an
 casing, query/output identities, complete PowerTable parts and deferred setup,
 readable Home geometry, comparison charts and owner-preserving embeds. Earlier
 release coverage notes in preserved references do not remove newer listed helpers.
-Native application API commands are labeled separately from public Fabric REST;
-do not advertise internal workload/asset routes as public APIs.
+Application-service commands require an external approved profile and are
+labeled separately from public Fabric REST.
 
 ## Authoring contract
 
@@ -670,13 +670,29 @@ The current business request determines functionality; current model metadata de
 
 Use bundled API constructors and authenticated API adapters only. There is no native UI authoring fallback. Read `references/api-contract-gaps.json` as a feature-level coverage inventory. Follow `references/verified-authoring-flow.md`: use documented construction and native phases, preserve requested components, and continue independent supported work. Do not auto-deploy a reduced substitute or choose a simpler business flow to bypass a missing capability. Report the exact gap. Do not copy an old report, require a source checkout, manufacture payload fields or ask the user to hand-edit JSON. `references/connected-construction.md` retains component recipes; its older partial-deployment policy is superseded by v29.
 
-**Verification boundary:** the preceding release checked numeric registration, saved Pivots, IDs, geometry and Home persistence on a newly created DXT Plan. This integration adds the supplied standalone builder contracts and executable typed-column/rule factories, InfoBridge reload/polling, PowerTable initialization/save adapters, bookmark persistence, Navigator registration and Home asset upload. These additions have offline contract tests, not new live verification. Full capture/restore, some advanced factories, environment compatibility and execution acceptance remain incomplete; see `references/builder-integration.md`. Never equate saved state with working calculation, input edits, automatic propagation or rendered behavior.
+**Verification boundary:** bundled typed-column/rule factories, InfoBridge
+adapters, PowerTable initialization/save adapters, bookmark persistence,
+Navigator registration and Home asset upload have offline contract tests. Full
+capture/restore, some advanced factories, environment compatibility and execution
+acceptance remain incomplete; see `references/builder-integration.md`. Never
+equate saved state with working calculation, input edits, propagation or rendering.
 
-**2026-11-13 reference integration:** adds ID/Skip descriptor construction (including context-only lookup descriptors), typed PowerTable lookup presentation, normalized additive P&L contributions, equality filters, linked-measure companions and owner-preserving embed references. A fresh authorized export established these saved shapes; new constructors and partial-deployment behavior were tested offline. The original report is not a runtime dependency.
+**Reference integration:** adds ID/Skip descriptor construction, typed PowerTable
+lookup presentation, normalized contributions, equality filters, linked-measure
+companions and owner-preserving embed references. Constructors and deployment
+boundaries are tested offline; no tenant report is a runtime dependency.
 
-**2026-11-13 Context/Intelligence update:** external Context now has a model-driven constructor and full mirrored selection/input binding; Scenario stays off the visible axes. The composed build/provision path supports labeled semantic slicers, numeric period ranges, native KPI cards, styled text and a lower Planning embed with resolved runtime placement. Fresh MSIT export confirmed the saved shapes; new generation has offline and mocked-API tests, not destination rendering or event-propagation proof. Read `references/context-intelligence.md`.
+**Context/Intelligence:** external Context has a model-driven constructor and
+mirrored selection/input binding; Scenario stays off the visible axes. The
+builder supports labeled slicers, numeric period ranges, KPI cards, styled text
+and a lower Planning embed. Offline and mocked-API tests do not prove destination
+rendering or propagation. Read `references/context-intelligence.md`.
 
-**2026-11-13 InfoBridge video integration:** the full instructional audio, screen sequence, fresh DXT/MSIT exports and all 11 DXT native query records were correlated. Treat InfoBridge as a general sheet-data transformation and delivery utility; connected P&L is one example. Both Add Measure and Add Dimension accept conditional SQL, and a measure operation can return text. Read `references/infobridge-construction.md` for complete records, Append/Merge/Join/SQL, PowerTable sources, result types, identity reconciliation, evaluation grain and the financial contribution recipe. Preview total rows must not drive construction changes. The 202-test offline suite covers the new constructors; generated graph import and automatic propagation are not live-proven. MSIT comparison uses its fresh ALM definition because its native authentication returned 403.
+**InfoBridge:** treat it as a general sheet-data transformation and delivery
+utility; connected P&L is one example. Both Add Measure and Add Dimension accept
+conditional SQL, and a measure operation can return text. Read
+`references/infobridge-construction.md` for synthetic contracts and identity
+reconciliation. Graph import and automatic propagation remain unverified.
 
 ## Source-aware assignments (v10)
 
@@ -819,7 +835,10 @@ For Open Periods, apply the requested formula or measure under editable Data Inp
 
 The composed Planning constructor supports `kind:"Forecast"`, `actuals`, `start`, `end`, optional `timezone` (UTC fallback), saved `periodUtc` or a `referenceForecast` profile and optional `openDefault`. It builds the complete Forecast record, source dependencies, measure registration, aggregation, formatting and context binding. Use `runtime.forecast.forecast_config` through `runtime.construct.planning`/`build`; no old report or manual JSON repair is needed. Preserve the user's requested formula exactly. If actuals or horizon cannot be resolved, ask only for the missing business input and continue independent work.
 
-Native Forecast registration and saved settings are distinct from calculated results. Check first/second open month, future-calendar expansion and edit restrictions when the model is available; a failover error must be reported without fabricating values. The Forecast release's 243 offline tests passed; the Home-fit update adds targeted regressions, with current results in the exported package validation. New DXT native readback verified the exact Forecast source, dates and formula, measure registration, chart filters, visibility and dashboard rectangles. It did not establish calculated results or rendered appearance. The original detailed feature guides remain included.
+Native Forecast registration and saved settings are distinct from calculated
+results. Check open periods, future-calendar expansion and edit restrictions when
+the model is available; report a failover error without fabricating values.
+Offline regressions verify construction, not calculation or rendered appearance.
 
 ## Forecast period and time-extension fixes
 
@@ -863,13 +882,21 @@ The prior correction suite contained 209 passing tests, including output-ID/row-
 
 Every dimension and measure assigned to a chart, including KPI and comparison measures, needs an ordinary visible registration at `properties.superFilterAssignments[]`. Hidden scenario/slicer scope in `visualState.embeddedSuperFilter`, page filters and Planning external Context do not populate those Visual level cards. Use `runtime.chart_filters.ensure_chart_filters` and `audit_chart_filters` after chart construction and after resolving imported field identities. The KPI constructor and native dashboard placement path now call these helpers automatically.
 
-Read `references/chart-visual-filters.md` for complete numeric/FACET registrations, DAX flags, category evaluation grain, comparison buckets, preservation and nested ID rules. A dimension inside a measure's filter is evaluation grain, not its own dimension filter card. Preserve existing selections and Context; do not replace the filter list wholesale. The numeric constructor matched a fresh DXT native reference exactly except for a new filter ID. Live target readback confirmed 22 added card registrations. The 216-test suite covers further construction cases; saved registrations do not prove rendering or query execution.
+Read `references/chart-visual-filters.md` for complete numeric/FACET
+registrations, DAX flags, category evaluation grain, comparison buckets and
+preservation. A dimension inside a measure's filter is evaluation grain, not its
+own card. Offline tests cover construction cases; saved registrations do not
+prove rendering or query execution.
 
 ## Complete PowerTable construction
 
 Use `runtime.powertable_factory.configured_table` and `references/powertable-alm-construction.md` when the authorized SQL table and connection are resolved. Bundle all five parts: the sheet companion and the visual's properties, source, column configurations and source settings. The visual properties require the double schema/properties wrapper. Use the real SQL schema, a fresh source GUID, creationMode 2, a real SQLDbNative artifact binding, and source settings linked to that same GUID. The embedded presentation defaults contain no old report IDs.
 
-An empty POWERTABLE sheet only shows setup/welcome; it is not a configured table. The complete ALM route created seven native grids with accessible SQL schemas in DXT after a separate direct-initialization route had returned PT_WB_9013. Do not treat that earlier error as proof that the generic FabricSql cloud connection was deleted. Keep connection, artifact, source, visual and column identities separate. Preserve non-identity integer primary keys as mandatory user-supplied fields, and construct lookups only against verified unique remote keys.
+An empty POWERTABLE sheet only shows setup/welcome; it is not a configured
+table. A direct-initialization error is not proof that a generic Fabric SQL
+connection was deleted. Keep connection, artifact, source, visual and column
+identities separate. Preserve non-identity integer primary keys and construct
+lookups only against verified unique remote keys.
 
 Verify owned type-30 visuals, non-null dataSourceId, the schema in the resolved visual context, intended columns/settings and the final exported definition. Acknowledge runtime/rendering or row-save limits separately. The connection-deferred fallback below remains available only when a source cannot be initialized; it must be labelled honestly.
 
@@ -898,14 +925,14 @@ From the installed runtime, first use `plan.py discover` and `references/module-
 | Need | Bundled reference or tool |
 |---|---|
 | Every module: business request, guide, command, inputs and limits | `references/module-routing.md`, `references/module-routing.json`, `plan.py discover`, `references/routing-examples.md` |
-| New standalone contracts and compatibility/acceptance guide | `references/builder-implementation-contracts-standalone.md`, `references/builder-integration.md` |
+| External adapter compatibility and acceptance guide | `references/builder-integration.md` |
 | Typed-column/rule factories and API operations | `runtime/input_factories.py`, `runtime/rule_factories.py`, `runtime/builder_api.py`, `plan.py construct-native`, `plan.py builder-api` |
 | PowerTable encoding, new Navigator host and Home assets | `runtime/powertable_factory.py`, `runtime/navigator_api.py`, `runtime/assets_api.py` |
 | Native Forecast intent, complete records and defaults | `references/forecast-authoring.md`, `runtime/forecast.py`, `tests/test_forecast.py` |
 | Complete configured PowerTable ALM construction | `references/powertable-alm-construction.md`, `runtime/powertable_factory.py`, `tests/test_powertable_alm.py` |
 | Business-to-feature decisions and exact properties | `references/feature-contracts.md` |
 | Layout, typography, colors, illustrations and quality | `references/design-standards.md` |
-| Additional property contracts and known conflicts | `references/audit-contracts.md` |
+| Property validation and known conflicts | `references/planning-integrity.md` |
 | Complete Navigator state, appearance and recipes | `references/navigators.md`, `fixtures/navigator-spec-*.json` |
 | Runtime/coverage/dependency boundaries | `references/runtime-guide.md`, `references/implementation-status.json` |
 | External Context, rich Intelligence construction and API layout | `references/context-intelligence.md`, `runtime/filters.py`, `runtime/intelligence.py`, `runtime/intelligence_api.py` |
@@ -943,23 +970,31 @@ Use `python plan.py reference feature-contracts.md --list` to find headings and 
 7. Fetch fresh definitions/native state. Check activation, catalogs, source/query bindings, Home and geometry; exercise requested calculations, locked edits, scenario retention, allocations and connected before/after values. Distinguish manual refresh from proven automatic propagation. Restore authorized test values.
 8. Return the native artifact link, decoded/transport JSON where requested, credential-free scripts, execution evidence and the coverage ledger. State supported results, alternatives, omitted features and unverified behavior separately. A useful partial deployment is permitted; keep working through all independent modules. A module-level construction gap alone is not a reason to withhold the application.
 
-## Live DXT readback corrections
+## Readback normalization
 
-The API-only deployment on 2026-11-13 established two normalization rules: sheet visual declarations can be returned with embedded references first, so compare declarations by unique visual identity while retaining layer ordering in visual properties; geometry readback uses Decimal numbers, so normalize numeric arithmetic before collision checks without changing saved coordinates. The bundled validators implement both rules and include regression tests. Native page readback verified seven generated dashboard layouts; this does not establish rendered appearance or interaction propagation.
-
-## Live DXT compatibility results, 2026-11-13
-
-A fresh API-only build from the bundled constructors and current semantic metadata persisted six Planning owners and seven Intelligence dashboards. Native readback verified mirrored external Context, context-bound input records, 28 slicers, 21 semantic KPI cards, seven bottom embeds, and non-overlapping geometry. A Context-selection API canary changed Budget to Upside and restored the original properties. These checks establish persistence and geometry, not rendered behavior, input-value isolation or UI-event propagation.
+Sheet visual declarations can be returned with embedded references first, so
+compare declarations by unique visual identity while retaining layer order in
+properties. Normalize Decimal geometry before collision checks without changing
+saved coordinates. The bundled validators implement both rules; they do not
+establish rendered appearance or interaction propagation.
 
 The native column-list projection omits the outer `boundToFilterContext` enum. Verify its inner `bound_to_filter_context` Boolean in native records and the outer enum in the ALM definition; do not synthesize a missing response field or reject an otherwise matched native projection.
 
-The attempted empty-catalog Planning-source enrichment/import was rejected with `ImportFailed: Cannot read properties of undefined (reading flatMap)`. That construction path is not live-proven. Do not promise it will enrich empty catalogs; require a complete supported source/query contract, or omit only the connected module and label dependent totals unavailable. A failed update was not atomic across all modules: unrelated Planning formula and aggregation changes persisted, while the InfoBridge export contained zero sources. Always reconcile fresh module state after failure; neither assume rollback nor resubmit the full import blindly.
+Do not assume an empty-catalog Planning source can be enriched on import. Require
+a complete supported source/query contract or omit only the connected module and
+label dependent totals unavailable. After any failed update, reconcile each module
+from fresh state; neither assume rollback nor resubmit the full import blindly.
 
-Historical direct-route result (superseded for configured-table construction by the complete ALM route above): PowerTable initialization returned `PT_WB_9013: DMTS connection is deleted or not found` for two connections that the Fabric connection catalog listed. This is a workload-side credential-resolution failure, not evidence that the connections were actually deleted. Preserve existing SQL data, report the binding gap, and continue independent modules. Mark semantic actual/reference KPI cards explicitly when connected plan outputs are unavailable.
+Treat `PT_WB_9013` as a binding/credential-resolution failure, not proof that a
+connection was deleted. Preserve existing SQL data, report the binding gap and
+continue independent modules.
 
 ## Native sheet visibility publication
 
-In the tested DXT profile, ALM updateDefinition accepted existing-sheet isHidden=false without changing native navigation. Publish each geometry-verified dashboard through `PUT /v1/workload/entity/{resolvedNumericEntityId}/` with `{"isHidden":20}`; 10 means hidden. The bundled `visibility_native` verifies the actual entity catalog and preserves names, order, membership and Context metadata. The provision workflow uses this writer. Seven dashboard flags were verified live; the final ALM export must independently show isHidden=false. A failed dashboard can be hidden through the same writer. Do not treat a successful update response as publication evidence.
+Publish a geometry-verified dashboard only through the approved external
+visibility operation. The adapter verifies the entity catalog and preserves names,
+order, membership and Context metadata. Re-export independently to confirm
+`isHidden=false`; do not treat an accepted update as publication evidence.
 
 ## Essential invariants
 
