@@ -1,0 +1,13 @@
+{
+  "name": "dimension-hash-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone product-compatible dimension ID and pivot layout hashing",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test dimension-utils.test.js"
+  },
+  "dependencies": {
+    "hash-wasm": "^4.12.0"
+  }
+}
