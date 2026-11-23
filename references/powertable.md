@@ -1,5 +1,12 @@
 # Plan a PowerTable and inspect its definition
 
+Use this skill for the Plan definition. For live Fabric SQL Database work,
+use the sibling skill `sqldb-cli`: `az rest` calls the Fabric control plane;
+`sqlcmd` runs T-SQL against the database. Before connecting, follow the Fabric
+skills collection's [shared CLI setup](https://github.com/microsoft/skills-for-fabric/blob/main/common/COMMON-CLI.md)
+for sign-in and workspace discovery, and its [authentication guide](https://github.com/microsoft/skills-for-fabric/blob/main/common/COMMON-CORE.md#authentication--token-acquisition)
+for the token audience. A Plan repair does not authorize a database write.
+
 **Existing table.** Start from the physical schema: database, schema, base
 table, columns, types, nullability, primary key, identity/generated columns,
 and approved connection identity. A display name does not prove any of those
