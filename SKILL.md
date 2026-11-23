@@ -834,12 +834,11 @@ in Rows. Preserve valid Year-only/Year-Quarter or other supported requested grai
 time-extension metadata is derived dynamically from the actual column levels.
 
 Read **[forecast-review-execution.md](references/forecast-review-execution.md)** for
-the shipped `plan.py forecast-review` and `forecast-repair` commands. The first
-adds direct From Sheets SUM consumption, quarterly text commentary, formula
-variance, negative-variance formatting and Forecast-versus-Actuals charts after
-base construction/import. It is a separate executable phase, not a missing
-constructor and not automatically handled by `provision`. Include this phase in
-the plan whenever requested; do not silently omit its dependent features.
+direct From Sheets SUM consumption, quarterly text commentary, formula variance,
+negative-variance formatting and Forecast-versus-Actuals charts. Author them in
+the public definition; the native post-import `forecast-review` command is no
+longer bundled. `forecast-repair` remains for scoped ALM updates. Include these
+features in the plan whenever requested; do not silently omit them.
 These operations use the same bundled Python/native application API adapters in
 Copilot and other agents, with no Codex tool dependency. Tenant authorization and
 build-compatible workload routes remain external prerequisites, not public REST

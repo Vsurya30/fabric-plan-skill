@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from runtime.codec import load
 from runtime.construct import navigator
-from runtime.navigator_api import state, create
+from runtime.navigator_api import state
 from runtime.navigator_defaults import complete_defaults, require_complete_defaults
 
 
@@ -81,20 +81,6 @@ class NavigatorDefaultsTests(unittest.TestCase):
             require_complete_defaults(value)
         self.assertEqual(value, original)
 
-    def test_null_and_invalid_padding_fail_before_network(self):
-        for key, bad in (('padding', None), ('padding', {'topPadding': '4'}),
-                         ('padding', {'topPadding': -1}), ('padding', {'topPadding': float('nan')}),
-                         ('padding', {'isEnabled': 'false'}), ('iconTypeMapping', None)):
-            with self.subTest(bad=bad):
-                value = state()
-                value['style']['DEFAULT']['shapeState']['icon'][key] = bad
-                with self.assertRaises(ValueError):
-                    create(None, '201', '00000000-0000-4000-8000-000000000001', value,
-                           {'x': 0, 'y': 0, 'width': 100, 'height': 50}, 'not-sent', pages=['201'], bookmarks=[])
-        value = state()
-        value['style']['ACTIVE']['shapeState']['icon'] = {'padding': None}
-        with self.assertRaises(ValueError):
-            complete_defaults(value)
 
     def test_application_default_gate_catches_sparse_dashboard_navigator(self):
         from runtime.application_defaults import check_application_defaults

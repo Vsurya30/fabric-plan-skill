@@ -15,11 +15,10 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from runtime.activation import select_saved_pivot
 from runtime.codec import load, loads, pack, unpack
 from runtime.home_api import decode_roles, deploy_home
 from runtime.identity import Registry
-from runtime.layout import audit, place_native, verify_unchanged
+from runtime.layout import audit
 from runtime.pivots import compile_pivots
 from runtime.transport import Client
 from runtime.workflow import preflight, provision
@@ -134,20 +133,7 @@ class WorkflowServer:
             'location': 'https://example.invalid/v1/operations/' + operation, 'retry-after': '0'}, 'body': {}}
 
     def native(self, method, url, headers, body):
-        sheet = self.raw['definition.json']['sheets'][0]
-        owner = sheet['workloadItemEntityVisuals'][0]
-        prefix = 'sheets/' + sheet['recordGuid'] + '/visuals/' + owner['visualId'] + '/'
-        if url.endswith('/entity/'):
-            payload = {'workloadEntities': [{'id': '201', 'displayName': sheet['displayName'], 'entityType': 10}]}
-        elif '/datainput/column/' in url:
-            columns = self.raw[prefix + 'dataInput.json']['columns']
-            payload = {'resBody': columns, 'totalRecordCount': len(columns)}
-        elif url.endswith('/properties/'):
-            payload = {'etag': 'page-1', 'visuals': [{'id': '101', 'visualType': 80,
-                'properties': {'etag': 'visual-1', 'properties': self.raw[prefix + 'properties.json']['properties']}}]}
-        else:
-            raise AssertionError('Unexpected mocked native route: ' + url)
-        return {'status': 200, 'headers': {}, 'body': {'statusCode': 200, 'payload': copy.deepcopy(payload)}}
+        raise AssertionError('Unexpected mocked native route: ' + url)
 
 
 class IndependentApiTests(unittest.TestCase):
@@ -211,28 +197,7 @@ class IndependentApiTests(unittest.TestCase):
         return Client('https://example.invalid/native', TOKEN_ENV, journal=self.directory / name,
                       adapter=adapter, sleep=lambda seconds: None)
 
-    def test_completed_native_actions_reconcile_without_second_write(self):
-        actions = [
-            ('pivot', PageAdapter(), lambda c: select_saved_pivot(c, '201', '101', '301', 'same-step')),
-            ('place', PageAdapter(), lambda c: place_native(c, '201', '101',
-                {'x': 30, 'y': 40, 'width': 200, 'height': 100}, 'same-step')),
-            ('home', HomeAdapter(), lambda c: deploy_home(c, '__everyone__',
-                {'items': [], 'rows': []}, 1, 'same-step'))]
-        for name, adapter, action in actions:
-            with self.subTest(action=name):
-                client = self.client(name, adapter)
-                action(client)
-                result = action(client)
-                self.assertEqual(result['write'], 'already-matched')
-                self.assertEqual(adapter.writes, 1)
 
-    def test_pivot_applied_before_response_loss_reconciles(self):
-        adapter = PageAdapter(lose_response=True)
-        client = self.client('lost-pivot', adapter)
-        with self.assertRaisesRegex(RuntimeError, 'interrupted'):
-            select_saved_pivot(client, '201', '101', '301', 'pivot')
-        self.assertEqual(select_saved_pivot(client, '201', '101', '301', 'pivot')['write'], 'already-matched')
-        self.assertEqual(adapter.writes, 1)
 
     def test_orphan_override_is_not_a_complete_inventory(self):
         page = native_page()
@@ -241,12 +206,6 @@ class IndependentApiTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Orphan'):
             audit(page)
 
-    def test_unrelated_page_property_drift_fails_readback(self):
-        before = native_page()
-        after = copy.deepcopy(before)
-        after['payload']['properties']['properties']['pageFilter'] = 'unexpected change'
-        with self.assertRaisesRegex(ValueError, 'Unrelated page'):
-            verify_unchanged(before, after, '101', {'x': 20, 'y': 20, 'width': 200, 'height': 100})
 
     def test_false_string_does_not_enable_cross_axis_capability(self):
         sheet = {'sheetId': 'sheet', 'rows': ['Employee'], 'columns': ['Month'],
@@ -265,9 +224,9 @@ class IndependentApiTests(unittest.TestCase):
             input=text.encode('utf-8'), capture_output=True, check=True, timeout=30).stdout.decode('ascii')
         self.assertEqual(decode_roles(compressed, node), json.loads(text))
 
-    def test_native_place_rejects_traversal_label_before_any_api(self):
+    def test_native_home_rejects_traversal_label_before_any_api(self):
         cli = runpy.run_path(str(ROOT / 'plan.py'), run_name='independent_cli_test')
-        argv = ['plan.py', 'native', 'place', '--config', 'unused', '--input', 'unused',
+        argv = ['plan.py', 'native', 'home', '--config', 'unused', '--input', 'unused',
                 '--run', str(self.directory / 'run'), '--label', '../escaped']
         with patch.object(sys, 'argv', argv), patch('runtime.session.native_session') as session:
             with self.assertRaisesRegex(ValueError, 'Unsafe operation label'):
@@ -296,12 +255,33 @@ class WorkflowRegressionTests(unittest.TestCase):
         def client(base, env, allowed=None, journal=None):
             return Client(base, env, allowed, journal, server.public, sleep=lambda seconds: None)
         @contextmanager
-        def native(base, env, workspace, plan, journal, native_read_versions=None):
+        def native(base, env, workspace, plan, journal):
             yield Client('https://example.invalid/native', env, journal=journal,
                          adapter=server.native, sleep=lambda seconds: None)
         with patch('runtime.workflow.Client', client), patch('runtime.workflow.native_session', native):
             return provision(config, model, spec, directory)
 
+    def test_native_calls_for_standard_provision_are_only_home(self):
+        server = WorkflowServer()
+        observed = []
+        original = server.native
+        def native(method, url, headers, body):
+            observed.append((method, url))
+            return original(method, url, headers, body)
+        server.native = native
+        result = self.run_workflow(server, self.directory / 'restricted')
+        self.assertTrue(observed)
+        self.assertTrue(all('/v1/access/roles/layout/' in url for method,url in observed))
+        self.assertEqual(result['dashboards'][0]['geometrySource'],'public-create')
+        self.assertEqual(result['visibilitySource'],'public-create')
+    def test_successful_layout_and_home_complete_the_new_report(self):
+        server = WorkflowServer()
+        with patch('runtime.workflow.deploy_home',return_value={'write':'submitted'}) as home:
+            result = self.run_workflow(server, self.directory / 'successful')
+        home.assert_called_once()
+        self.assertEqual((server.creates,server.updates),(1,0))
+        self.assertTrue(result['originalScopeComplete'],result['phaseErrors'])
+        self.assertEqual(result['mandatoryDefaults']['dashboardSaves'],1)
     def test_public_create_contains_visibility_and_complete_grid(self):
         server = WorkflowServer()
         self.run_workflow(server, self.directory / 'create')
@@ -322,35 +302,7 @@ class WorkflowRegressionTests(unittest.TestCase):
         self.run_workflow(server, directory)
         self.assertEqual((server.creates, server.updates), (1, 0))
 
-    def test_native_calls_for_standard_provision_are_only_home(self):
-        server = WorkflowServer()
-        observed = []
-        original = server.native
-        def native(method, url, headers, body):
-            observed.append((method, url))
-            return original(method, url, headers, body)
-        server.native = native
-        with patch('runtime.navigation_publish.publish',side_effect=AssertionError('navigation publication')), \
-             patch('runtime.intelligence_api.visibility_native',side_effect=AssertionError('visibility writer')), \
-             patch('runtime.session.columns',side_effect=AssertionError('grid validation')):
-            result = self.run_workflow(server, self.directory / 'restricted')
-        self.assertTrue(observed)
-        self.assertTrue(all('/v1/access/roles/layout/' in url for method,url in observed))
-        self.assertEqual(result['dashboards'][0]['geometrySource'],'public-create')
-        self.assertEqual(result['visibilitySource'],'public-create')
 
-    def test_successful_layout_and_home_complete_the_new_report(self):
-        server = WorkflowServer()
-        with patch('runtime.intelligence_api.deploy_geometry',side_effect=AssertionError('unexpected native alignment')) as geometry, \
-             patch('runtime.workflow.deploy_home',return_value={'write':'submitted'}) as home, \
-             patch('runtime.navigation_publish.publish',side_effect=AssertionError('unexpected navigation')), \
-             patch('runtime.session.columns',side_effect=AssertionError('unexpected grid validation')):
-            result = self.run_workflow(server, self.directory / 'successful')
-        geometry.assert_not_called()
-        home.assert_called_once()
-        self.assertEqual((server.creates,server.updates),(1,0))
-        self.assertTrue(result['originalScopeComplete'],result['phaseErrors'])
-        self.assertEqual(result['mandatoryDefaults']['dashboardSaves'],1)
 
     def test_hidden_dashboard_is_rejected_before_create(self):
         from runtime.application_defaults import require_business_navigation

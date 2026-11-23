@@ -80,25 +80,6 @@
       ],
       "phase": "local"
     },
-    "column-create": {
-      "command": "python plan.py builder-api column-create --config builder.json --input create.request.json --run run --label column",
-      "description": "Create or resume a native column after destination identities exist; verify SQL columnType or OneLake dataInputType without duplicate creation.",
-      "inputs": "Application builder profile; request visual_id, payload and optional version. Complete asynchronous creation before registering dependents. See native-column-readback.md; keep the same authored measureGuid after a saved-record validation failure.",
-      "symbols": [
-        "runtime.builder_api.create_column",
-        "runtime.builder_api.column_matches"
-      ],
-      "phase": "live-write"
-    },
-    "column-register": {
-      "command": "python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration",
-      "description": "Register the created measure in visibility, aggregation and formatting companions.",
-      "inputs": "Request entity_id, visual_id, payload, row_aggregation, column_aggregation, format_entries and optional visible. Use returned destination IDs. Saved native type validation accepts the verified OneLake alias; native-column-readback.md.",
-      "symbols": [
-        "runtime.builder_api.register_column"
-      ],
-      "phase": "live-write"
-    },
     "forecast": {
       "command": "python plan.py build --model current-model.json --spec forecast.json --out draft",
       "description": "Construct complete native Forecast via a Planning measure with kind Forecast. New editable inputs explicitly use ReadAndEdit unless an explicit mode or formula condition is supplied.",
@@ -111,11 +92,10 @@
       "phase": "local"
     },
     "forecast-review": {
-      "command": "python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run",
+      "command": null,
       "description": "Apply direct From Sheets SUM, quarterly text commentary, formula variance, negative formatting and comparison charts after base import.",
       "inputs": "Adapt the named source/target sheets, measures and charts in examples/forecast-review.request.json to the current application. Resolve actuals, source Forecast and compatible destination grain.",
       "symbols": [
-        "runtime.forecast_review.quarterly_review",
         "runtime.forecast_review.from_sheet_assignment",
         "runtime.forecast_review.comparison_chart",
         "runtime.forecast_review.apply_negative_variance"
@@ -132,12 +112,11 @@
       "phase": "local"
     },
     "pivot": {
-      "command": "python plan.py native pivot --config destination.json --input pivot.request.json --run run --label pivot",
+      "command": null,
       "description": "Activate an existing saved Pivot after building its symbolic configuration.",
       "inputs": "Build sheet pivots/activePivot first; request entityId, visualId, pivotId from the current destination.",
       "symbols": [
-        "runtime.pivots.compile_pivots",
-        "runtime.activation.select_saved_pivot"
+        "runtime.pivots.compile_pivots"
       ],
       "phase": "live-write"
     },
@@ -175,24 +154,6 @@
         "runtime.rule_factories.verify_saved_rule"
       ],
       "phase": "local"
-    },
-    "rule-create": {
-      "command": "python plan.py builder-api rule-create --config engine.json --input rule-create.request.json --run run --label rule",
-      "description": "Submit a supported rule on a verified engine rules mount.",
-      "inputs": "Engine builder profile, engineRulesMountVerified and payload. Rule persistence/trigger execution are separate from submission.",
-      "symbols": [
-        "runtime.builder_api.create_rule"
-      ],
-      "phase": "live-write"
-    },
-    "bridge-query": {
-      "command": "python plan.py builder-api bridge-query --config builder.json --input operation.request.json --run run --label bridge-query",
-      "description": "Inspect or execute the selected InfoBridge phase; respect source/job dependencies.",
-      "inputs": "query_id",
-      "symbols": [
-        "runtime.builder_api.bridge_query"
-      ],
-      "phase": "live-read"
     },
     "bridge-append": {
       "command": "python plan.py construct-bridge append --input bridge.request.json --out bridge.json",
@@ -247,42 +208,6 @@
         "runtime.bridge.planning_source"
       ],
       "phase": "local"
-    },
-    "bridge-inventory": {
-      "command": "python plan.py builder-api bridge-inventory --config builder.json --input operation.request.json --run run --label bridge-inventory",
-      "description": "Inspect or execute the selected InfoBridge phase; respect source/job dependencies.",
-      "inputs": "workload_id",
-      "symbols": [
-        "runtime.builder_api.bridge_inventory"
-      ],
-      "phase": "live-read"
-    },
-    "bridge-reload": {
-      "command": "python plan.py builder-api bridge-reload --config builder.json --input operation.request.json --run run --label bridge-reload",
-      "description": "Inspect or execute the selected InfoBridge phase; respect source/job dependencies.",
-      "inputs": "query_id",
-      "symbols": [
-        "runtime.builder_api.reload_query"
-      ],
-      "phase": "live-write"
-    },
-    "bridge-poll": {
-      "command": "python plan.py builder-api bridge-poll --config builder.json --input operation.request.json --run run --label bridge-poll",
-      "description": "Inspect or execute the selected InfoBridge phase; respect source/job dependencies.",
-      "inputs": "workload_id, job_ids, event_id_fields, status_field and the actual notification profile",
-      "symbols": [
-        "runtime.builder_api.poll_bridge"
-      ],
-      "phase": "live-read"
-    },
-    "bridge-stream": {
-      "command": "python plan.py builder-api bridge-stream --config builder.json --input operation.request.json --run run --label bridge-stream",
-      "description": "Inspect or execute the selected InfoBridge phase; respect source/job dependencies.",
-      "inputs": "source_id; optional skip, limit",
-      "symbols": [
-        "runtime.builder_api.source_parquet"
-      ],
-      "phase": "live-read"
     },
     "bridge-consumer": {
       "command": "python plan.py construct-native bridge-consumer --input consumer.request.json --out consumer.json",
@@ -339,24 +264,6 @@
       ],
       "phase": "local"
     },
-    "table-initialize": {
-      "command": "python plan.py builder-api powertable-initialize --config builder.json --input initialize.request.json --run run --label table",
-      "description": "Initialize the supported existing-table source directly; the complete ALM path is also available.",
-      "inputs": "payload; actual destination source/visual identity returned by service.",
-      "symbols": [
-        "runtime.builder_api.initialize_powertable"
-      ],
-      "phase": "live-write"
-    },
-    "table-schema": {
-      "command": "python plan.py builder-api powertable-schema --config builder.json --input schema.request.json --run run --label schema",
-      "description": "Read the initialized source schema.",
-      "inputs": "source_id from destination.",
-      "symbols": [
-        "runtime.builder_api.powertable_schema"
-      ],
-      "phase": "live-read"
-    },
     "table-rows": {
       "command": "python plan.py construct-native powertable-rows --input rows.request.json --out rows.payload.json",
       "description": "Serialize supported insert/update rows using actual SQL metadata.",
@@ -365,15 +272,6 @@
         "runtime.powertable_factory.row_save"
       ],
       "phase": "local"
-    },
-    "table-save": {
-      "command": "python plan.py builder-api powertable-save --config builder.json --input save.request.json --run run --label rows",
-      "description": "Submit authorized physical row changes; terminal jobs and physical readback are separate.",
-      "inputs": "source_id, payload, version, route_shape.",
-      "symbols": [
-        "runtime.builder_api.save_powertable"
-      ],
-      "phase": "live-write"
     },
     "intelligence": {
       "command": "python plan.py build --model current-model.json --spec dashboard.json --out draft",
@@ -396,15 +294,6 @@
       ],
       "phase": "local"
     },
-    "place": {
-      "command": "python plan.py native place --config destination.json --input placement.request.json --run run --label place",
-      "description": "Place a visual with fresh ETags and page-local geometry.",
-      "inputs": "entityId, visualId, rectangle and optional gap. Preserve source geometry for embeds.",
-      "symbols": [
-        "runtime.layout.place_native"
-      ],
-      "phase": "live-write"
-    },
     "home": {
       "command": "python plan.py native home --config destination.json --input home.request.json --run run --label home",
       "description": "Save readable Home content, role priority and optional visibility.",
@@ -413,33 +302,6 @@
         "runtime.home_fit.readable_home_layout",
         "runtime.surfaces.home_item",
         "runtime.home_api.deploy_home"
-      ],
-      "phase": "live-write"
-    },
-    "home-priority": {
-      "command": "python plan.py builder-api home-priority --config builder.json --input priority.request.json --run run --label priority",
-      "description": "Set current Home role-layout order.",
-      "inputs": "orders; actual role IDs. This does not grant access.",
-      "symbols": [
-        "runtime.home_api.set_priorities"
-      ],
-      "phase": "live-write"
-    },
-    "home-effective": {
-      "command": "python plan.py builder-api home-effective --config builder.json --input empty.json --run run --label effective",
-      "description": "Read effective Home selection for the current user.",
-      "inputs": "Empty JSON object and authorized current profile.",
-      "symbols": [
-        "runtime.home_api.effective_home"
-      ],
-      "phase": "live-read"
-    },
-    "bookmark": {
-      "command": "python plan.py builder-api bookmark-upsert --config builder.json --input bookmark.request.json --run run --label bookmark",
-      "description": "Persist a complete known public bookmark capture with current ETags.",
-      "inputs": "slug, capture. Full capture-options construction and restore/application remain incomplete.",
-      "symbols": [
-        "runtime.builder_api.upsert_bookmark"
       ],
       "phase": "live-write"
     },
@@ -453,15 +315,6 @@
         "runtime.navigator_defaults.require_complete_defaults"
       ],
       "phase": "local"
-    },
-    "navigator-create": {
-      "command": "python plan.py builder-api navigator-create --config builder.json --input navigator-create.request.json --run run --label navigator",
-      "description": "Create and place the Navigator using current target catalogs and ETags.",
-      "inputs": "entity_id, visual_guid, navigator_state, rectangle, pages, bookmarks; optional gap.",
-      "symbols": [
-        "runtime.navigator_api.create"
-      ],
-      "phase": "live-write"
     },
     "bridge-construct-query": {
       "command": "python plan.py construct-bridge query --input bridge.request.json --out bridge.json",
@@ -870,15 +723,6 @@
       ],
       "phase": "local"
     },
-    "bookmark-read": {
-      "command": "python plan.py builder-api bookmark-read --config target.json --input bookmark.json --run run --label read-bookmark",
-      "description": "Read the native public capture by exact slug, retaining runtime measure identities.",
-      "inputs": "Current slug and artifact-scoped authenticated client.",
-      "symbols": [
-        "runtime.builder_api.read_bookmark"
-      ],
-      "phase": "live-read"
-    },
     "home-role": {
       "command": "python plan.py builder-api home-role --config target.json --input role.json --run run --label read-home",
       "description": "Read V2 Home role content independently from exported Home properties.",
@@ -887,24 +731,6 @@
         "runtime.home_api.role_content"
       ],
       "phase": "live-read"
-    },
-    "powertable-schema": {
-      "command": "python plan.py builder-api powertable-schema --config target.json --input source.json --run run --label read-schema",
-      "description": "Read PowerTable details and physical schema independently, with explicit component status.",
-      "inputs": "Current native source_id from the intended visual; source record GUID is not interchangeable.",
-      "symbols": [
-        "runtime.builder_api.powertable_schema"
-      ],
-      "phase": "live-read"
-    },
-    "planning-rule-save": {
-      "command": null,
-      "description": "Save a measure-weighted rule on its actual Planning owner using fresh ETags and exact readback; preserve unrelated state. Configuration only, no allocation execution.",
-      "inputs": "Current native owner, validated rule payload, fresh authored record ID.",
-      "symbols": [
-        "runtime.planning_rule_state.save_rule"
-      ],
-      "phase": "native saved-state"
     },
     "sql-schema-definition": {
       "command": null,
@@ -933,8 +759,7 @@
       "command": null,
       "description": "Finish required Arial defaults after service-expanded native chart creation.",
       "symbols": [
-        "runtime.application_typography.normalize_arial",
-        "runtime.application_typography.finish_native_typography"
+        "runtime.application_typography.normalize_arial"
       ],
       "phase": "native",
       "inputs": "Artifact-scoped client; optional current numeric owner entity IDs."
@@ -951,16 +776,6 @@
       ],
       "phase": "construct",
       "inputs": "Complete owner properties, exact owner identity and measure_id/row_fields/column_fields requests. No saved donor hash required. Base build alternative: per-measure anchor options.",
-      "enabled": true
-    },
-    "anchor-save": {
-      "command": "python plan.py builder-api anchor-apply --config CONFIG --input REQUEST --run RUN --label LABEL",
-      "description": "Save current-owner anchors through the existing ETag properties batch route; no value writes or runtime test.",
-      "symbols": [
-        "runtime.anchor_measures.save_anchors"
-      ],
-      "phase": "native-save",
-      "inputs": "Authorized application session; entity_id, actual nonembedded visual_id, requests; optional expose_entry_totals. Reads current owner itself.",
       "enabled": true
     }
   },
@@ -996,10 +811,7 @@
           "command": "python plan.py reference verified-authoring-flow.md"
         }
       ],
-      "operations": [
-        "column-create",
-        "column-register"
-      ],
+      "operations": [],
       "prerequisites": "Current owner-scoped catalog, destination visual identity and original authored measureGuid/payload. Use the documented write field columnType.",
       "limitations": "OneLake readback may use dataInputType. Reject conflicting, wrong or missing types and metadata/context mismatches. Never rename semantic Column fields or guess write routes. Offline readback/resume tests do not establish UI or financial correctness.",
       "related": [
@@ -1031,9 +843,7 @@
         "decode",
         "inspect-reference-views",
         "number-parameter",
-        "bookmark-read",
-        "home-role",
-        "powertable-schema"
+        "home-role"
       ],
       "prerequisites": "Current authorized reference export and native reads; actual owner, source and role identities.",
       "limitations": "Read-only saved configuration evidence and number parameter construction. Does not close arbitrary bookmark snapshot construction or restore; no live input/SQL row writes or dashboard rendering are inferred.",
@@ -1191,9 +1001,7 @@
         "VERIFIED-AUTHORING-FLOW",
         "INFOBRIDGE-MAPPING"
       ],
-      "examples": [
-        "examples/metadata-backend-routing/build.py"
-      ]
+      "examples": []
     },
     {
       "id": "VERIFIED-AUTHORING-FLOW",
@@ -1541,7 +1349,6 @@
       ],
       "operations": [
         "build",
-        "place",
         "planning-column-presentation",
         "planning-totals",
         "roll-forward-presentation"
@@ -1601,7 +1408,6 @@
       ],
       "operations": [
         "build",
-        "column-register",
         "usecase"
       ],
       "prerequisites": "Establish additive, semi-additive or formula semantics per measure.",
@@ -1663,7 +1469,6 @@
       ],
       "operations": [
         "format-matrix",
-        "column-register",
         "build",
         "present-planning",
         "check-application-presentation",
@@ -1782,8 +1587,6 @@
       ],
       "operations": [
         "input",
-        "column-create",
-        "column-register",
         "forecast-review",
         "usecase",
         "planning-display-defaults"
@@ -2296,7 +2099,6 @@
         "format-matrix",
         "build",
         "intelligence",
-        "place",
         "check-planning-properties",
         "repair-planning-properties",
         "present-planning",
@@ -2544,11 +2346,6 @@
         "bridge-sql",
         "bridge-editable-source",
         "contribution",
-        "bridge-inventory",
-        "bridge-query",
-        "bridge-reload",
-        "bridge-poll",
-        "bridge-stream",
         "bridge-consumer",
         "resolve-measure-binding",
         "planning-display-defaults"
@@ -2711,8 +2508,7 @@
         }
       ],
       "operations": [
-        "anchor-construct",
-        "anchor-save"
+        "anchor-construct"
       ],
       "prerequisites": "Resolve the actual measure, full sheet grain, decision/display grain, existing distribution and exact source metadata identities. Hash all ordered current pivot dimensions and expose entry totals.",
       "limitations": "First-anchor base construction and current-owner ETag updates are implemented with native XXH3 hashing. General disable/reset serialization, cross-layout migration and native propagation/render/edit enforcement remain separate gaps.",
@@ -2937,9 +2733,7 @@
         }
       ],
       "operations": [
-        "bookmark",
-        "navigator",
-        "navigator-create"
+        "navigator"
       ],
       "prerequisites": "Complete supported capture, current page/visual identities and current ETags.",
       "limitations": "Persistence of a complete capture is executable; universal snapshot construction and restore/application are incomplete. Navigator alone does not create a working saved view.",
@@ -2995,8 +2789,6 @@
       "operations": [
         "provision",
         "home",
-        "home-priority",
-        "home-effective",
         "check-application-defaults",
         "usecase"
       ],
@@ -3158,7 +2950,6 @@
       "operations": [
         "intelligence",
         "embed",
-        "place",
         "check-application-defaults",
         "planning-column-presentation",
         "integrated-variance",
@@ -3274,9 +3065,7 @@
       ],
       "operations": [
         "input",
-        "build",
-        "column-create",
-        "column-register"
+        "build"
       ],
       "prerequisites": "Explicit changed input, target measure identities and supported side-effect formula semantics.",
       "limitations": "Use on_change in build input specs or on_change in input_create; handlers are distinct from forecast open defaults and ordinary formula evaluation. Configuration does not prove event execution.",
@@ -3322,7 +3111,6 @@
       "operations": [
         "build",
         "input",
-        "column-register",
         "forecast",
         "plan-intent"
       ],
@@ -3518,7 +3306,6 @@
         "intelligence",
         "provision",
         "forecast-review",
-        "place",
         "resolve-measure-binding",
         "check-application-defaults",
         "integrated-variance",
@@ -3608,10 +3395,7 @@
         "powertable",
         "table-column",
         "table-source",
-        "table-initialize",
-        "table-schema",
         "table-rows",
-        "table-save",
         "deferred-table",
         "update",
         "table-config-repair"
@@ -3725,9 +3509,7 @@
       ],
       "operations": [
         "weighted-rule",
-        "rule",
-        "rule-create",
-        "planning-rule-save"
+        "rule"
       ],
       "prerequisites": "Actual Planning owner and current target/weight identities; exact intended axis, weight basis and destination selectors. Engine mount verification is needed only for the engine New route.",
       "limitations": "Captured Column and Row/All/Measure/CurrentYear profiles are constructible and saved-state readback is supported. Additional reference/period syntax and runtime allocation acceptance remain separate checks. Never substitute parent-input distribution or silently widen scope.",
@@ -3871,8 +3653,6 @@
       "operations": [
         "build",
         "formula",
-        "column-create",
-        "column-register",
         "forecast-review"
       ],
       "prerequisites": "Resolved dependency graph, correct grain/units and native formula symbols.",
@@ -3961,8 +3741,7 @@
         "build",
         "provision",
         "check-application-defaults",
-        "navigator",
-        "navigator-create"
+        "navigator"
       ],
       "prerequisites": "Current pages/bookmarks, supported host registration and complete placement inventory.",
       "limitations": "All-visible-page navigation is integrated via ALM and the native geometry/state save phase. Additional targeted buttons/bookmark tabs use separate helpers and resolved destination IDs. Host create-endpoint compatibility is independent of ALM registration; static checks do not prove rendered navigation.",
@@ -4298,8 +4077,6 @@
         "planning-totals",
         "plan-intent",
         "formula",
-        "column-create",
-        "column-register",
         "fit-planning-header",
         "planning-hierarchy-icons"
       ],
@@ -4436,7 +4213,6 @@
         "bind-bridge-outputs",
         "bridge-source",
         "bridge-construct-query",
-        "bridge-query",
         "bridge-consumer"
       ],
       "prerequisites": "Current owner measure records and typed source catalog; exact destination query metadata for post-import binding.",
@@ -4537,9 +4313,7 @@
         "planning-time-column",
         "input",
         "formula",
-        "forecast",
-        "column-create",
-        "column-register"
+        "forecast"
       ],
       "prerequisites": "Current model fields and valid calendar parentage Resolve single-sheet versus shared dashboard cutoff, missing values, row aggregation and storage context",
       "limitations": "Local constructors do not prove runtime evaluation or dashboard interactions Shared slicer route needs separately authored semantic measure/selector and configured interactions Dataset-backed date List is the captured parameter serializer; other parameter types require their own confirmed contract",

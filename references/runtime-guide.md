@@ -62,7 +62,7 @@
 > provisioning, separate phases and actual gaps. Preserve the latest targeted
 > fixes; historical coverage statements below are release-scoped.
 
-> Executable Forecast review update: use [forecast-review-execution.md](forecast-review-execution.md) and `plan.py forecast-review` for From Sheets SUM, quarterly commentary/variance, negative formatting and comparison charts. This separate post-import phase is bundled; do not treat a convenience-provisioner omission as missing capability. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
+> Forecast review: author From Sheets SUM, quarterly commentary/variance, negative formatting and comparison charts in the public definition; see [forecast-review-execution.md](forecast-review-execution.md). The separate native post-import phase is no longer bundled. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
 
 > Current Forecast policy: forecasting requests use native Forecast with closed periods linked to actuals. Unspecified open defaults use None/Blank; explicit formula or measure defaults remain editable. Read `forecast-authoring.md` and use `runtime/forecast.py` through the composed constructor.
 
@@ -189,7 +189,6 @@ Plan definition carries the grid measures.
 ```text
 python plan.py native home --config target-config.json --input home-request.json --run run/home --label home
 # The public definition carries direct visual rectangles and page-local embedded matrix placement.
-python plan.py native pivot --config target-config.json --input pivot-request.json --run run/pivot --label summary-view
 ```
 
 Service request inputs are generated from the current registry: Home

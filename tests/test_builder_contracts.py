@@ -3,7 +3,7 @@ import base64,copy,os,tempfile,unittest,socket
 from pathlib import Path
 from decimal import Decimal
 from unittest.mock import patch
-from runtime import input_factories as inputs,rule_factories as rules,builder_api as api
+from runtime import input_factories as inputs,rule_factories as rules
 from runtime.cube_contract import multi_dimension_settings
 from runtime import powertable_factory as pt,home_api,navigator_api
 from runtime.transport import Client,HttpError
@@ -76,12 +76,6 @@ class BuilderContracts(unittest.TestCase):
             referenceMeasures=[],newPartitions=[],existingPartitions=[],cubeModel='LEGACY')
         with self.assertRaises(ValueError):inputs.input_create(
             '501','Invalid cube','Number',{},'config',cube_model='DYNAMIC')
-    def test_rules_keep_logical_identity_and_require_selected_mount(self):
-        r=rules.new_rule('501','Locked approved plan',rules.lock(True),rows={'Dimension':'401'},measures={'SelectedMeasures':['601']})
-        self.assertEqual(r['ruleOperation']['New']['rule_id'],'501');self.assertNotIn('id',r['ruleOperation']['New'])
-        with self.assertRaises(ValueError):api.create_rule(None,r,'rule')
-        with self.assertRaises(ValueError):rules.min_max({'Static':{}},{'Static':{}})
-        with self.assertRaises(ValueError):rules.min_max({'Static':{'value':1,'is_exclusive':True}},{'Static':{'value':1}})
     def test_insert_compression_preserves_unicode_decimal_and_u64(self):
         meta=[{'id':'id','isPrimaryKey':True,'isEditable':False},{'id':'Name'},{'id':'Amount'},{'id':'ExternalKey'}]
         rows=[['地域 – Málaga',Decimal('123.456789012345678901'),18446744073709551615]]
@@ -90,53 +84,7 @@ class BuilderContracts(unittest.TestCase):
         self.assertEqual(out['createData']['records'],rows)
         self.assertEqual([m['id'] for m in p['metaData']],['Name','Amount','ExternalKey'])
         with self.assertRaises(ValueError):pt.row_save(meta,'insert',rows,visual_meta={'rowIds':[],'optionsMeta':{}},node=self.node())
-    def test_power_save_routes_are_explicit_and_octet(self):
-        calls=[]
-        def adapter(method,url,headers,body):calls.append((url,headers,loads(body.decode())));return reply({'jobId':'job-a'})
-        c=self.client(adapter);payload={'data':'actual-encoder-output','actions':['update']}
-        for version,shape in [('v3','source-qualified'),('v4','context-only')]:
-            r=api.save_powertable(c,'source-a',payload,version,version=version,route_shape=shape)
-            self.assertEqual(r['rowsSaved'],'not-verified')
-        self.assertTrue(calls[0][0].endswith('/v3/powertable-source/source-a/data/save/'))
-        self.assertTrue(calls[1][0].endswith('/v4/powertable-source/data/save/'))
-        self.assertEqual(calls[0][1]['Content-Type'],'application/octet-stream')
-        with self.assertRaises(ValueError):api.save_powertable(c,'s',payload,'bad',version='v4',route_shape='guess')
-    def test_bridge_reload_no_body_and_aliases(self):
-        calls=[]
-        def adapter(method,url,headers,body):
-            calls.append((method,url,body))
-            if method=='POST':return reply({'jobIds':['record-a','record-b']})
-            return reply({'events':[{'executionId':'worker-a','state':200},{'jobId':'record-b','state':200},{'jobId':'unrelated','state':400}]})
-        c=self.client(adapter);r=api.reload_query(c,'q/a','reload');self.assertIsNone(calls[0][2])
-        out=api.poll_bridge(c,'workload',r['jobIds'],event_id_fields=['executionId','jobId'],status_field='state',aliases={'record-a':'worker-a'},max_polls=1,interval=0)
-        self.assertEqual(out['status'],'all-expected-jobs-succeeded');self.assertIn('q%2Fa',calls[0][1])
-    def test_stream_202_is_pending_and_binary_not_value_proof(self):
-        class Fake:
-            def __init__(self,result):self.result=result
-            def request(self,*a,**kw):return self.result
-        pending=api.source_parquet(Fake(reply({'jobIds':['record-a']},202)),'source')
-        self.assertNotIn('bytes',pending);self.assertEqual(pending['status'],'pending-user-output')
-        data=b'PAR1'+bytes(8)+b'PAR1'
-        got=api.source_parquet(Fake({'status':200,'body':{'binaryBase64':base64.b64encode(data).decode()}}),'source')
-        self.assertEqual(got['bytes'],data);self.assertEqual(got['schemaAndValues'],'not-decoded-or-verified')
-    def test_bookmark_update_uses_current_etag_and_replay_verifies(self):
-        capture={'name':'Region','bookmarkType':20,'bookmarkMeta':{'bookmarkSlug':'view-a','activePageId':'201'},'bookmarkVisualMeta':{'101':{'syntheticCapture':True}}}
-        current={**copy.deepcopy(capture),'name':'Old','etag':'v1'};writes=[]
-        def adapter(method,url,headers,body):
-            if method=='GET':return reply(copy.deepcopy(current))
-            p=loads(body.decode());writes.append(p);current.update(p['view-a']);current['etag']='v2';return reply({'etags':{'view-a':'v2'}})
-        c=self.client(adapter)
-        self.assertEqual(api.upsert_bookmark(c,'view-a',capture,'bookmark')['etag'],'v2')
-        self.assertEqual(writes[0]['view-a']['etag'],'v1')
-        api.upsert_bookmark(c,'view-a',capture,'bookmark');self.assertEqual(len(writes),1)
         # Synthetic capture above tests persistence only, not a product capture factory.
-    def test_bookmark_stale_etag_and_empty_snapshot_reject(self):
-        capture={'name':'New','bookmarkType':20,'bookmarkMeta':{'bookmarkSlug':'a'},'bookmarkVisualMeta':{'101':{'syntheticCapture':True}},'etag':'old'}
-        current={**capture,'name':'Old','etag':'current'}
-        def adapter(method,*_):self.assertEqual(method,'GET');return reply(current)
-        with self.assertRaises(ValueError):api.upsert_bookmark(self.client(adapter),'a',capture,'bookmark')
-        capture['bookmarkVisualMeta']={}
-        with self.assertRaises(ValueError):api.upsert_bookmark(None,'a',capture,'empty')
     def test_navigator_new_shape_is_not_legacy_corner_profile(self):
         s=navigator_api.state('NAVIGATOR_BUTTON',page_target='201',palette={'fill':'#FFFFFF','activeFill':'#087F8C'})
         keys=s['style']['DEFAULT']['shapeState']['cornerRadius'].keys()

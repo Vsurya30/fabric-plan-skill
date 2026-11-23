@@ -33,7 +33,7 @@ older comparison examples; original supplied documents remain preserved.
 > provisioning, separate phases and actual gaps. Preserve the latest targeted
 > fixes; historical coverage statements below are release-scoped.
 
-> Executable Forecast review update: use [forecast-review-execution.md](forecast-review-execution.md) and `plan.py forecast-review` for From Sheets SUM, quarterly commentary/variance, negative formatting and comparison charts. This separate post-import phase is bundled; do not treat a convenience-provisioner omission as missing capability. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
+> Forecast review: author From Sheets SUM, quarterly commentary/variance, negative formatting and comparison charts in the public definition; see [forecast-review-execution.md](forecast-review-execution.md). The separate native post-import phase is no longer bundled. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
 
 # Standalone builder contract integration
 
@@ -74,28 +74,9 @@ The agent authors command inputs from current business requirements and actual A
 | `construct-native powertable-source` | `powertable_factory.existing_source(table,connection,explicit?)` |
 | `construct-native powertable-rows` | `powertable_factory.row_save(metadata,operation,records,conditions?,visual_meta,relations?,generated_keys?)` |
 | `construct-native navigator` | `navigator_api.state(kind?,page_target?,bookmark_target?,web_url?,selected_pages?,hidden_bookmarks?,caption?,palette?)` |
-| `builder-api column-create` | `{visual_id,payload,version?}`; `payload` is the native factory output |
-| `builder-api column-register` | `{entity_id,visual_id,payload,row_aggregation,column_aggregation,format_entries,visible?}` |
-| `builder-api rule-create` | `{payload}` plus config engine mount verification |
-| `builder-api bridge-inventory` | `{workload_id}` |
-| `builder-api bridge-query` | `{query_id}` |
-| `builder-api bridge-reload` | `{query_id}`; preserves returned job IDs |
-| `builder-api bridge-poll` | `{workload_id,job_ids,event_id_fields,status_field,timestamp_field?,query_id?,target_visual_ids?,aliases?,max_polls?,interval?}` |
-| `builder-api bridge-stream` | `{source_id,skip?,limit?}`; writes returned binary separately |
-| `builder-api powertable-initialize` | `{payload}` from existing-table constructor |
-| `builder-api powertable-schema` | `{source_id}` resolved from actual returned source |
-| `builder-api powertable-save` | `{source_id,payload,version,route_shape}` |
-| `builder-api bookmark-upsert` | `{slug,capture}`; complete capture required, not synthesized from a caption |
-| `builder-api navigator-create` | `{entity_id,visual_guid,navigator_state,rectangle,pages,bookmarks,gap?}`; catalogs must be current |
-| `builder-api home-upload` | `{path,workload_id}`; existing authorized image bytes |
-| `builder-api home-priority` | `{orders:[{roleId,homeLayoutOrder}]}` |
-| `builder-api home-effective` | `{}` |
 
 ```text
 python plan.py construct-native input --input authored-input.json --out native-column.json
-python plan.py builder-api column-create --config destination-profile.json --input column-create-request.json --run run/columns --label salary-driver
-python plan.py builder-api bridge-reload --config destination-profile.json --input bridge-query.json --run run/bridge --label reload-workforce
-python plan.py builder-api bridge-poll --config destination-profile.json --input returned-jobs.json --run run/bridge --label verify-workforce
 python plan.py native home --config destination-profile.json --input home-request.json --run run/home --label home
 ```
 

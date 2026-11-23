@@ -7,7 +7,7 @@ from runtime.identity import *
 from runtime.construct import build,navigator,acyclic
 from runtime.bridge import *
 from runtime.surfaces import *
-from runtime.layout import inventory,audit,find,placement_batch,verify_unchanged
+from runtime.layout import inventory,audit,find
 from runtime.validate import validate_plan,Schemas,SchemaGap,Invalid,schema_report
 from runtime.transport import Client,HttpError,plan_operation
 def setUpModule():
@@ -201,13 +201,6 @@ class LayoutTests(unittest.TestCase):
         with self.assertRaises(ValueError): inventory(p)
         p=page(); p['payload']['properties']['properties']['canvasStyle']['dimension']['elementScalingUnit']='points'
         with self.assertRaises(ValueError): inventory(p)
-    def test_stale_and_source_preserved(self):
-        p=page(); inv=inventory(p); r={'x':20,'y':200,'width':560,'height':270}
-        with self.assertRaises(ValueError): placement_batch(p,'page','linked',r,'wrong')
-        batch=placement_batch(p,'page','linked',r,inv['fingerprint']); self.assertEqual(batch['visuals'],{})
-        after=copy.deepcopy(p); after['payload']['properties']=batch['workloadEntities']['page']; verify_unchanged(p,after,'linked',r,gap=16)
-        after['payload']['visuals'][1]['properties']['properties']['position']['x']=99
-        with self.assertRaises(ValueError): verify_unchanged(p,after,'linked',r)
     def test_overlap_and_bounds(self):
         p=page(); p['payload']['properties']['properties']['reactiveVisualProperties'][0]['properties']['position']['y']=50
         with self.assertRaises(ValueError): audit(p)

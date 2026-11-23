@@ -1,5 +1,5 @@
-"""Independent geometry reader/auditor and native page-property transactions."""
-import copy, math
+"""Independent geometry reader and auditor."""
+import math
 from decimal import Decimal
 from .codec import sha,dumps
 def number(v): return not isinstance(v,bool) and isinstance(v,(int,float,Decimal)) and math.isfinite(v)
@@ -63,58 +63,3 @@ def find(bounds,dimension,occupied,gap=16,margin=24):
             r={'x':x,'y':y,**dimension}
             if x>=margin and y>=margin and x+dimension['width']<=bounds['width']-margin and y+dimension['height']<=bounds['height']-margin and not any(overlap(r,a,gap) for a in occupied): return r
     return None
-def placement_batch(response,page_id,visual_id,intended,expected_fingerprint):
-    inv=inventory(response)
-    if inv['fingerprint']!=expected_fingerprint: raise ValueError('Stale inventory')
-    if visual_id not in inv['visuals']: raise ValueError('Unknown runtime visual')
-    target=inv['visuals'][visual_id]; b={'visuals':{},'workloadEntities':{},'workload':{},'etags':{'visuals':{},'workloadEntities':{}}}
-    page_etag=inv['payload'].get('etag')
-    if page_etag is None: raise ValueError('Fresh page ETag required')
-    b['etags']['workloadEntities'][page_id]=page_etag
-    p=copy.deepcopy(target['properties']); p['position']={k:intended[k] for k in ('x','y')}; p['dimension']={**p.get('dimension',{}),**{k:intended[k] for k in ('width','height')}}
-    rect(p)
-    if target['embedded']:
-        page=copy.deepcopy(inv['page'])
-        for o in page['reactiveVisualProperties']:
-            if o['visualId']==visual_id: o['properties']=p
-        b['workloadEntities'][page_id]={'schema':'0.0.1','properties':page}
-    else:
-        record=target['record']; flat=record.get('etag'); nested=record.get('properties',{}).get('etag')
-        if flat is not None and nested is not None and flat!=nested: raise ValueError('Conflicting visual ETags')
-        etag=nested if nested is not None else flat
-        if etag is None: raise ValueError('Fresh visual ETag required')
-        b['visuals'][visual_id]={'schema':'0.0.1','properties':p}; b['etags']['visuals'][visual_id]=etag
-    return b
-def verify_unchanged(before,after,target_id,intended,gap=0):
-    a=inventory(before); b=inventory(after)
-    if set(a['visuals'])!=set(b['visuals']) or a['unit']!=b['unit'] or a['bounds']!=b['bounds']: raise ValueError('Inventory/canvas drift')
-    for vid,v in a['visuals'].items():
-        if vid!=target_id and v['properties']!=b['visuals'][vid]['properties']: raise ValueError('Unrelated visual changed')
-    old=a['visuals'][target_id]; new=b['visuals'][target_id]
-    expected_page=copy.deepcopy(a['page'])
-    if old['embedded']:
-        for entry in expected_page['reactiveVisualProperties']:
-            if entry['visualId']==target_id: entry['properties']=copy.deepcopy(new['properties'])
-    if b['page']!=expected_page: raise ValueError('Unrelated page property changed')
-    if old['embedded'] and old['ownerProperties']!=new['ownerProperties']: raise ValueError('Embedding moved source owner')
-    for k in set(old['properties'])|set(new['properties']):
-        if k not in ('position','dimension') and old['properties'].get(k)!=new['properties'].get(k): raise ValueError('Unrelated target property changed')
-    if new['rectangle']!=intended: raise ValueError('Persisted geometry differs')
-    return audit(after,gap=gap)
-def place_native(client,page_id,visual_id,intended,label,gap=0,version=None):
-    from .session import page
-    before=page(client,page_id,version); inv=inventory(before)
-    if visual_id not in inv['visuals']: raise ValueError('Unknown runtime visual')
-    if inv['visuals'][visual_id]['rectangle']==intended:
-        return {**audit(before,gap=gap),'write':'already-matched'}
-    body=placement_batch(before,page_id,visual_id,intended,inv['fingerprint'])
-    # Validate candidate without mutating real state, including every obstacle.
-    candidate=copy.deepcopy(before)
-    if inv['visuals'][visual_id]['embedded']: candidate['payload']['properties']=body['workloadEntities'][page_id]
-    else:
-        for v in candidate['payload']['visuals']:
-            if v['id']==visual_id: v['properties']=body['visuals'][visual_id]
-    audit(candidate,gap=gap)
-    client.request('POST','/v1/workload/properties/batch/',body,label=label)
-    after=page(client,page_id,version)
-    return verify_unchanged(before,after,visual_id,intended,gap)

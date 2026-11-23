@@ -39,26 +39,6 @@ def deploy_home(client,role,layout,order,label,node=None,method='POST'):
         roleContentEnabled=metadata[role].get('homeLayoutEnabled'),rendering='not-tested')
     return result
 
-def effective_home(client):
-    return result_body(client.request('GET','/v1/access/users/home-layout/'))
-
-def set_priorities(client,orders,label,node=None):
-    if not isinstance(orders,list) or not orders:raise ValueError('Explicit ordered role metadata required')
-    ids=[]
-    for item in orders:
-        if set(item)!={'roleId','homeLayoutOrder'} or not isinstance(item['roleId'],str):raise ValueError('Role priority shape')
-        value=item['homeLayoutOrder']
-        if isinstance(value,bool) or not isinstance(value,int) or value<0:raise ValueError('Role priority integer')
-        ids.append(item['roleId'])
-    if len(ids)!=len(set(ids)):raise ValueError('Duplicate role priority')
-    current=roles(client,node)
-    if any(x not in current for x in ids):raise ValueError('Unknown role identity')
-    if not all(current[x['roleId']].get('homeLayoutOrder')==x['homeLayoutOrder'] for x in orders):
-        result_body(client.request('PATCH','/v1/access/roles/layout/order/',{'roles':orders},label=label))
-    after=roles(client,node)
-    if any(after.get(x['roleId'],{}).get('homeLayoutOrder')!=x['homeLayoutOrder'] for x in orders):raise ValueError('Role priority readback mismatch')
-    return {'priority':'persisted','effectiveAudience':'separate-check'}
-
 def visibility_via_alm(client,workspace,plan,show,label):
     """Fresh-export scoped mutation. ALM has no documented server CAS guarantee."""
     if not isinstance(show,bool): raise ValueError('Home visibility must be Boolean')

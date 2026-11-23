@@ -66,7 +66,7 @@ different routes/evidence; do not conclude a listed connection was deleted.
 
 After import, read the entity/page catalog and verify one owned type-30 visual with
 non-null `dataSourceId`. In that actual visual context call
-`GET /v2/powertable/sources/{nativeSourceId}/table/schema/` and compare columns, PKs,
+read the PowerTable table schema and compare columns, PKs,
 identity and nullability against the intended configurations. A source-details GET
 can fail while the table/schema succeeds; preserve both outcomes. An integer PK
 without `isIdentity` must stay visible, mandatory and user-supplied on insert.

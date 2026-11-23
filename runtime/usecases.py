@@ -6,12 +6,9 @@ as prerequisites; no UI, calculation tests or post-save validation are performed
 import copy,re,time,uuid
 from pathlib import Path
 from .codec import load,save,dumps,sha,parts,pack
-from .identity import Registry
-from .planning_presentation import build_application,apply_presentation
-from .forecast_review import owner,find_column,save_properties,quarterly_review,comparison_chart,apply_negative_variance
-from .measure_bindings import resolve_measure,registered_measure
-from .input_factories import input_create,formula_create
-from .session import native_session,entities,page,columns,result_body
+from .planning_presentation import build_application
+from .forecast_review import apply_negative_variance
+from .session import native_session,result_body
 from .transport import Client,plan_operation
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -143,51 +140,6 @@ def prepare(key,model,run,name=None):
       'runtimeValidation':'not run','completeness':'Local base only; execute deploy to complete the native phases'})
     return b,case,name
 
-def extend_sheet(client,step,run):
-    """Ordered links -> dependent formula DAG -> typed commentary -> companions."""
-    from .builder_api import create_column
-    eid,vid,p=owner(client,step['sheet']);existing=columns(client,vid)
-    labels=[x['name'] for x in existing]
-    if len(labels)!=len(set(labels)):raise ValueError('Ambiguous native measure captions in '+step['sheet'])
-    bylabel={x['name']:x['measureGuid'] for x in existing}
-    f=Path(run)/('ids-'+vid+'.json');reg=Registry(load(f) if f.exists() else {})
-    assignments=[];created=[]
-    for link in step.get('links',[]):
-        se,sv,sp=owner(client,link['sourceSheet']);cs=columns(client,sv);source=find_column(cs,link['sourceMeasure'])
-        from .storage_context import require_same
-        require_same(sp,p)
-        for axis in ('rowDimensions','columnDimensions'):
-            src=[x['externalKey'] for x in sp['visualState'][axis]];dst=[x['externalKey'] for x in p['visualState'][axis]]
-            if not set(dst)<=set(src) or (axis=='columnDimensions' and dst!=src[:len(dst)]):raise ValueError('Current native source/target grain changed')
-        a=resolve_measure({'sourceType':'Visual','visualId':sv,'sourceMeasureGuid':source['measureGuid'],'bucket':'ameasure','order':len(p['pivotAssignments'])+len(assignments),'label':link['label']},sheets=[{'visualId':sv,'name':link['sourceSheet'],'properties':sp,'columns':cs}])
-        assignments.append(a);mid=a['measureGuid'];bylabel[link['label']]=mid
-        created.append({'measureGuid':mid,'columnType':6,'name':link['label'],'columnMeta':{'id':mid,'label':link['label'],'data_type':'Number','measure_type':{'Native':{'measure_role':'FCMeasure'}}}})
-    for formula in step.get('formulas',[]):
-        mid=reg.custom(formula['label']);created.append(formula_create(mid,formula['label'],formula['expression'],{k:bylabel[v] for k,v in formula['symbols'].items()}));bylabel[formula['label']]=mid
-    commentary=step.get('commentary')
-    if commentary:
-        mid=reg.custom(commentary);created.append(input_create(mid,commentary,'LongText',{},str(uuid.uuid5(uuid.NAMESPACE_URL,vid+commentary)),visual_column=False));bylabel[commentary]=mid
-    save(f,reg.entries)
-    for payload in created:
-        result=create_column(client,vid,payload,'create-'+vid+'-'+payload['measureGuid'])
-        save(Path(run)/('created-'+vid+'-'+payload['measureGuid']+'.json'),result)
-        if result.get('status')=='pending':raise RuntimeError('Pending native column jobs; reconcile their completion before dependent writes')
-    def register(prop):
-        for a in assignments:prop['pivotAssignments']=[x for x in prop['pivotAssignments'] if x.get('measureGuid')!=a['measureGuid']]+[a]
-        vs=prop['visualState'];ms=vs['manage_measures']
-        for x in created:
-            mid=x['measureGuid'];found=next((m for m in ms if m['id']==mid),None)
-            if found:found.update(label=x['name'],visible=True)
-            else:ms.append({'id':mid,'label':x['name'],'visible':True,'order':len(ms)})
-            ag='None' if x['name']==commentary else 'Sum'
-            vs['aggregation_config']['measure_aggregation'][mid]={'row':ag,'column':ag}
-            vs['formatConfig']['measure'].setdefault(mid,[{'format':{'4':'Arial'},'order':len(ms)}])
-        from .display_defaults import auto_number_formatting
-        prop['visualState']=auto_number_formatting(vs,[x['measureGuid'] for x in created if x['columnMeta'].get('data_type')=='Number'])
-        for label in step.get('negative',[]):prop=apply_negative_variance(prop,bylabel[label],label)
-        return prop
-    return save_properties(client,eid,vid,register,'extend-'+vid)
-
 def finish_native(client,auth,case,model,run,*,native_feature_authoring=False):
     from .application_defaults import check_application_defaults,require_delivery_phases
     check_application_defaults(auth['raw'],auth.get('home'))
@@ -215,24 +167,6 @@ def finish_native(client,auth,case,model,run,*,native_feature_authoring=False):
         dashboard_visibility=[s['recordGuid'] for s in auth['raw']['definition.json']['sheets'] if s['sheetType']=='REPORTING' and s['isHidden'] is False])
     return {'phases':'saved','mandatoryDefaults':required,'expected':case['expected'],'runtimeValidation':'not run','postSaveValidation':'not run'}
 
-def comparison_measures(client,source,comparison,owners,model):
-    """Read current query metadata only when a selected companion needs it.
-
-    No SQL reader, reload or refresh is needed to resolve either binding route.
-    """
-    from .consumer_bindings import find_query
-    from .builder_api import segment
-    records=[find_column(source['columns'],comparison[side]) for side in ('left','right')]
-    mids={r['measureGuid'] for r in records};queries=[]
-    qids={a['queryId'] for a in source['properties'].get('pivotAssignments',[])
-        if a.get('measureGuid') in mids and a.get('sourceType')=='InfoBridge'}
-    for qid in sorted(qids):
-        metadata=result_body(client.request('GET',f'/v2/ib/query/{segment(qid)}/meta/'))
-        if not isinstance(metadata,list):raise ValueError('Expected current query metadata records')
-        queries.append(find_query(metadata,qid))
-    return tuple(registered_measure(source['properties'],r,source['visualId'],source['name'],
-        model=model,bucket=bucket,sheets=owners,queries=queries) for r,bucket in zip(records,('AC','PY')))
-
 def deploy(key,config,model,run,name=None,*,native_feature_authoring=False):
     """Create a new application or resume this run; never overwrite by report name."""
     if not config.get('authorizedMutation'):raise ValueError('Deployment requires the current user-authorized destination')
@@ -256,7 +190,7 @@ def deploy(key,config,model,run,name=None,*,native_feature_authoring=False):
         name=name,definition=pack(auth['raw']),label='create-with-definition')
     save(cp,created);plan=created.get('body',{}).get('id')
     if not plan:raise ValueError('Create receipt missing Plan ID; reconcile, do not repeat create')
-    with native_session(config['powerbiApiBase'],config['tokenEnvironment'],config['workspaceId'],plan,run/'native-api',native_read_versions=config.get('nativeReadVersions')) as client:
+    with native_session(config['powerbiApiBase'],config['tokenEnvironment'],config['workspaceId'],plan,run/'native-api') as client:
         result=finish_native(client,auth,case,model,run/'native-phases',native_feature_authoring=native_feature_authoring)
     result.update(planId=plan,name=name,case=case['id']);save(done,result)
     save(run/'phase-ledger.json',{'base':'saved','nativePhases':'saved','expected':case['expected'],'pending':[],'runtimeValidation':'not run','postSaveValidation':'not run'})

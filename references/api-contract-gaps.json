@@ -105,7 +105,7 @@
     "forecast-actuals-variance-chart"
   ],
   "executablePostImport": {
-    "command": "plan.py forecast-review",
+    "command": null,
     "implementation": "runtime/forecast_review.py",
     "guide": "forecast-review-execution.md",
     "capabilities": [

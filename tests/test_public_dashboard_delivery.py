@@ -68,7 +68,7 @@ class PublicDashboardDelivery(unittest.TestCase):
     def test_native_wire_transport_blocks_non_home_before_sending(self):
         c = Client('https://example.test/CoreAPI', 'TEST_TOKEN', auth_scheme='MWCToken',journal=ROOT)
         with patch('urllib.request.urlopen') as send, patch('subprocess.run') as node:
-            for route in ['v2/workload/entity/', 'v1/workload/properties/batch/', 'v1/visual/datainput/column/', 'v1/access/roles/layout/__everyone__/../extra/']:
+            for route in ['v2/example/', 'v1/example/batch/', 'v1/access/roles/', 'v1/access/roles/layout/__everyone__/../extra/']:
                 with self.subTest(route=route), self.assertRaises(WorkloadRouteError):
                     c._http('GET', c.base+'/'+route, {}, None)
             send.assert_not_called()

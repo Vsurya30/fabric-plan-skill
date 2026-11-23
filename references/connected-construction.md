@@ -10,7 +10,7 @@
 > provisioning, separate phases and actual gaps. Preserve the latest targeted
 > fixes; historical coverage statements below are release-scoped.
 
-> Executable Forecast review update: use [forecast-review-execution.md](forecast-review-execution.md) and `plan.py forecast-review` for From Sheets SUM, quarterly commentary/variance, negative formatting and comparison charts. This separate post-import phase is bundled; do not treat a convenience-provisioner omission as missing capability. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
+> Forecast review: author From Sheets SUM, quarterly commentary/variance, negative formatting and comparison charts in the public definition; see [forecast-review-execution.md](forecast-review-execution.md). The separate native post-import phase is no longer bundled. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
 
 > Maintenance fallback: when a requested PowerTable cannot be bound, deploy a visible native PowerTable sheet with deferred connection using `maintenance-deferred-connection.md`. Do not omit the sheet solely for a connection gap. Preserve chart Visual level field registrations using `chart-visual-filters.md`.
 

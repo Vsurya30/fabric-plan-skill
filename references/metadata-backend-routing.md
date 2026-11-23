@@ -34,23 +34,8 @@ Plan, migrate storage, or alter mode settings as an automatic repair.
 
 ## Exact supported scope
 
-| Collection | Fabric SQL handler | OneLake handler |
-| --- | --- | --- |
-| Entity catalog | GET `/v1/workload/entity/` | GET `/v2/workload/entity/` |
-| Entity properties | GET `/v1/workload/entity/{id}/properties/` | GET `/v2/workload/entity/{id}/properties/` |
-| Column catalog | GET `/v1/visual/datainput/column/?order=ASC&take=-1` | GET `/v2/visual/datainput/column/?order=ASC&take=-1` |
-
-These are CoreAPI routes within the artifact-scoped proxy returned by the workload
-token exchange. This is not a host substitution or general V1-to-V2 rewrite.
-Home, properties batch, InfoBridge, engine operations and PowerTable retain their
-own contracts. In particular, a V1 Home read may work while V1 entity reads fail.
-
-`create_column` resolves the column profile independently before the already
-documented V1/V2 column POST. It sends a mutation only once, journals its intent,
-and reads back on that same version. An explicit version remains strict. Read
-success is evidence of metadata access, not a guarantee that the writer works.
-Never replay a failed/ambiguous POST against another backend; reconcile the same
-identity before resuming. SQL/OneLake reads do not authorize storage migration.
+The bundled runtime no longer reads entity, page or column catalogs through the
+workload API. Native workload access is limited to role-specific Home layout.
 
 ## Evidence and limits
 
@@ -71,10 +56,7 @@ Validate scenario/period fields, skipped
 totals, source grain and financial reconciliation separately. Keep incomplete
 dashboards identified as incomplete.
 
-`examples/metadata-backend-routing/build.py` exercises both profiles with synthetic
-responses, without a prior report, chat, credentials or repair script. Tests cover
-bounded retries, strict configuration, authentication, migration changes, separate
-collection profiles, mutation non-replay and current-context headers.
+The SQL/OneLake catalog readers and their synthetic example are no longer bundled.
 
 ## Visibility for new and existing pages
 

@@ -28,10 +28,10 @@ charts. Embed both workbenches in Intelligence dashboards.
 | Monthly Forecast | F09 forecast-authoring | Build Native actuals plus Forecast; closed actuals, exact editable open formula; supported actual date hierarchy. |
 | Quarterly review grid | F01/F02 | Build the second owner with Region/Product rows and Year/Quarter columns and its actuals. Do not create a second independent Forecast. |
 | Charts and embeds | INTELLIGENCE/F27 | Build prepared column charts, both source owners and dashboards. Import/provision base application before resolving native source/target identities. |
-| From Sheets Forecast | F19 forecast-review-execution | Separate `plan.py forecast-review` phase resolves the existing source column and registers its numeric SUM consumer at compatible subset grain. |
-| Quarterly commentary | F05 | Same review phase creates a LongText visual measure, `visual_column=false`, with the quarter grain. |
-| Variance and negative color | FORMULAS/F15 | Same phase creates Forecast-minus-Actuals and applies the specific negative-variance rule. |
-| Variance charts versus actuals | INTELLIGENCE | Same phase binds prepared comparison charts; ordinary visual filters include all assignments. |
+| From Sheets Forecast | F19 forecast-review-execution | Author the numeric SUM consumer of the existing source column at compatible subset grain in the public definition. |
+| Quarterly commentary | F05 | Author a LongText visual measure, `visual_column=false`, with the quarter grain. |
+| Variance and negative color | FORMULAS/F15 | Author Forecast-minus-Actuals and apply the specific negative-variance rule. |
+| Variance charts versus actuals | INTELLIGENCE | Bind prepared comparison charts; ordinary visual filters include all assignments. |
 | Readable Home | F24 | Provision supported text/cards, or `native home` using `readable_home_layout`; full-width prose when width is unknown. |
 
 ```text
@@ -39,7 +39,6 @@ python plan.py discover --module F09
 python plan.py discover --module F19
 python plan.py reference forecast-review-execution.md
 python plan.py provision --config destination.json --model current-model.json --spec application.json --run base-run
-python plan.py forecast-review --config destination.json --input review.request.json --run review-run
 ```
 
 Adapt `examples/forecast-review.request.json` for review.request.json; retain the

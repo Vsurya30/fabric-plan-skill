@@ -51,8 +51,6 @@ def main():
     da=sp.add_parser('audit-definition'); da.add_argument('raw'); da.add_argument('--out',required=True)
     r=sp.add_parser('reference'); r.add_argument('name'); r.add_argument('--heading'); r.add_argument('--list',action='store_true')
     t=sp.add_parser('test')
-    fr=sp.add_parser('forecast-review',help='Apply From Sheets, quarterly commentary/variance, formatting and comparison charts after import')
-    fr.add_argument('--config',required=True);fr.add_argument('--input',required=True);fr.add_argument('--run',required=True)
     fre=sp.add_parser('forecast-repair',help='Prepare a scoped ALM update from a working reference sheet')
     fre.add_argument('--baseline',required=True);fre.add_argument('--input',required=True);fre.add_argument('--out',required=True)
     pt=sp.add_parser('repair-powertable-config',help='Local lookup/source metadata candidate; preserves editability, row actions and unrelated parts')
@@ -62,21 +60,19 @@ def main():
         bm=sp.add_parser(command,help='Local Planning-source lineage construction, graph check, or current query-output identity resolution')
         bm.add_argument('--input',required=True);bm.add_argument('--out',required=True)
     api=sp.add_parser('api'); api.add_argument('action',choices=['export','create','create-blank','update']); api.add_argument('--config',required=True); api.add_argument('--payload'); api.add_argument('--run',required=True); api.add_argument('--label',required=True)
-    n=sp.add_parser('native'); n.add_argument('action',choices=['home','place','pivot']); n.add_argument('--config',required=True); n.add_argument('--input',required=True); n.add_argument('--run',required=True); n.add_argument('--label',required=True)
+    n=sp.add_parser('native'); n.add_argument('action',choices=['home']); n.add_argument('--config',required=True); n.add_argument('--input',required=True); n.add_argument('--run',required=True); n.add_argument('--label',required=True)
     w=sp.add_parser('provision'); w.add_argument('--config',required=True); w.add_argument('--model',required=True); w.add_argument('--spec',required=True); w.add_argument('--run',required=True)
     ms=sp.add_parser('prepare-maintenance');ms.add_argument('--baseline',required=True);ms.add_argument('--requests',required=True);ms.add_argument('--out',required=True)
     ps=sp.add_parser('prepare-scope');ps.add_argument('--spec',required=True);ps.add_argument('--model');ps.add_argument('--out',required=True)
     cb=sp.add_parser('construct-native'); cb.add_argument('action',choices=['anchor','number-parameter','input','formula','cube-settings','rule','weighted-rule','powertable-source','powertable-rows','navigator','dimension-mapping','table-column','bridge-consumer','contribution','embedded-planning']); cb.add_argument('--input',required=True); cb.add_argument('--out',required=True)
-    ba=sp.add_parser('builder-api'); ba.add_argument('action',choices=['anchor-apply','bookmark-read','home-role','column-create','column-register','rule-create','bridge-inventory','bridge-query','bridge-reload','bridge-poll','bridge-stream','powertable-initialize','powertable-schema','powertable-save','bookmark-upsert','navigator-create','home-upload','home-priority','home-effective']); ba.add_argument('--config',required=True); ba.add_argument('--input',required=True); ba.add_argument('--run',required=True); ba.add_argument('--label',required=True)
+    ba=sp.add_parser('builder-api'); ba.add_argument('action',choices=['home-role']); ba.add_argument('--config',required=True); ba.add_argument('--input',required=True); ba.add_argument('--run',required=True); ba.add_argument('--label',required=True)
     for command in ('check-formula-syntax','repair-formula-equality','planning-time-axis','planning-time-column'):
         ti=sp.add_parser(command,help='Local native equality/date-axis/as-of VisualColumn helper; no live writes')
         ti.add_argument('--input',required=True);ti.add_argument('--out',required=True)
         if command=='planning-time-column':ti.add_argument('--baseline',required=True)
     args=p.parse_args()
     if hasattr(args,'label') and not re.fullmatch(r'[a-zA-Z0-9_.-]+',args.label): raise ValueError('Unsafe operation label')
-    if ((args.cmd=='native' and args.action!='home') or args.cmd=='forecast-review'
-        or (args.cmd=='builder-api' and args.action!='home-role')
-        or getattr(args,'native_feature_authoring',False)):
+    if getattr(args,'native_feature_authoring',False):
         p.error('The runtime uses the public Plan definition for authoring. Native access is limited to Home layout.')
     # These helpers construct local candidates only; deployment remains explicit.
     if args.cmd in ('check-formula-syntax','repair-formula-equality'):
@@ -177,13 +173,6 @@ def main():
         from runtime.dimension_mapping import leaf_key_mapping
         save(args.out,leaf_key_mapping(**load(args.input)))
         print('Saved local mapping; visible assignments unchanged; no stored-value migration.')
-    elif args.cmd=='forecast-review':
-        from runtime.session import native_session
-        from runtime.forecast_review import quarterly_review
-        c=load(args.config)
-        if not c.get('authorizedMutation'):raise ValueError('Current authorized mutation scope required')
-        with native_session(c['powerbiApiBase'],c['tokenEnvironment'],c['workspaceId'],c['planId'],Path(args.run)/'native-api',native_read_versions=c.get('nativeReadVersions')) as client:
-            print(dumps(quarterly_review(client,load(args.input),Path(args.run)/'review')))
     elif args.cmd=='forecast-repair':
         from runtime.forecast_repair import repair_definition
         result,summary=repair_definition(load(args.baseline),**load(args.input))
@@ -263,33 +252,12 @@ def main():
           'embedded-planning':connected_components.embedded_planning,'cube-settings':multi_dimension_settings}
         save(args.out,factories[args.action](**load(args.input)));print('Constructed source-contract payload; destination compatibility/execution not yet verified.')
     elif args.cmd=='builder-api':
-        from runtime import builder_api,navigator_api,assets_api,home_api,anchor_measures
+        from runtime import home_api
         from runtime.session import native_session
-        from runtime.transport import Client
-        import urllib.parse
-        c=load(args.config);data=load(args.input);read_only={'bookmark-read','home-role','bridge-inventory','bridge-query','bridge-poll','bridge-stream','powertable-schema','home-effective'}
-        if args.action not in read_only and not c.get('authorizedMutation'):raise ValueError('Current authorized mutation scope required')
-        if c.get('builderSurface') not in ('application','engine'):raise ValueError('Select application or engine surface explicitly')
-        if (args.action=='rule-create')!=(c['builderSurface']=='engine'):raise ValueError('Selected route does not belong to this API surface')
-        with native_session(c['powerbiApiBase'],c['tokenEnvironment'],c['workspaceId'],c['planId'],Path(args.run)/'auth',native_read_versions=c.get('nativeReadVersions')) as native:
-            base=c['builderApiBase']
-            if urllib.parse.urlsplit(base).netloc!=urllib.parse.urlsplit(native.base).netloc:raise ValueError('Builder base must match trusted workload-token origin; cross-host mounts require separately verified authentication')
-            client=Client(base,native.token_env,native.allowed,Path(args.run)/'builder-api',auth_scheme=native.auth_scheme,context_headers=native.context_headers)
-            from runtime.native_profile import inherit
-            inherit(native,client)
-            if c.get('targetVisualId') is not None:client=builder_api.scoped(client,c['targetVisualId'])
-            functions={'anchor-apply':anchor_measures.save_anchors,'column-create':builder_api.create_column,'column-register':builder_api.register_column,
-              'rule-create':builder_api.create_rule,'bridge-inventory':builder_api.bridge_inventory,'bridge-query':builder_api.bridge_query,
-              'bridge-reload':builder_api.reload_query,'bridge-poll':builder_api.poll_bridge,'bridge-stream':builder_api.source_parquet,
-              'bookmark-read':builder_api.read_bookmark,'home-role':home_api.role_content,'powertable-initialize':builder_api.initialize_powertable,'powertable-schema':builder_api.powertable_schema,
-              'powertable-save':builder_api.save_powertable,'bookmark-upsert':builder_api.upsert_bookmark,
-              'navigator-create':navigator_api.create,'home-upload':assets_api.upload_home_image,'home-priority':home_api.set_priorities,'home-effective':home_api.effective_home}
-            if args.action not in read_only:data['label']=args.label
-            if args.action=='rule-create':data['mount_verified']=c.get('engineRulesMountVerified',False)
-            result=functions[args.action](client,**data)
-        if args.action=='bridge-stream' and isinstance(result.get('bytes'),bytes):
-            out=Path(args.run)/(args.label+'.parquet');out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(result.pop('bytes'));result['file']=str(out.resolve())
-        save(Path(args.run)/(args.label+'.result.json'),result);print('Saved operation evidence; inspect status and remaining acceptance stages.')
+        c=load(args.config);data=load(args.input)
+        with native_session(c['powerbiApiBase'],c['tokenEnvironment'],c['workspaceId'],c['planId'],Path(args.run)/'auth') as client:
+            result=home_api.role_content(client,**data)
+        save(Path(args.run)/(args.label+'.result.json'),result);print('Saved Home role content; inspect status and remaining acceptance stages.')
     elif args.cmd=='prepare-maintenance':
         from runtime.maintenance_shells import add_deferred_powertables
         envelope,manifest=add_deferred_powertables(load(args.baseline),load(args.requests));out=Path(args.out)
@@ -306,20 +274,15 @@ def main():
     elif args.cmd=='native':
         from runtime.session import native_session
         from runtime.home_api import deploy_home,visibility_via_alm
-        from runtime.layout import place_native
-        from runtime.activation import select_saved_pivot
         c=load(args.config); data=load(args.input)
         if not c.get('authorizedMutation'): raise ValueError('Current authorized mutation scope required')
-        with native_session(c['powerbiApiBase'],c['tokenEnvironment'],c['workspaceId'],c['planId'],Path(args.run)/'native-api',native_read_versions=c.get('nativeReadVersions')) as client:
-            if args.action=='home':
-                result=deploy_home(client,data['roleId'],data['layout'],data['order'],args.label,method=c.get('homeWriteMethod','POST'))
-                if 'show' in data:
-                    from runtime.transport import Client
-                    public=Client(c['apiBase'],c['tokenEnvironment'],c.get('allowedHosts'),Path(args.run)/'public-api')
-                    result.update(visibility_via_alm(public,c['workspaceId'],c['planId'],data['show'],args.label+'-visibility'))
-            elif args.action=='place': result=place_native(client,data['entityId'],data['visualId'],data['rectangle'],args.label,data.get('gap',0))
-            elif args.action=='pivot': result=select_saved_pivot(client,data['entityId'],data['visualId'],data['pivotId'],args.label)
-        save(Path(args.run)/(args.label+'.result.json'),result); print('Native API persistence evidence written; calculation and rendered behavior are separate.')
+        with native_session(c['powerbiApiBase'],c['tokenEnvironment'],c['workspaceId'],c['planId'],Path(args.run)/'native-api') as client:
+            result=deploy_home(client,data['roleId'],data['layout'],data['order'],args.label,method=c.get('homeWriteMethod','POST'))
+            if 'show' in data:
+                from runtime.transport import Client
+                public=Client(c['apiBase'],c['tokenEnvironment'],c.get('allowedHosts'),Path(args.run)/'public-api')
+                result.update(visibility_via_alm(public,c['workspaceId'],c['planId'],data['show'],args.label+'-visibility'))
+        save(Path(args.run)/(args.label+'.result.json'),result); print('Home layout persistence evidence written; rendered behavior is separate.')
     elif args.cmd=='api':
         from runtime.transport import Client,plan_operation
         c=load(args.config); payload=load(args.payload) if args.payload else None

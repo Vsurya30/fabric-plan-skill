@@ -3,7 +3,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from runtime.pivots import compile_pivots,select_pivot
 from runtime.identity import Registry
-from runtime.layout import inventory,placement_batch
+from runtime.layout import inventory
 from runtime.native import save_home,set_home_visibility
 from runtime.session import native_session,result_body
 from runtime.transport import plan_operation,Client
@@ -34,13 +34,6 @@ class PivotTests(unittest.TestCase):
         before=copy.deepcopy(r);after=select_pivot(r,r['ids']['Region']);self.assertEqual(r,before);self.assertEqual(after['manage_measures'],before['manage_measures'])
 
 class NewNativeTests(unittest.TestCase):
-    def test_real_nested_visual_etag(self):
-        p=page();v=p['payload']['visuals'][0];v['properties']['etag']=v.pop('etag')
-        r=placement_batch(p,'page','nav',{'x':20,'y':20,'width':560,'height':80},inventory(p)['fingerprint'])
-        self.assertEqual(r['etags']['visuals']['nav'],'nav-etag')
-    def test_conflicting_etag_rejected(self):
-        p=page();p['payload']['visuals'][0]['properties']['etag']='other'
-        with self.assertRaises(ValueError): placement_batch(p,'page','nav',{'x':20,'y':20,'width':560,'height':80},inventory(p)['fingerprint'])
     def test_absent_home_200_null(self):
         class Fake:
             def __init__(self): self.calls=[]

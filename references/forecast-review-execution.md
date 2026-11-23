@@ -14,10 +14,11 @@ older comparison examples; original supplied documents remain preserved.
 ## Route this request before considering omissions
 
 For a monthly forecast consumed by a quarterly review, use the normal constructor
-for the base Planning sheets and Intelligence charts, then run **`plan.py forecast-review`**.
-The convenience `provision` command does not compose this phase automatically.
-Do not report these features as missing or silently drop them: the post-import
-implementation is shipped in `runtime/forecast_review.py` and exposed in CLI help.
+for the base Planning sheets and Intelligence charts, and author the From Sheets
+link, commentary, variance, formatting and comparison charts in the public
+definition. The native post-import `forecast-review` command is no longer bundled;
+`runtime/forecast_review.py` keeps only its local constructors. Do not report
+these features as missing or silently drop them.
 
 This release includes the direct sheet link, conditional-format rule and
 comparison-chart implementation as parameterized constructors. No old-report
@@ -63,9 +64,7 @@ request to ask them again. Example request is bundled at
 `examples/forecast-review.request.json`. Set names to the actual created sheets,
 source Forecast, target native Actuals and chart layer names:
 
-```powershell
-python plan.py forecast-review --config C:/task/native-config.json --input C:/task/review.json --run C:/task/review-run
-```
+The native command that applied these changes after import is no longer bundled.
 
 The command resolves names against the current Plan, reads only the source/target
 catalogs and required ETags, creates missing companions and saves scoped properties.

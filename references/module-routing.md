@@ -177,7 +177,7 @@ do not silently discard clauses that do not fit a case.
 
 **Read:** [Layout and Measure Placement Authoring](feature-contracts.md), [design-standards.md](design-standards.md).
 
-**Execution:** partial. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py native place --config destination.json --input placement.request.json --run run --label place`
+**Execution:** partial. `python plan.py build --model current-model.json --spec application.json --out draft`
 
 **Inputs/dependencies:** Resolve row/column grain and requested measure orientation.
 
@@ -192,7 +192,7 @@ Related: F14, F27.
 
 **Read:** [Totals and Aggregation Authoring](feature-contracts.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`
 
 **Inputs/dependencies:** Establish additive, semi-additive or formula semantics per measure.
 
@@ -207,7 +207,7 @@ Related: FORMULAS.
 
 **Read:** [matrix-formatting.md](matrix-formatting.md), [Number Format Authoring](feature-contracts.md), [Number Format Property Inventory](feature-contracts.md).
 
-**Execution:** partial. `python plan.py format-matrix --input examples/matrix-formatting.request.json --out candidate.json`; `python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration`; `python plan.py build --model current-model.json --spec application.json --out draft`
+**Execution:** partial. `python plan.py format-matrix --input examples/matrix-formatting.request.json --out candidate.json`; `python plan.py build --model current-model.json --spec application.json --out draft`
 
 **Inputs/dependencies:** Measure data types, units, currency and exact native format entries.
 
@@ -238,7 +238,7 @@ Related: F11, POWERTABLE.
 
 **Read:** [Input Type and Placement Workflows](feature-contracts.md), [Input and Formula Measure Authoring](feature-contracts.md), [builder-integration.md](builder-integration.md).
 
-**Execution:** separate-phase. `python plan.py construct-native input --input input.request.json --out input.payload.json`; `python plan.py builder-api column-create --config builder.json --input create.request.json --run run --label column`; `python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration`; `python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run`
+**Execution:** separate-phase. `python plan.py construct-native input --input input.request.json --out input.payload.json`
 
 **Inputs/dependencies:** Resolve input type, storage/context grain, native IDs and visual measure versus visual column.
 
@@ -254,7 +254,7 @@ Related: F29, F30, F08.
 
 **Read:** [Pivot View Authoring](feature-contracts.md), [Pivot Business Reconciliation](feature-contracts.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py native pivot --config destination.json --input pivot.request.json --run run --label pivot`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`
 
 **Inputs/dependencies:** Current dimension/measure registry and saved-view scope.
 
@@ -299,7 +299,7 @@ Related: F07, SCENARIOS, F25.
 
 **Read:** [forecast-authoring.md](forecast-authoring.md), [Rolling Forecast Authoring](feature-contracts.md), [Forecast Business Examples](feature-contracts.md), [Time extension under Forecast](feature-contracts.md), [forecast-review-execution.md](forecast-review-execution.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec forecast.json --out draft`; `python plan.py provision --config destination.json --model current-model.json --spec application.json --run run`; `python plan.py forecast-repair --baseline definition.json --input examples/forecast-repair.request.json --out candidate.json`; `python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec forecast.json --out draft`; `python plan.py provision --config destination.json --model current-model.json --spec application.json --run run`; `python plan.py forecast-repair --baseline definition.json --input examples/forecast-repair.request.json --out candidate.json`
 
 **Inputs/dependencies:** Resolved actuals semantics, horizon, supported ordered column date levels and any requested open defaults.
 
@@ -377,7 +377,7 @@ Related: F25, F30, RULES.
 
 **Read:** [matrix-formatting.md](matrix-formatting.md), [Grid Appearance Authoring](feature-contracts.md), [design-standards.md](design-standards.md).
 
-**Execution:** partial. `python plan.py format-matrix --input examples/matrix-formatting.request.json --out candidate.json`; `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py build --model current-model.json --spec dashboard.json --out draft`; `python plan.py native place --config destination.json --input placement.request.json --run run --label place`
+**Execution:** partial. `python plan.py format-matrix --input examples/matrix-formatting.request.json --out candidate.json`; `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py build --model current-model.json --spec dashboard.json --out draft`
 
 **Inputs/dependencies:** Real canvas/visual dimensions, typography and content volume.
 
@@ -393,7 +393,7 @@ Related: F01, F03, F24.
 
 **Read:** [matrix-formatting.md](matrix-formatting.md), [Conditional Formatting Business Workflow](feature-contracts.md), [forecast-review-execution.md](forecast-review-execution.md).
 
-**Execution:** separate-phase. `python plan.py format-matrix --input examples/matrix-formatting.request.json --out candidate.json`; `python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run`
+**Execution:** separate-phase. `python plan.py format-matrix --input examples/matrix-formatting.request.json --out candidate.json`
 
 **Inputs/dependencies:** Target measure, comparison/condition source, detail/total scope and appearance.
 
@@ -440,7 +440,7 @@ Related: POWERTABLE, F18, F13.
 
 **Read:** [infobridge-construction.md](infobridge-construction.md), [Transformation Discovery Inventory](feature-contracts.md), [Connected Planning Design Examples](feature-contracts.md).
 
-**Execution:** separate-phase. `python plan.py construct-bridge planning-source --input source.request.json --out source.json`; `python plan.py construct-bridge query --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge append --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge merge --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge join --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge sql --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge editable-source --input bridge.request.json --out bridge.json`; `python plan.py construct-native contribution --input contribution.request.json --out contribution.json`; `python plan.py builder-api bridge-inventory --config builder.json --input operation.request.json --run run --label bridge-inventory`; `python plan.py builder-api bridge-query --config builder.json --input operation.request.json --run run --label bridge-query`; `python plan.py builder-api bridge-reload --config builder.json --input operation.request.json --run run --label bridge-reload`; `python plan.py builder-api bridge-poll --config builder.json --input operation.request.json --run run --label bridge-poll`; `python plan.py builder-api bridge-stream --config builder.json --input operation.request.json --run run --label bridge-stream`; `python plan.py construct-native bridge-consumer --input consumer.request.json --out consumer.json`
+**Execution:** separate-phase. `python plan.py construct-bridge planning-source --input source.request.json --out source.json`; `python plan.py construct-bridge query --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge append --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge merge --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge join --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge sql --input bridge.request.json --out bridge.json`; `python plan.py construct-bridge editable-source --input bridge.request.json --out bridge.json`; `python plan.py construct-native contribution --input contribution.request.json --out contribution.json`; `python plan.py construct-native bridge-consumer --input consumer.request.json --out consumer.json`
 
 **Inputs/dependencies:** Source grain/catalogs, transformation order, compatible output types and destination identities.
 
@@ -455,7 +455,7 @@ Related: F19, LOOKUP, DIMENSION-ID, POWERTABLE.
 
 **Read:** [Measures From Sheets Authoring](feature-contracts.md), [Connected Planning Design Examples](feature-contracts.md), [forecast-review-execution.md](forecast-review-execution.md).
 
-**Execution:** separate-phase. `python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run`
+**Execution:** separate-phase. Guide only.
 
 **Inputs/dependencies:** Current source sheet/owner/column catalog, compatible ordered subset dimensions, numeric SUM meaning and time/context compatibility.
 
@@ -515,7 +515,7 @@ Related: F07, F08.
 
 **Read:** [Bookmark Business Authoring](feature-contracts.md), [Observed Public Bookmark Snapshots](feature-contracts.md), [builder-integration.md](builder-integration.md).
 
-**Execution:** partial. `python plan.py builder-api bookmark-upsert --config builder.json --input bookmark.request.json --run run --label bookmark`; `python plan.py construct-native navigator --input navigator.request.json --out navigator.json`; `python plan.py builder-api navigator-create --config builder.json --input navigator-create.request.json --run run --label navigator`
+**Execution:** partial. `python plan.py construct-native navigator --input navigator.request.json --out navigator.json`
 
 **Inputs/dependencies:** Complete supported capture, current page/visual identities and current ETags.
 
@@ -530,7 +530,7 @@ Related: F06, NAVIGATOR.
 
 **Read:** [Home Layout Authoring](feature-contracts.md), [home-layout-fit.md](home-layout-fit.md).
 
-**Execution:** separate-phase. `python plan.py provision --config destination.json --model current-model.json --spec application.json --run run`; `python plan.py native home --config destination.json --input home.request.json --run run --label home`; `python plan.py builder-api home-priority --config builder.json --input priority.request.json --run run --label priority`; `python plan.py builder-api home-effective --config builder.json --input empty.json --run run --label effective`
+**Execution:** separate-phase. `python plan.py provision --config destination.json --model current-model.json --spec application.json --run run`; `python plan.py native home --config destination.json --input home.request.json --run run --label home`
 
 **Inputs/dependencies:** Audience/role IDs, content, navigation targets and known width when available.
 
@@ -577,7 +577,7 @@ Related: F14.
 
 **Read:** [F27 Embedding](feature-contracts.md), [Observed Embedded Owner and Placement Checks](feature-contracts.md), [context-intelligence.md](context-intelligence.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec dashboard.json --out draft`; `python plan.py construct-native embedded-planning --input embed.request.json --out embed.json`; `python plan.py native place --config destination.json --input placement.request.json --run run --label place`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec dashboard.json --out draft`; `python plan.py construct-native embedded-planning --input embed.request.json --out embed.json`
 
 **Inputs/dependencies:** One true Planning owner per sheet and current destination runtime IDs/ETags.
 
@@ -607,7 +607,7 @@ Related: F14, F24.
 
 **Read:** [On Change Workflow Authoring](feature-contracts.md), [Cross-Industry Input and Workflow Cases](feature-contracts.md).
 
-**Execution:** integrated. `python plan.py construct-native input --input input.request.json --out input.payload.json`; `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py builder-api column-create --config builder.json --input create.request.json --run run --label column`; `python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration`
+**Execution:** integrated. `python plan.py construct-native input --input input.request.json --out input.payload.json`; `python plan.py build --model current-model.json --spec application.json --out draft`
 
 **Inputs/dependencies:** Explicit changed input, target measure identities and supported side-effect formula semantics.
 
@@ -622,7 +622,7 @@ Related: FORMULAS, F05, F09.
 
 **Read:** [Formula-Based Editability Workflow](feature-contracts.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py construct-native input --input input.request.json --out input.payload.json`; `python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py construct-native input --input input.request.json --out input.payload.json`
 
 **Inputs/dependencies:** Boolean eligibility formula and its resolved measure dependencies.
 
@@ -652,7 +652,7 @@ Related: .
 
 **Read:** [Intelligence Dashboard Business Authoring](feature-contracts.md), [context-intelligence.md](context-intelligence.md), [chart-visual-filters.md](chart-visual-filters.md), [forecast-review-execution.md](forecast-review-execution.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec dashboard.json --out draft`; `python plan.py provision --config destination.json --model current-model.json --spec application.json --run run`; `python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run`; `python plan.py native place --config destination.json --input placement.request.json --run run --label place`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec dashboard.json --out draft`; `python plan.py provision --config destination.json --model current-model.json --spec application.json --run run`
 
 **Inputs/dependencies:** Current semantic/query fields, source owners, meaningful comparisons and complete KPI/chart state.
 
@@ -667,7 +667,7 @@ Related: F27, F07, F15.
 
 **Read:** [powertable-alm-construction.md](powertable-alm-construction.md), [maintenance-deferred-connection.md](maintenance-deferred-connection.md), [connected-construction.md](connected-construction.md).
 
-**Execution:** separate-phase. `runtime.powertable_factory.configured_table(...)`; `python plan.py construct-native table-column --input column.request.json --out column.json`; `python plan.py construct-native powertable-source --input source.request.json --out source.json`; `python plan.py builder-api powertable-initialize --config builder.json --input initialize.request.json --run run --label table`; `python plan.py builder-api powertable-schema --config builder.json --input schema.request.json --run run --label schema`; `python plan.py construct-native powertable-rows --input rows.request.json --out rows.payload.json`; `python plan.py builder-api powertable-save --config builder.json --input save.request.json --run run --label rows`; `python plan.py prepare-maintenance --baseline definition.json --requests maintenance.json --out maintenance`; `python plan.py api update --config destination.json --payload candidate.json --run run --label update`
+**Execution:** separate-phase. `runtime.powertable_factory.configured_table(...)`; `python plan.py construct-native table-column --input column.request.json --out column.json`; `python plan.py construct-native powertable-source --input source.request.json --out source.json`; `python plan.py construct-native powertable-rows --input rows.request.json --out rows.payload.json`; `python plan.py prepare-maintenance --baseline definition.json --requests maintenance.json --out maintenance`; `python plan.py api update --config destination.json --payload candidate.json --run run --label update`
 
 **Inputs/dependencies:** Authorized physical SQL table, schema, artifact and connection. Physical primary keys and lookup uniqueness must be resolved.
 
@@ -697,7 +697,7 @@ Related: F18, DIMENSION-ID, POWERTABLE.
 
 **Read:** [Input Rule Business Workflows](feature-contracts.md), [Allocation Examples](feature-contracts.md), [Native Rule Serialization](feature-contracts.md), [builder-integration.md](builder-integration.md).
 
-**Execution:** separate-phase. `python plan.py construct-native rule --input rule.request.json --out rule.payload.json`; `python plan.py builder-api rule-create --config engine.json --input rule-create.request.json --run run --label rule`
+**Execution:** separate-phase. `python plan.py construct-native rule --input rule.request.json --out rule.payload.json`
 
 **Inputs/dependencies:** Target grain, row/column/measure selectors, weights, total conservation and verified engine mount.
 
@@ -727,7 +727,7 @@ Related: LOOKUP, F08.
 
 **Read:** [Native Formula Authoring](feature-contracts.md), [Ordinary Measure-Based Planning Examples](feature-contracts.md), [forecast-review-execution.md](forecast-review-execution.md).
 
-**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py construct-native formula --input formula.request.json --out formula.payload.json`; `python plan.py builder-api column-create --config builder.json --input create.request.json --run run --label column`; `python plan.py builder-api column-register --config builder.json --input register.request.json --run run --label registration`; `python plan.py forecast-review --config destination.json --input examples/forecast-review.request.json --run run`
+**Execution:** integrated. `python plan.py build --model current-model.json --spec application.json --out draft`; `python plan.py construct-native formula --input formula.request.json --out formula.payload.json`
 
 **Inputs/dependencies:** Resolved dependency graph, correct grain/units and native formula symbols.
 
@@ -757,7 +757,7 @@ Related: FORMULAS, F09.
 
 **Read:** [navigators.md](navigators.md), [builder-integration.md](builder-integration.md).
 
-**Execution:** separate-phase. `python plan.py construct-native navigator --input navigator.request.json --out navigator.json`; `python plan.py builder-api navigator-create --config builder.json --input navigator-create.request.json --run run --label navigator`
+**Execution:** separate-phase. `python plan.py construct-native navigator --input navigator.request.json --out navigator.json`
 
 **Inputs/dependencies:** Current pages/bookmarks, supported host registration and complete placement inventory.
 

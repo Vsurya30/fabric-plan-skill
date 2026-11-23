@@ -8,26 +8,26 @@ import copy
 from .discovery import catalog
 
 ROUTES={
- 'shared-assumption':(['F20','F05'],['anchor-construct','anchor-save'],['measure','sheetGrain','rowDimensions','columnDimensions','eligibleScope','aggregation','distribution','consumers','displayAtAllLevels']),
- 'display-anchor':(['F20','F12'],['anchor-construct','anchor-save'],['measure','sheetGrain','rowDimensions','columnDimensions','consumers','displayAtAllLevels']),
- 'time-intelligence':(['TIME-INTELLIGENCE','FORMULAS'],['planning-time-column','formula','column-create','column-register'],['source','period','cutoffScope','cutoffControl','cutoff','aggregation','missingPolicy']),
- 'one-time-column':(['TIME-INTELLIGENCE','F05'],['input','formula','column-create','column-register'],['kind','grain','placement','storageContext']),
- 'editable-value':(['F05'],['input','column-create','column-register'],['unit','grain','default']),
- 'conditional-input':(['F30'],['input','forecast','column-create','column-register'],['target','condition','expression','scope']),
- 'calculated-value':(['FORMULAS','F02'],['formula','column-create','column-register'],['expression','inputs','aggregation']),
+ 'shared-assumption':(['F20','F05'],['anchor-construct'],['measure','sheetGrain','rowDimensions','columnDimensions','eligibleScope','aggregation','distribution','consumers','displayAtAllLevels']),
+ 'display-anchor':(['F20','F12'],['anchor-construct'],['measure','sheetGrain','rowDimensions','columnDimensions','consumers','displayAtAllLevels']),
+ 'time-intelligence':(['TIME-INTELLIGENCE','FORMULAS'],['planning-time-column','formula'],['source','period','cutoffScope','cutoffControl','cutoff','aggregation','missingPolicy']),
+ 'one-time-column':(['TIME-INTELLIGENCE','F05'],['input','formula'],['kind','grain','placement','storageContext']),
+ 'editable-value':(['F05'],['input'],['unit','grain','default']),
+ 'conditional-input':(['F30'],['input','forecast'],['target','condition','expression','scope']),
+ 'calculated-value':(['FORMULAS','F02'],['formula'],['expression','inputs','aggregation']),
  'rolling-forecast':(['F09','TIME-INTELLIGENCE'],['forecast','forecast-review'],['actuals','grain','openPeriod','openDefault','timezone']),
- 'balance-roll-forward':(['ROLL-FORWARD','FORMULAS','F09','F12','F01'],['roll-forward-presentation','planning-totals','formula','column-create','column-register'],['grain','calendar','unit','seedAuthority','movements','signConvention','forecastCutoff','editableFields','dependencyStrategy','aggregation']),
+ 'balance-roll-forward':(['ROLL-FORWARD','FORMULAS','F09','F12','F01'],['roll-forward-presentation','planning-totals','formula'],['grain','calendar','unit','seedAuthority','movements','signConvention','forecastCutoff','editableFields','dependencyStrategy','aggregation']),
  'reuse-values':(['F19'],['resolve-measure-binding','forecast-review'],['sourceOrigin','source','targetGrain','transformation','grainCompatibility']),
- 'commentary':(['F05','TIME-INTELLIGENCE'],['input','column-create','column-register'],['grain','placement']),
+ 'commentary':(['F05','TIME-INTELLIGENCE'],['input'],['grain','placement']),
  'comparison':(['INTELLIGENCE','F15'],['resolve-measure-binding','integrated-variance'],['current','baseline','grain','difference','favorableDirection','unit']),
  'conditional-format':(['CONDITIONAL-FORMATTING','F15'],['build','format-matrix','forecast-review'],['target','condition','meaning']),
  'storage-identity':(['DIMENSION-ID'],['leaf-key-mapping','mapping'],['leaf','idField','ancestorDependency']),
- 'master-data-maintenance':(['POWERTABLE'],['powertable','table-source','table-initialize','table-schema','table-save'],['source','key','editableColumns']),
- 'allocation':(['RULES'],['rule','rule-create'],['source','targetGrain','weights','missingWeights','totalRule']),
+ 'master-data-maintenance':(['POWERTABLE'],['powertable','table-source'],['source','key','editableColumns']),
+ 'allocation':(['RULES'],['rule'],['source','targetGrain','weights','missingWeights','totalRule']),
  'approval':(['F13'],[],['scope','stages']),
  'access-control':(['F25'],[],['scope','audience','policy']),
  'scenario':(['SCENARIOS'],['input','filters','build'],['behavior','scope']),
- 'navigation':(['NAVIGATOR'],['navigator','navigator-create'],['destinations'])
+ 'navigation':(['NAVIGATOR'],['navigator'],['destinations'])
 }
 
 def plan_intent(brief):
@@ -53,10 +53,10 @@ def plan_intent(brief):
             if origin=='semantic' and transform=='direct':
                 mids=['F21'];ops=['resolve-measure-binding'];notes.append('Reuse the original PowerBI assignment, not its Native Planning companion as From Sheets.')
             elif transform in ('join','merge','append','sql','aggregate'):
-                mids=['F18'];ops=['bridge-source','bridge-'+('construct-query' if transform=='aggregate' else transform),'bridge-query','bridge-reload','bridge-poll','bridge-consumer']
+                mids=['F18'];ops=['bridge-source','bridge-'+('construct-query' if transform=='aggregate' else transform),'bridge-consumer']
                 notes.append('Resolve transformed query outputs before assigning InfoBridge IDs. A saved graph does not prove refresh or materialization.')
             elif origin=='query' and transform=='direct':
-                mids=['F18'];ops=['bridge-inventory','bridge-consumer','resolve-measure-binding']
+                mids=['F18'];ops=['bridge-consumer','resolve-measure-binding']
             elif origin=='sheet' and transform=='direct' and grain in ('same','coarser-compatible'):
                 notes.append('Link the produced input/Forecast/formula output at its resolved source ID; do not duplicate inputs.')
             elif origin and transform:
