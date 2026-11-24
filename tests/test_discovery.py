@@ -80,6 +80,12 @@ class DiscoveryTests(unittest.TestCase):
                                 ('from sheets', 'F19'), ('negative variance', 'F15'),
                                 ('employee master', 'POWERTABLE'), ('compare PowerTable sheets', 'POWERTABLE')]:
             self.assertIn(expected, [m['id'] for m in discover(query)['modules'][:3]], query)
+        for query in ('create a PowerTable table from scratch with sqldb-cli',
+                      'analyze an existing PowerTable source'):
+            route=discover(query)['modules'][0]
+            self.assertEqual(route['id'],'POWERTABLE')
+            self.assertIn('creation mode',route['prerequisites'])
+            self.assertIn('CoreAPI',route['limitations'])
         approval = discover(module='f13')['modules'][0]
         self.assertEqual(approval['operations'], [])
         self.assertIn('Guidance only', render(discover(module='F13')))

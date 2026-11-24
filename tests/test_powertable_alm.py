@@ -33,6 +33,20 @@ class PowerTableAlmTests(unittest.TestCase):
         self.assertEqual(check_powertable_parts(parts,prefix),
             {'sourceId':ids['sourceGuid'],'columns':1,'settings':3})
 
+    def test_from_scratch_origin_is_preserved_after_approved_sql_creation(self):
+        table={'name':'Employee','schema':'dbo','physicalType':'U','primaryKey':['EmployeeID'],'columns':['EmployeeID']}
+        conn={'connectionId':'00000000-0000-4000-8000-000000000001','dbHost':'sql.example.invalid',
+            'dbName':'Test','artifactId':'00000000-0000-4000-8000-000000000002',
+            'workspaceId':'00000000-0000-4000-8000-000000000003',
+            'connectionName':'Demo connection','workspaceName':'Demo workspace','dbDisplayName':'Demo SQL'}
+        col=column_config({'name':'EmployeeID','dbMeta':{'type':'int','isIdentity':True,'isNullable':False,
+            'isPrimaryKey':True,'isUnique':True,'isCompositeUnique':False}},'integer')
+        _,parts,_=configured_table('Employees',table,conn,[col],explicit=True,creation_mode=1)
+        source=next(v['source'] for k,v in parts.items() if k.endswith('/source.json'))
+        self.assertEqual(source['creationMode'],1)
+        with self.assertRaisesRegex(ValueError,'supported from-scratch'):
+            configured_table('Employees',table,conn,[col],explicit=True,creation_mode=3)
+
     def test_source_and_column_identity_mismatches_are_rejected(self):
         table={'name':'DimTest','schema':'dbo','physicalType':'U','primaryKey':['Key'],'columns':['Key']}
         conn={'connectionId':'00000000-0000-4000-8000-000000000001','dbHost':'sql.example.invalid',

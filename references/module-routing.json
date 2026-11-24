@@ -199,8 +199,8 @@
     },
     "powertable": {
       "phase": "local",
-      "description": "Construct table definition parts in Python.",
-      "inputs": "Authorized source identity, physical schema and column configuration.",
+      "description": "Construct table definition parts in Python after an existing table or approved sqldb-cli from-scratch DDL has been verified.",
+      "inputs": "Authorized source identity, physical schema, column configuration and creation_mode=1 or 2.",
       "command": null,
       "symbols": [
         "runtime.powertable_factory.configured_table"
@@ -208,11 +208,11 @@
     },
     "table-source": {
       "phase": "local",
-      "description": "Describe an existing table source.",
-      "inputs": "Database, connection and physical table identity.",
+      "description": "Describe a verified existing or newly created table source without opening a workload API session.",
+      "inputs": "Database, connection, physical table identity and optional creation_mode=1 or 2.",
       "command": "python plan.py construct-native powertable-source --input source.request.json --out source.json",
       "symbols": [
-        "runtime.powertable_factory.existing_source"
+        "runtime.powertable_factory.source_request"
       ]
     },
     "table-column": {
@@ -909,7 +909,7 @@
     },
     {
       "id": "POWERTABLE",
-      "name": "Model, configure and analyze PowerTable sources",
+      "name": "Create, configure and analyze PowerTable sources",
       "guides": [
         {
           "file": "powertable.md"
@@ -930,10 +930,13 @@
         "master data"
       ],
       "businessRequests": [
-        "Model, configure and analyze PowerTable sources"
+        "Connect verified existing tables to PowerTable",
+        "Create new SQL tables with sqldb-cli and add them to PowerTable",
+        "Analyze an existing PowerTable source through its saved definition",
+        "Distinguish supported public routes from private PowerTable CoreAPI modes"
       ],
-      "prerequisites": "Supply physical schema, keys and authorized source identity.",
-      "limitations": "No SQL provisioning, row write, schema discovery or connection setup is performed.",
+      "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-inspect the committed table. Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 1 for from scratch, 2 for existing table.",
+      "limitations": "This skill does not execute SQL directly or call private PowerTable CoreAPI upload/template/semantic routes. From-scratch requires external sqldb-cli DDL followed by public Plan definition creation. Creation modes 3, 4 and 5 are unavailable without an approved external adapter.",
       "coverage": "local"
     },
     {

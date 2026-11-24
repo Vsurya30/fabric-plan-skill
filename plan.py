@@ -241,7 +241,7 @@ def main():
         from runtime import input_factories,rule_factories,powertable_factory,navigator_api,dimension_mapping,table_columns,connected_components,page_parameters,anchor_measures
         from runtime.cube_contract import multi_dimension_settings
         factories={'anchor':anchor_measures.apply_anchors,'number-parameter':page_parameters.number_parameter,'input':input_factories.input_create,'formula':input_factories.formula_create,'rule':rule_factories.new_rule,'weighted-rule':rule_factories.measure_weighted_rule,
-          'powertable-source':powertable_factory.existing_source,'powertable-rows':powertable_factory.row_save,'navigator':navigator_api.state,
+          'powertable-source':powertable_factory.source_request,'powertable-rows':powertable_factory.row_save,'navigator':navigator_api.state,
           'dimension-mapping':dimension_mapping.dimension_mapping,'table-column':table_columns.column_config,
           'bridge-consumer':connected_components.bridge_consumer,'contribution':connected_components.contribution,
           'embedded-planning':connected_components.embedded_planning,'cube-settings':multi_dimension_settings}

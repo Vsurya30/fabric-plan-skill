@@ -9,7 +9,8 @@ from pathlib import Path
 from .codec import dumps
 from .surfaces import powertable_source
 
-def configured_table(name, table, connection, columns, *, explicit=False, allow_add=True, allow_update=True, allow_delete=False):
+def configured_table(name, table, connection, columns, *, explicit=False, creation_mode=2,
+                     allow_add=True, allow_update=True, allow_delete=False):
     """Complete ALM grid from verified target source/schema; no old report/template.
 
     SQL rows are never changed by this constructor. Row actions reflect the
@@ -17,6 +18,8 @@ def configured_table(name, table, connection, columns, *, explicit=False, allow_
     """
     from .construct import guid,schema,sheet_properties
     from .codec import load
+    if creation_mode not in (1,2):
+        raise ValueError('Use supported from-scratch (1) or existing-table (2) creation mode')
     if not columns or len({c['columnName'] for c in columns})!=len(columns):
         raise ValueError('Complete unique physical column configurations required')
     for c in columns:
@@ -25,7 +28,7 @@ def configured_table(name, table, connection, columns, *, explicit=False, allow_
     if any(not isinstance(x,bool) for x in (allow_add,allow_update,allow_delete)):
         raise ValueError('Row-action flags must be Boolean')
     source=powertable_source(table,connection,explicit)
-    source['source'].update(creationMode=2,tableType=1)
+    source['source'].update(creationMode=creation_mode,tableType=1)
     sid,vid=guid(),guid();prefix=f'sheets/{sid}/visuals/{vid}/'
     state=load(Path(__file__).resolve().parents[1]/'fixtures/powertable-presentation-defaults.json')
     names=[c['columnName'] for c in columns]
@@ -49,12 +52,17 @@ def configured_table(name, table, connection, columns, *, explicit=False, allow_
     return declaration,raw,{'sheetGuid':sid,'visualGuid':vid,'sourceGuid':source['source']['recordGuid'],
         'sqlSchemaReadback':'required','rowSave':'not-tested'}
 
-def existing_source(table,connection,explicit=False):
+def source_request(table,connection,explicit=False,creation_mode=2):
+    if creation_mode not in (1,2):
+        raise ValueError('Use supported from-scratch (1) or existing-table (2) creation mode')
     # The initialization request is not a complete exported source.json. Its
     # response must be reconciled before ALM construction; do not invent labels.
     s=powertable_source(table,connection,explicit,require_metadata=False)['source']
     return {'tableName':s['tableName'],'schema':s['schemaName'],'dbName':s['dbName'],'dbHost':s['dbHost'],
-        'connectionId':s['connectionId'],'creationMode':2,'sqlTargetArtifact':s['sqlTargetArtifact']}
+        'connectionId':s['connectionId'],'creationMode':creation_mode,'sqlTargetArtifact':s['sqlTargetArtifact']}
+
+def existing_source(table,connection,explicit=False):
+    return source_request(table,connection,explicit,2)
 
 def compress_json(value,node=None):
     node=node or os.environ.get('FABRIC_PLAN_NODE') or os.environ.get('FABRIC_PLAN_HTTP_NODE')
