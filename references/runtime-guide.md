@@ -17,6 +17,13 @@ python plan.py build --model current-model.json --spec application.json --out dr
 python plan.py check-import-contract --spec application.json --construction draft/construction.json --out coverage.json
 ```
 
+`validation.json` can report `passed-native-extension` for the reviewed native
+dashboard visual types, object-form Home layout, and target-input values that
+the pinned historical public schemas do not describe. These rows are
+normalized only for schema checking; the authored native payload is unchanged.
+Treat `schema-conflict` or `schema-gap` as a deployment blocker. A passing
+schema report is still static evidence, not backend or UI acceptance.
+
 Keep the original request with the candidate. Check that requested measures,
 inputs, formulas and conditional rules survived construction together. When
 editing a definition, start from a fresh complete export, keep unknown parts

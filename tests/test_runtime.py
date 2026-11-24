@@ -8,7 +8,7 @@ from runtime.construct import build,navigator,acyclic
 from runtime.bridge import *
 from runtime.surfaces import *
 from runtime.layout import inventory,audit,find,placement_batch,verify_unchanged
-from runtime.validate import validate_plan,Schemas,SchemaGap,Invalid,schema_report
+from runtime.validate import validate_plan,Schemas,SchemaGap,Invalid,schema_report,require_public_schema_acceptance
 from runtime.transport import Client,HttpError,plan_operation
 def setUpModule():
     # Test suite is explicitly offline. HTTP adapter tests have no sockets.
@@ -104,12 +104,28 @@ class ConstructionTests(unittest.TestCase):
         col=next(c for c in b['raw'][k]['columns'] if 'DataInput' in c['columnMeta']['measure_type'])
         col['columnMeta']['measure_type']['DataInput']['column_type']['Number']['default_value']={'Measure':'999'}
         with self.assertRaises(ValueError):validate_plan(b['raw'])
-    def test_native_public_conflicts_are_not_hidden(self):
-        report=schema_report(built()['raw']); conflicts=[x for x in report if x['status']=='schema-conflict']
-        self.assertEqual(len([x for x in conflicts if x['path'].endswith('dataInput.json')]),4)
-        home=[x for x in conflicts if x['path']=='planProperties.json']
-        self.assertEqual(len(conflicts),5);self.assertEqual(len(home),1)
-        self.assertIn('homeLayout',home[0]['reason']) # Native object vs historical public string schema.
+    def test_reviewed_native_extensions_are_distinguished_from_schema_conflicts(self):
+        from runtime.planning_presentation import build_application
+        report=schema_report(build_application(model(),finance())['raw'])
+        extensions=[x for x in report if x['status']=='passed-native-extension']
+        self.assertFalse([x for x in report if x['status']=='schema-conflict'])
+        self.assertEqual(len([x for x in extensions if x['path'].endswith('dataInput.json')]),4)
+        home=[x for x in extensions if x['path']=='planProperties.json']
+        dashboard=[x for x in extensions if x['path']=='definition.json']
+        self.assertEqual(len(extensions),6);self.assertEqual(len(home),1);self.assertEqual(len(dashboard),1)
+        self.assertIn('homeLayout',home[0]['reason'])
+        self.assertIn('Reporting visual types',dashboard[0]['reason'])
+
+    def test_unreviewed_schema_conflicts_are_not_hidden(self):
+        from runtime.planning_presentation import build_application
+        application=build_application(model(),finance())
+        sheet=application['raw']['definition.json']['sheets'][-1]
+        sheet['workloadItemEntityVisuals'][0]['visualType']='UNKNOWN_DASHBOARD_VISUAL'
+        conflicts=[x for x in schema_report(application['raw']) if x['status']=='schema-conflict']
+        self.assertTrue(conflicts)
+        self.assertEqual(conflicts[0]['path'],'definition.json')
+        with self.assertRaisesRegex(ValueError,'PUBLIC_SCHEMA_VALIDATION'):
+            require_public_schema_acceptance(application['raw'])
     def test_row_height_uses_native_owner(self):
         b=built(); k=next(k for k in b['raw'] if k.endswith('properties.json') and '/visuals/' in k)
         vs=b['raw'][k]['properties']['visualState']; self.assertNotIn('rowHeight',vs['globalStyles']); self.assertEqual(vs['row_height_config']['default_row_height'],26)

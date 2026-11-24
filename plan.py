@@ -4,7 +4,7 @@ import argparse,sys,copy,re,subprocess,os
 from pathlib import Path
 from runtime.codec import load,save,unpack,pack,parts,sha,dumps,safe_path,definition_hash
 from runtime.construct import build
-from runtime.validate import validate_plan,schema_report
+from runtime.validate import validate_plan,schema_report,require_public_schema_acceptance
 ROOT=Path(__file__).resolve().parent
 def main():
     p=argparse.ArgumentParser(description=__doc__); sp=p.add_subparsers(dest='cmd',required=True)
@@ -177,7 +177,8 @@ def main():
         out=Path(args.out); out.mkdir(parents=True,exist_ok=True)
         for k in ('raw','envelope','registry','identities','dashboardIdentities','presentationCheck','defaultsCheck','home','homeSpec','evidence','buildRequest','importContract'): save(out/(k+'.json'),result[k])
         save(out/'construction.json',result)
-        save(out/'validation.json',{'invariants':validate_plan(result['raw']),'publicSchemas':schema_report(result['raw'])})
+        public_schemas=require_public_schema_acceptance(result['raw'])
+        save(out/'validation.json',{'invariants':validate_plan(result['raw']),'publicSchemas':public_schemas})
         print('Constructed draft in '+str(out.resolve())+'; target initialization and runtime acceptance remain required.')
     elif args.cmd=='check-import-contract':
         from runtime.authoring_flow import require_import_contract
