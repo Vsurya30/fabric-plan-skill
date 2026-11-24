@@ -200,11 +200,13 @@
     },
     "powertable": {
       "phase": "local",
-      "description": "Construct table definition parts in Python after an existing table or approved sqldb-cli from-scratch DDL has been verified.",
-      "inputs": "Authorized source identity, physical schema, column configuration and creation_mode=1 or 2.",
-      "command": null,
+      "description": "Construct a configured PowerTable from verified SQL catalog metadata with the product column defaults (Text, Number, Decimal, Date, Date time, Checkbox; displayed keys; All users row access).",
+      "inputs": "Name, authorized connection, sqldb-cli catalog and unique-index results (or physical table metadata), creation_mode 1 or 2, optional column overrides and a fresh export.",
+      "command": "python plan.py powertable-table --input table.request.json --baseline current-definition.json --out candidate",
       "symbols": [
-        "runtime.powertable_factory.configured_table"
+        "runtime.powertable_factory.table_from_request",
+        "runtime.powertable_factory.add_table_to_definition",
+        "runtime.table_columns.table_column_configs"
       ]
     },
     "table-source": {
@@ -218,8 +220,8 @@
     },
     "table-column": {
       "phase": "local",
-      "description": "Construct a table column configuration.",
-      "inputs": "Physical column metadata, key role and editing policy.",
+      "description": "Construct one table column configuration; the kind defaults to the product type for the SQL type.",
+      "inputs": "Physical column metadata, optional kind, key role and editing policy.",
       "command": "python plan.py construct-native table-column --input column.request.json --out column.json",
       "symbols": [
         "runtime.table_columns.column_config"
@@ -236,7 +238,7 @@
     },
     "powertable-approvals": {
       "phase": "external-write",
-      "description": "Configure PowerTable approvers through an explicitly approved workload-service profile and current runtime source identity.",
+      "description": "Assign PowerTable approver users through an explicitly approved workload-service profile; approvers are not definition content.",
       "inputs": "Approved external profile, resolved runtime sourceId, approver Graph IDs/entity types and explicit mutation authorization.",
       "command": "python plan.py powertable-service approval-create --config service.json --input approval.request.json --run run --label approval",
       "symbols": [
@@ -245,13 +247,32 @@
       ]
     },
     "powertable-forms": {
-      "phase": "external-write",
-      "description": "Create a PowerTable form through an explicitly approved workload-service profile using current runtime column config identities.",
-      "inputs": "Approved external profile, resolved runtime sourceId, title, fields and runtime columnConfigId values; explicit mutation authorization.",
-      "command": "python plan.py powertable-service form-create --config service.json --input form.request.json --run run --label form",
+      "phase": "local",
+      "description": "Add PowerTable forms as public definition parts that reference column recordGuids; every mandatory column is included.",
+      "inputs": "Fresh export, PowerTable sheet GUID, form title, ordered field columns and optional display settings.",
+      "command": "python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate",
       "symbols": [
-        "runtime.powertable_service.form_payload",
-        "runtime.powertable_service.create_form"
+        "runtime.powertable_features.form_record",
+        "runtime.powertable_features.add_features"
+      ]
+    },
+    "powertable-automations": {
+      "phase": "local",
+      "description": "Add PowerTable row-event automations (email, Teams, create or update record) as public definition parts.",
+      "inputs": "Fresh export, PowerTable sheet GUID, trigger, optional watched columns and conditions, ordered actions.",
+      "command": "python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate",
+      "symbols": [
+        "runtime.powertable_features.automation_record",
+        "runtime.powertable_features.add_features"
+      ]
+    },
+    "powertable-row-access": {
+      "phase": "local",
+      "description": "Give enabled PowerTable row actions without a Row access selection the product default All users.",
+      "inputs": "Fresh export and optional PowerTable sheet GUIDs.",
+      "command": "python plan.py repair-powertable-row-access --baseline current-definition.json --out candidate",
+      "symbols": [
+        "runtime.powertable_config.backfill_row_access"
       ]
     },
     "format-matrix": {
@@ -941,8 +962,10 @@
         "table-source",
         "table-column",
         "table-config-repair",
-        "powertable-approvals",
-        "powertable-forms"
+        "powertable-row-access",
+        "powertable-forms",
+        "powertable-automations",
+        "powertable-approvals"
       ],
       "aliases": [
         "employee master",
@@ -953,18 +976,24 @@
         "create a PowerTable form",
         "add approval users",
         "database lookup",
-        "master data"
+        "master data",
+        "create a PowerTable automation",
+        "PowerTable row access",
+        "import a file into PowerTable",
+        "PowerTable from template"
       ],
       "businessRequests": [
         "Connect verified existing tables to PowerTable",
         "Create new SQL tables with sqldb-cli and add them to PowerTable",
+        "Import a file or template into a new PowerTable through approved sqldb-cli DDL",
         "Analyze an existing PowerTable source through its saved definition",
+        "Create PowerTable forms and automations in the Plan definition",
+        "Repair a PowerTable with no Row access selection",
         "Configure approvers for PowerTable submissions",
-        "Create a PowerTable form from current column configuration identities",
         "Distinguish supported public routes from private PowerTable CoreAPI modes"
       ],
-      "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-inspect the committed table. Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 1 for from scratch, 2 for existing table.",
-      "limitations": "This skill does not execute SQL directly or call private CoreAPI creation routes. From-scratch requires external sqldb-cli DDL followed by public Plan definition creation. Approval and Form setup use only the explicitly approved workload-service adapter and current runtime identities; upload/template/semantic creation modes remain unavailable without another approved adapter.",
+      "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-read the committed catalog (PHYSICAL_METADATA_SQL and UNIQUE_METADATA_SQL). Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 2 for an existing table, 1 for tables created by DDL (from scratch, file, template or snapshot). Author forms and automations on a fresh export.",
+      "limitations": "This skill does not execute SQL directly or call private CoreAPI creation routes. New tables need external sqldb-cli DDL followed by public Plan definition creation; file, template and snapshot tables record creation mode 1. Semantic-model live sync is unavailable. Approver users need the explicitly approved workload-service adapter and current runtime identities. Scheduled, form-submitted and button automations are not authored.",
       "coverage": "external-adapter"
     },
     {

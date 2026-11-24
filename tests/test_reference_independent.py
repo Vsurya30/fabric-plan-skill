@@ -84,7 +84,7 @@ class IndependentReferenceTests(unittest.TestCase):
 
     def test_generated_sql_identity_is_not_editable(self):
         c=column_config({'name':'ID','dbMeta':dbmeta(isIdentity=True,isPrimaryKey=True)},'integer')
-        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,1,0))
+        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,0,0))
 
     def test_contribution_casts_and_aggregates_to_common_grain(self):
         q=normalize();steps=q['transformationSteps']

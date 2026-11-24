@@ -12,7 +12,8 @@ from .surfaces import powertable_source
 def row_access_setting(name,source_id,enabled):
     from .construct import guid
     setting={'name':name,'recordGuid':guid(),'sourceId':source_id,'settings':{'enabled':enabled}}
-    if name in ('ROW_ADD','ROW_UPDATE'):
+    # Product default: Add/Update carry "All users"; any other enabled action needs an audience too.
+    if name in ('ROW_ADD','ROW_UPDATE') or enabled:
         setting['filters']=[{'recordGuid':guid(),'name':'all_users','filterType':1,'filter':{}}]
     return setting
 
@@ -58,6 +59,62 @@ def configured_table(name, table, connection, columns, *, explicit=False, creati
         'workloadItemEntityVisuals':[{'visualId':vid,'visualType':'POWERTABLE','isEmbedded':False}]}
     return declaration,raw,{'sheetGuid':sid,'visualGuid':vid,'sourceGuid':source['source']['recordGuid'],
         'sqlSchemaReadback':'required','rowSave':'not-tested'}
+
+TABLE_REQUEST={'name','connection','table','catalog','creation_mode','columns','lookup_catalog',
+               'allow_add','allow_update','allow_delete','forms','automations'}
+
+def table_from_request(request):
+    """Configured PowerTable parts from verified physical metadata with product defaults.
+
+    Supply either ``table`` (physical metadata, e.g. from ``sql_definition.physical_table``)
+    or ``catalog`` = ``{"schema", "table", "rows", "unique_rows"}`` holding the
+    sqldb-cli results of ``PHYSICAL_METADATA_SQL`` and ``UNIQUE_METADATA_SQL``.
+    ``columns`` overrides product defaults per physical column. Optional
+    ``forms``/``automations`` are added as definition parts of the same visual.
+    """
+    from .sql_definition import catalog_table
+    from .table_columns import table_column_configs
+    from .powertable_features import feature_parts
+    from .validate import check_powertable_parts
+    if not isinstance(request,dict) or set(request)-TABLE_REQUEST:
+        raise ValueError('Unsupported PowerTable table request field: '+', '.join(sorted(set(request)-TABLE_REQUEST)) if isinstance(request,dict) else 'Request object required')
+    if not isinstance(request.get('name'),str) or not request['name'].strip():raise ValueError('PowerTable sheet name required')
+    if ('table' in request)==('catalog' in request):raise ValueError('Supply exactly one of table or catalog')
+    if 'catalog' in request:
+        catalog=request['catalog']
+        if not isinstance(catalog,dict) or set(catalog)!={'schema','table','rows','unique_rows'}:
+            raise ValueError('catalog needs schema, table, rows and unique_rows')
+        table=catalog_table(catalog['rows'],catalog['unique_rows'],schema=catalog['schema'],table=catalog['table'])
+    else:table=request['table']
+    columns=table_column_configs(table,request.get('columns'),lookup_catalog=request.get('lookup_catalog'))
+    declaration,raw,ids=configured_table(request.get('name'),table,request.get('connection') or {},columns,explicit=True,
+        creation_mode=request.get('creation_mode',2),allow_add=request.get('allow_add',True),
+        allow_update=request.get('allow_update',True),allow_delete=request.get('allow_delete',False))
+    prefix=f"sheets/{ids['sheetGuid']}/visuals/{ids['visualGuid']}/"
+    if request.get('forms') or request.get('automations'):
+        changes,summary=feature_parts(prefix,raw,forms=request.get('forms'),automations=request.get('automations'))
+        raw.update(changes);ids.update(forms=summary['forms'],automations=summary['automations'])
+    check_powertable_parts(raw,prefix)
+    ids['columnTypes']={c['columnName']:c['columnType'] for c in columns}
+    return declaration,raw,ids
+
+def add_table_to_definition(envelope,declaration,new_parts):
+    """Append one configured PowerTable sheet; every existing part keeps its bytes."""
+    from .codec import parts,unpack,patch,pack,sha
+    raw=unpack(envelope);root=copy.deepcopy(raw['definition.json']);sheets=root['sheets']
+    if not isinstance(declaration.get('displayName'),str) or not declaration['displayName'].strip():raise ValueError('Sheet name required')
+    if declaration['displayName'].strip().casefold() in {s['displayName'].casefold() for s in sheets}:
+        raise ValueError('Existing sheet name; choose another name or reconcile the existing sheet')
+    if declaration['recordGuid'] in {s['recordGuid'] for s in sheets} or set(new_parts)&set(raw):
+        raise ValueError('Sheet identity or part collision')
+    sheet=copy.deepcopy(declaration);sheet['order']=max((s.get('order',0) for s in sheets),default=-1)+1
+    sheets.append(sheet)
+    out=patch(envelope,{'definition.json':root},{'definition.json':sha(parts(envelope)['definition.json'])})
+    out.get('definition',out)['parts'].extend(pack(new_parts)['definition']['parts'])
+    after=parts(out)
+    for path,payload in parts(envelope).items():
+        if path!='definition.json' and after[path]!=payload:raise ValueError('Unrelated part changed: '+path)
+    return out
 
 def source_request(table,connection,explicit=False,creation_mode=2):
     if creation_mode not in (1,2):

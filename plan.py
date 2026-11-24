@@ -55,7 +55,13 @@ def main():
     fre.add_argument('--baseline',required=True);fre.add_argument('--input',required=True);fre.add_argument('--out',required=True)
     pt=sp.add_parser('repair-powertable-config',help='Local lookup/source metadata candidate; preserves editability, row actions and unrelated parts')
     pt.add_argument('--baseline',required=True);pt.add_argument('--input',required=True);pt.add_argument('--out',required=True)
-    pts=sp.add_parser('powertable-service',help='Approved external-profile PowerTable source, approval and form operations')
+    ptt=sp.add_parser('powertable-table',help='Configured PowerTable from verified SQL metadata with product column defaults; optional append to a fresh export')
+    ptt.add_argument('--input',required=True);ptt.add_argument('--out',required=True);ptt.add_argument('--baseline')
+    ptf=sp.add_parser('powertable-features',help='Add PowerTable Forms/Automations as public definition parts to a fresh export; preserves other parts')
+    ptf.add_argument('--baseline',required=True);ptf.add_argument('--input',required=True);ptf.add_argument('--out',required=True)
+    pra=sp.add_parser('repair-powertable-row-access',help='Give enabled row actions without a Row access selection the product default All users')
+    pra.add_argument('--baseline',required=True);pra.add_argument('--out',required=True);pra.add_argument('--input')
+    pts=sp.add_parser('powertable-service',help='Approved external-profile PowerTable source and approver operations (approvers are not definition content)')
     pts.add_argument('action',choices=['source-resolve','approval-create','approval-read','form-create','forms-read'])
     pts.add_argument('--config',required=True);pts.add_argument('--input',required=True)
     pts.add_argument('--run',required=True);pts.add_argument('--label',required=True)
@@ -95,6 +101,24 @@ def main():
         out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
         save(out/'definition.json',candidate);save(out/'changes.json',manifest)
         print(dumps(manifest))
+    elif args.cmd=='powertable-table':
+        from runtime.powertable_factory import table_from_request,add_table_to_definition
+        declaration,new_parts,ids=table_from_request(load(args.input))
+        out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
+        save(out/'powertable.json',{'sheet':declaration,'parts':new_parts,'ids':ids})
+        manifest={**ids,'deployment':'not run','runtimeValidation':'not run'}
+        if args.baseline:
+            save(out/'definition.json',add_table_to_definition(load(args.baseline),declaration,new_parts))
+            manifest['candidate']='definition.json'
+        save(out/'changes.json',manifest);print(dumps(manifest))
+    elif args.cmd in ('powertable-features','repair-powertable-row-access'):
+        from runtime.powertable_features import add_features
+        from runtime.powertable_config import backfill_row_access
+        request=load(args.input) if args.input else {}
+        fn=add_features if args.cmd=='powertable-features' else backfill_row_access
+        candidate,manifest=fn(load(args.baseline),**request)
+        out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
+        save(out/'definition.json',candidate);save(out/'changes.json',manifest);print(dumps(manifest))
     elif args.cmd=='powertable-service':
         from runtime.powertable_service import (
             approval_payload, client_from_config, create_approval, create_form,

@@ -52,7 +52,8 @@ class DiscoveryTests(unittest.TestCase):
                 self.assertIn(action['command'].split()[2:4], [['api', 'export'], ['api', 'create'], ['api', 'update']])
             if action['phase']=='external-write':
                 self.assertEqual(action['command'].split()[2],'powertable-service')
-                self.assertIn(action['command'].split()[3],('approval-create','form-create'))
+                # Only approver assignment lacks a public route; forms are definition parts.
+                self.assertEqual(action['command'].split()[3],'approval-create')
 
     def test_every_advertised_callable_exists(self):
         for op in catalog()['actions'].values():
@@ -89,6 +90,9 @@ class DiscoveryTests(unittest.TestCase):
             self.assertEqual(route['id'],'POWERTABLE')
             self.assertIn('creation mode',route['prerequisites'])
             self.assertIn('CoreAPI',route['limitations'])
+        forms=discover('create a PowerTable form')['modules'][0]
+        self.assertEqual(forms['id'],'POWERTABLE')
+        self.assertEqual(catalog()['actions']['powertable-forms']['phase'],'local')
         approval = discover(module='f13')['modules'][0]
         self.assertEqual(approval['operations'], [])
         self.assertIn('Guidance only', render(discover(module='F13')))

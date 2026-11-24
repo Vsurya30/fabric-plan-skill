@@ -33,6 +33,37 @@ def enrich_source(source,connection,workspace,database):
         'artifactId':database['id'],'dbDisplayName':database['displayName']}))
     return result
 
+def backfill_row_access(envelope,*,sheet_guids=None):
+    """Give enabled row actions without an audience the product default "All users".
+
+    PowerTables saved without a row-access filter show no selection on the Row
+    access tab. Only enabled ROW_ADD/ROW_UPDATE/ROW_DELETE settings with no
+    filters change; existing selections and disabled actions are untouched.
+    """
+    from .construct import guid
+    raw=unpack(envelope);original=parts(envelope)
+    sheets=[s for s in raw['definition.json']['sheets'] if s.get('sheetType')=='POWERTABLE']
+    if sheet_guids is not None:
+        if not isinstance(sheet_guids,list) or not set(sheet_guids)<={s['recordGuid'] for s in sheets}:
+            raise ValueError('Select current PowerTable sheet GUIDs')
+        sheets=[s for s in sheets if s['recordGuid'] in sheet_guids]
+    changes={};filled=[]
+    for sheet in sheets:
+        for visual in sheet.get('workloadItemEntityVisuals',[]):
+            path=f"sheets/{sheet['recordGuid']}/visuals/{visual.get('visualId')}/sourceSettings.json"
+            if visual.get('visualType')!='POWERTABLE' or visual.get('isEmbedded') or path not in raw:continue
+            settings=copy.deepcopy(raw[path])
+            for setting in settings.get('sourceSettings',[]):
+                if setting.get('name') in ('ROW_ADD','ROW_UPDATE','ROW_DELETE') and setting.get('settings',{}).get('enabled') is True and not setting.get('filters'):
+                    setting['filters']=[{'recordGuid':guid(),'name':'all_users','filterType':1,'filter':{}}]
+                    filled.append({'sheetGuid':sheet['recordGuid'],'setting':setting['name']})
+            if settings!=raw[path]:changes[path]=settings
+    from .powertable_features import automation_identity_warnings
+    candidate=patch(envelope,changes,{p:sha(original[p]) for p in changes}) if changes else copy.deepcopy(envelope)
+    return candidate,{'filled':filled,'changedParts':sorted(changes),'preservedPartCount':len(original)-len(changes),
+        'rowAccess':'All users for enabled actions that had no selection','warnings':automation_identity_warnings(raw),
+        'deployment':'not run','runtimeValidation':'not run'}
+
 def repair_definition(envelope,*,sheet_guid,lookups,lookup_catalog,source_metadata):
     """Prepare at most two changed parts. Preserve all unrelated encoded bytes."""
     raw=unpack(envelope);original=parts(envelope)

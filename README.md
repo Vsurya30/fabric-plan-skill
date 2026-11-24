@@ -88,7 +88,7 @@ folder or `_build/`.
 | Planning sheets | Input measures (number, text, checkbox, person, select, date), formulas and formula equality, forecasts and time intelligence, roll-forward balances, totals, measure hierarchies, anchors for business-grain assumptions, measure-weighted allocation rules, numeric input constraints |
 | Intelligence dashboards | Page Navigators, integrated variance charts, chart visual filters, Matrix formatting, conditional formatting, typography and layout defaults, embedded Planning and PowerTable visuals |
 | Home | Home content and business navigation within the public Plan definition |
-| PowerTable | Column configuration, lookups and source metadata |
+| PowerTable | Tables from existing or new SQL tables with the product column defaults, lookups, Row access, Forms and Automations; approver assignment through an approved adapter |
 | Connected planning | InfoBridge sources, queries and mappings, Planning-source identity, From Sheets bindings |
 | Data sources | Semantic-model bindings, Fabric SQL and OneLake (From Sheets and From Queries) |
 | Dimensions | Dimension ID mapping, leaf keys and native XXH3 dimension hashing |

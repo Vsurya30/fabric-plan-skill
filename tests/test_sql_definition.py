@@ -21,11 +21,11 @@ class SQLDefinition(unittest.TestCase):
 
     def test_unknown_column_definition_fails(self):
         sql="""CREATE TABLE [dbo].[T] (
-    [ID] BIGINT NOT NULL,
+    [ID] XML NOT NULL,
     CONSTRAINT [PK] PRIMARY KEY CLUSTERED ([ID] ASC)
 );"""
         with self.assertRaises(ValueError):physical_table(sql,'dbo','T')
-        with self.assertRaises(ValueError):physical_table(sql.replace('BIGINT','INT DEFAULT 1'),'dbo','T')
+        with self.assertRaises(ValueError):physical_table(sql.replace('XML','INT DEFAULT 1'),'dbo','T')
 
     def test_definition_endpoint_and_unsafe_part(self):
         class Fake:

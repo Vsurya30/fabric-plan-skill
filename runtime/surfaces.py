@@ -94,3 +94,12 @@ LEFT JOIN (SELECT ic.object_id,ic.column_id FROM sys.indexes i JOIN sys.index_co
  ON i.object_id=ic.object_id AND i.index_id=ic.index_id WHERE i.is_primary_key=1) pk
  ON pk.object_id=c.object_id AND pk.column_id=c.column_id
 WHERE s.name=@schema AND t.name=@table ORDER BY c.column_id;"""
+# Unique indexes and constraints for the same table; filtered indexes do not
+# guarantee table-wide uniqueness and are excluded. Feed both result sets to
+# sql_definition.catalog_table.
+UNIQUE_METADATA_SQL="""SELECT i.name AS index_name,i.is_primary_key,c.name AS column_name,ic.key_ordinal
+FROM sys.indexes i JOIN sys.index_columns ic ON i.object_id=ic.object_id AND i.index_id=ic.index_id
+JOIN sys.columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id
+JOIN sys.tables t ON t.object_id=i.object_id JOIN sys.schemas s ON s.schema_id=t.schema_id
+WHERE s.name=@schema AND t.name=@table AND i.is_unique=1 AND i.has_filter=0 AND ic.is_included_column=0
+ORDER BY i.index_id,ic.key_ordinal;"""

@@ -1,79 +1,198 @@
 # PowerTable modes, SQL ownership and Plan definition
 
-Choose the source state before planning. The bundled skill supports
-**existing-table** and **from-scratch-after-DDL** Plan authoring. It does not
-call the private PowerTable CoreAPI from scratch.
+Choose the source state before planning. `fabric-plan-skill` owns the PowerTable
+definition (`source.json`, `columnConfigs.json`, `sourceSettings.json`,
+`properties.json`, `forms.json`, `automations.json`) and the Fabric Plan
+lifecycle. The external `sqldb-cli` companion owns SQL catalog inspection, DDL,
+DML and read-only T-SQL:
+<https://github.com/gim-home/skills-for-fabric/tree/main/skills/sqldb-cli>.
+Install or attach it separately. A Plan-definition request alone never
+authorizes a database write.
 
-| Mode | SQL state | Supported route |
+| UI creation mode | Route in this skill | `creation_mode` |
 |---|---|---|
-| Existing table | Table already exists in an authorized Fabric SQL Database | Inspect physical catalog with `sqldb-cli`, construct `creationMode: 2`, then create/update the Plan through public Fabric APIs |
-| From scratch | Table must be designed and created | Model and approve DDL, execute it with the external `sqldb-cli` companion, re-inspect the committed table, then construct `creationMode: 1` and create/update the Plan through public Fabric APIs |
-| Import file | Table is created by the PowerTable CoreAPI upload/batch flow | Not exposed by this skill; the observed routes are workload-internal and require a pre-existing PowerTable create-table task |
-| Semantic model / template | Source is assembled by internal workload routes | Not exposed by this skill; report as unavailable rather than emulating CoreAPI calls |
-| Existing-sheet analysis | Read-only data question about a saved PowerTable | Decode the Plan definition, confirm database/schema/table and column mappings, then query read-only with `sqldb-cli` |
+| Import existing table | Read the catalog with `sqldb-cli`, then `powertable-table` | 2 |
+| Create from scratch | Approved DDL through `sqldb-cli`, re-read the catalog, then `powertable-table` | 1 |
+| Import from file (CSV/XLSX) | Infer columns from the file, approved DDL plus an approved row load through `sqldb-cli`, re-read the catalog, then `powertable-table` | 1 |
+| Create from template | Design the template's tables as from-scratch DDL (keys, lookups, sample rows only if approved), then `powertable-table` | 1 |
+| Import from semantic model | Not available as a live sync: the sync relies on workload records the public definition cannot create. Offer a one-time snapshot (query the model, then the file route) and say it will not refresh | 1 |
+| Existing-sheet analysis | Decode the Plan definition, confirm database/schema/table and column mappings, then query read-only with `sqldb-cli` | n/a |
 
-The external `sqldb-cli` companion is the SQL Database authoring/consumption
-skill: <https://github.com/gim-home/skills-for-fabric/tree/main/skills/sqldb-cli>.
-Install or attach that skill separately. `fabric-plan-skill` owns the PowerTable
-definition and Fabric Plan lifecycle; `sqldb-cli` owns SQL catalog inspection,
-DDL, DML and read-only T-SQL. A Plan-definition request alone never authorizes a
-database write.
+Tables built through the file, template or snapshot routes record
+`creation_mode` 1 because the table is created by DDL. The product's 3/4/5 origins
+depend on upload tasks, sync records and templates owned by the workload service.
+Do not call `/CoreAPI/.../databases/create-table/...` or other private workload
+routes to imitate them, and do not present them as Fabric REST APIs.
 
-## From-scratch workflow
+## Column defaults
 
-1. Resolve the destination workspace, Fabric SQL Database and one explicit user
-   schema. List every user schema; mark `dbo` as the default but require
+`powertable-table` and `table_column_configs` give every physical column the
+type the product assigns when a table is added:
+
+| SQL type | PowerTable column | Notes |
+|---|---|---|
+| `varchar`, `nvarchar`, `char`, `nchar`, `text` | Text (1) | Plain text. Never Single select by default |
+| `int`, `bigint`, `smallint`, `tinyint` | Number (6) | |
+| `decimal`, `numeric`, `float`, `real`, `money` | Decimal (13) | 2 decimals unless overridden |
+| `date` | Date (4) | |
+| `datetime`, `datetime2`, `smalldatetime` | Date time (12) | `timeZone: timezone-independent` keeps stored values unshifted; `user-local` treats them as UTC |
+| `bit` | Checkbox (11) | Checked `1`, unchecked `0` |
+
+Other SQL types (`uniqueidentifier`, `datetimeoffset`, `xml`, binary) have no
+default; choose a compatible kind explicitly or report the column.
+
+Every column, including the primary key, is displayed (`hideColumn: 0`).
+Identity and computed columns are read-only and not mandatory; other `NOT NULL`
+columns are mandatory. Change presentation only on request, per column:
+
+```json
+{"columns": {
+  "Status": {"kind": "text-options"},
+  "DepartmentID": {"kind": "database-lookup",
+                   "lookup": {"schema": "dbo", "table": "Department", "key": "DepartmentID", "label": "DepartmentName"}},
+  "Salary": {"decimals": 0, "hide": true},
+  "LastLogin": {"time_zone": "user-local"},
+  "Code": {"display_name": "Employee code"}
+}}
+```
+
+`text-options` is Single select with distinct values; `database-lookup` needs
+`lookup_catalog` from the current SQL catalog. `date` may be chosen for a
+datetime column to hide the time; `datetime` is never valid on a `date` column.
+
+## Build the table definition
+
+1. Resolve the destination workspace, Fabric SQL Database, connection and one
+   explicit schema. List user schemas; `dbo` is the default but needs
    confirmation.
-2. Model at most five tables with stable primary keys, required foreign keys and
-   a reviewed SQL type mapping. Use `sqldb-cli` for catalog/collision checks.
-3. Preview the complete table layout and obtain explicit DDL approval.
-4. Use `sqldb-cli` to execute the approved transactional DDL. Roll back on SQL
-   failure. Offer synthetic rows separately, only 1-100 per new table, and never
-   insert them without separate inclusion in the approval.
-5. Re-inspect the committed table through the authorized SQL catalog. DDL
-   success is not enough; capture the actual columns, types, keys and identity
-   metadata.
-6. Construct the PowerTable with `configured_table(..., creation_mode=1)`.
-   The generated `source.json` records origin mode 1 while referencing the
-   verified physical table.
-7. Create the Plan through the documented public Fabric Plan API, then read back
-   the complete definition and confirm source identity, column configs and row
-   actions.
-8. Report partial state if SQL committed but Plan creation failed. Never rerun
-   DDL merely to resume Plan creation.
+2. Run `surfaces.PHYSICAL_METADATA_SQL` and `surfaces.UNIQUE_METADATA_SQL` with
+   `@schema`/`@table` through `sqldb-cli`. Both are read-only. An empty unique
+   result is valid; a missing one is not.
+3. For from scratch, file, template or snapshot, first preview the complete
+   table layout and obtain explicit DDL approval. Model at most five tables with
+   stable primary keys and required foreign keys. Use a date-only `DATE` for
+   dates and `DATETIME2(0)` for date and time. Execute the approved
+   transactional DDL with `sqldb-cli` and roll back on failure. Load rows only
+   with separate approval (synthetic rows: 1-100 per table). Then run step 2 on
+   the committed table: DDL success is not proof of the schema.
+4. Write the request and construct the candidate on a fresh export:
 
-For existing tables, skip DDL and use `configured_table(..., creation_mode=2)`
-or the default constructor. The local `powertable-source` command accepts
-`creation_mode` in its input; pass `1` only after verified from-scratch DDL and
-`2` for an existing source.
+```json
+{
+  "name": "Employees",
+  "creation_mode": 2,
+  "connection": {"connectionId": "...", "dbHost": "...", "dbName": "...", "artifactId": "...",
+                 "workspaceId": "...", "connectionName": "...", "workspaceName": "...", "dbDisplayName": "..."},
+  "catalog": {"schema": "dbo", "table": "Employee", "rows": [], "unique_rows": []},
+  "columns": {},
+  "allow_add": true, "allow_update": true, "allow_delete": false
+}
+```
 
-## Why internal CoreAPI is not the fallback
+```sh
+python plan.py powertable-table --input table.request.json --baseline current-definition.json --out candidate
+```
 
-The attached `powertable-core` implementation is evidence for the product's
-private workload flow, not a public API contract. Its `CREATE_FROM_SCRATCH`
-mode and create-table batch endpoints live behind workload-scoped CoreAPI
-services, parent upload tasks, background workers, artifact context and
-privileged database credentials. The batch worker currently accepts uploaded
-Excel/CSV source tasks rather than arbitrary SQL DDL. Calling those endpoints
-directly would bypass the skill's public-API boundary and the required plan,
-connection and task context.
+`rows`/`unique_rows` are the two query results (objects keyed by the selected
+column names). `table` may replace `catalog` when the physical metadata came
+from `sql_definition.physical_table`. Without `--baseline` the command writes
+only the new sheet and parts. `changes.json` lists each column's type code;
+compare it with the request before `api update`.
 
-Therefore:
+5. Create or update the Plan through the public Fabric Plan API, then read back
+   the complete definition and confirm source identity, column configs, row
+   actions, forms and automations.
+6. Report partial state if SQL committed but the Plan update failed. Never rerun
+   DDL or row loads merely to resume Plan creation.
 
-- do not construct or call `/CoreAPI/.../databases/create-table/...` routes;
-- do not present a private workload endpoint as a supported Fabric REST API;
-- do support from-scratch creation through reviewed `sqldb-cli` DDL followed by
-  public Plan creation;
-- keep import-file, semantic-model and template source creation documented as
-  unsupported until an approved public contract or external adapter exists.
+## Row access
 
-## Approvals and Forms
+Row actions carry their audience. New tables get the product default:
+`ROW_ADD` and `ROW_UPDATE` enabled for **All users** (`all_users`,
+`filterType: 1`, `filter: {}`), `ROW_DELETE` disabled. Enabling delete adds the
+same All users selection. Validation rejects an enabled row action with no
+selection.
 
-Approvals and Forms are source-scoped workload-service records, not Plan
-definition parts. They cannot be satisfied by changing
-`properties.json` or `sourceSettings.json`.
+PowerTables saved without a selection show nothing on the Row access tab.
+Repair them on a fresh export; only enabled actions without a selection change:
 
-Use `plan.py powertable-service` only with an approved external profile:
+```sh
+python plan.py repair-powertable-row-access --baseline current-definition.json --out candidate
+```
+
+Pass `--input` with `{"sheet_guids": ["<sheet GUID>"]}` to limit the repair.
+
+## Forms and Automations
+
+Forms and Automations are Plan definition parts in the PowerTable visual folder.
+The Plan import creates and updates them, so author them on a fresh export and
+publish through the public API:
+
+```json
+{
+  "sheet_guid": "<PowerTable sheet GUID>",
+  "forms": [{
+    "title": "New employee",
+    "description": "",
+    "fields": [{"column": "Code"}, {"column": "FullName"}, {"column": "JoinDate"},
+               {"column": "Active", "defaultValue": true}, {"column": "Department", "mandatory": 0}],
+    "config": {"showTitle": true, "submissionMessage": "Thanks", "fieldLabel": "stacked"}
+  }],
+  "automations": [{
+    "name": "Notify HR",
+    "trigger": "ROW_UPDATED",
+    "watch_columns": ["Active"],
+    "conditions": {"combinator": "and", "rules": [{"field": "Active", "operator": "equals", "value": true}]},
+    "actions": [{"type": "SEND_MAIL", "config": {"subject": "Status changed", "body": "...", "to": ["hr@example.com"]}}]
+  }]
+}
+```
+
+```sh
+python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate
+```
+
+Forms:
+
+- Fields name configured columns. Every mandatory column must be on the form
+  (the product blocks submission otherwise) and stays mandatory there.
+  Read-only columns (identity, computed, read-only lookups) cannot be fields.
+- Each field and layout node references the column's `recordGuid`; the import
+  maps it to the runtime column. Do not use runtime column IDs or display names.
+- Submissions need `ROW_ADD` access; the command warns when adding is disabled.
+- Titles are unique per table; the default layout lists the fields in order.
+
+Automations:
+
+- Triggers: `ROW_CREATED`, `ROW_UPDATED` (optional `watch_columns`),
+  `ROW_DELETED`. Actions run in order in one action block: `SEND_MAIL`
+  (subject, body, to, optional cc/bcc), `MS_TEAMS` (message, channelDetails),
+  `CREATE_RECORD` and `UPDATE_RECORD` (connectionId, schema, table, fields;
+  update also needs a conditions group).
+- Trigger conditions use one `{combinator, rules}` group on Text, Number,
+  Decimal or Checkbox columns. The engine evaluates this group shape; the public
+  schema lists conditions as an array, so validation reports it as a native
+  extension.
+- `{{...}}` value references pass through unevaluated. Copy their syntax from an
+  exported automation of the same tenant. Scheduled, form-submitted, button,
+  conditional-branch and sync automations are not authored here.
+
+An update that omits an existing `automations.json` or `approvals.json`
+deletes those records on import. Always patch a fresh export; never rebuild a
+PowerTable folder from scratch for an existing Plan.
+
+Product exports omit each automation's `recordGuid`, so the import cannot match
+exported automations: any update that carries them may recreate or overwrite
+them and lose their run history. `powertable-features` and
+`repair-powertable-row-access` warn when this applies; tell the user and verify
+every automation after publishing.
+
+## Approvals
+
+`approvals.json` holds the approval workflow (rule type, levels, filters) and
+travels with the definition: preserve it. Approver users are not definition
+content. Assigning them needs the bounded `powertable-service` adapter with an
+approved external profile:
 
 ```json
 {
@@ -81,106 +200,53 @@ Use `plan.py powertable-service` only with an approved external profile:
   "allowedHosts": ["resolved-approved-workload-service-host"],
   "tokenEnvironment": "FABRIC_PLAN_POWERTABLE_TOKEN",
   "authScheme": "Bearer",
-  "contextHeaders": {
-    "x-ms-workload-resource-moniker": "<current Plan ID>"
-  },
+  "contextHeaders": {"x-ms-workload-resource-moniker": "<current Plan ID>"},
   "approvedExternalAdapter": true,
   "authorizedMutation": true
 }
 ```
 
 Resolve the runtime `sourceId` from the configured table; do not substitute the
-Plan definition's `recordGuid`. The adapter's source-resolution request returns
-the configured `dataSourceId`, runtime `visualId` and column catalog. Resolve
-approver Graph IDs and each form field's runtime `columnConfigId` through the
-authorized directory/current source context; never use display names as IDs.
+definition's `recordGuid`. Resolve approver Graph IDs through the authorized
+directory; never use display names as IDs.
 
 ```sh
-python plan.py powertable-service source-resolve \
-  --config service.json --input source.request.json --run run --label source
-
-python plan.py powertable-service approval-create \
-  --config service.json --input approval.request.json --run run --label approval
-
-python plan.py powertable-service form-create \
-  --config service.json --input form.request.json --run run --label form
+python plan.py powertable-service source-resolve --config service.json --input source.request.json --run run --label source
+python plan.py powertable-service approval-create --config service.json --input approval.request.json --run run --label approval
 ```
-
-Approval input:
 
 ```json
 {
   "sourceId": "<runtime sourceId>",
-  "approvers": [
-    {"graphId": "<Microsoft Graph user ID>", "entityType": "USER"}
-  ],
-  "ruleType": 10,
-  "multiLevelEnabled": 0,
-  "approvalLevel": 1
+  "approvers": [{"graphId": "<Microsoft Graph user ID>", "entityType": "USER"}],
+  "ruleType": 10, "multiLevelEnabled": 0, "approvalLevel": 1
 }
 ```
 
-Form input:
+The adapter writes only `POST /v2/powertable/sources/{sourceId}/approvals/`
+(and, for legacy runs, `.../forms/`; prefer the definition route for forms). It
+rejects unapproved hosts, missing mutation approval, missing runtime identities
+and invalid approver entity types. Re-read the approval after the call and
+report it separately from the Plan definition update. Whether an approval
+created through the definition import appears in the UI needs a live readback.
 
-```json
-{
-  "sourceId": "<runtime sourceId>",
-  "title": "New employee",
-  "fields": [
-    {
-      "columnConfigId": "<runtime column config ID>",
-      "description": "",
-      "mandatory": 1,
-      "defaultValue": ""
-    }
-  ]
-}
-```
+## Existing tables: keys, lookups and analysis
 
-The adapter writes only these exact source-scoped routes:
+Start from the physical schema: database, schema, base table, columns, types,
+nullability, primary key, identity/computed columns and approved connection
+identity. A display name does not prove any of those identities. Keep generated
+keys read-only. Decide row insertion separately from editability of an existing
+column.
 
-- `POST /v2/powertable/sources/{sourceId}/approvals/`
-- `POST /v2/powertable/sources/{sourceId}/forms/`
-
-It rejects unapproved hosts, missing mutation approval, missing runtime
-identities, invalid approver entity types, and empty/non-identified form fields.
-Re-read the approval/form source after the call and report the saved state
-separately from Plan definition creation.
-
-## Existing-table workflow
-
-Use this skill for the Plan definition. For live Fabric SQL Database work,
-use the sibling skill `sqldb-cli`: `az rest` calls the Fabric control plane;
-`sqlcmd` runs T-SQL against the database. Before connecting, follow the external
-companion's sign-in, workspace-discovery and token-audience setup. A Plan repair
-does not authorize a database write.
-
-**Existing table.** Start from the physical schema: database, schema, base
-table, columns, types, nullability, primary key, identity/generated columns,
-and approved connection identity. A display name does not prove any of those
-identities. Keep generated keys read-only. Decide row insertion separately
-from editability of an existing column.
-
-**New table.** Work out the grain before designing columns. For an employee
-master, decide whether a row denotes an employee or an employee assignment;
-choose the stable key accordingly. Specify required/default values and unique
-constraints. Use the external SQL companion for DDL and re-inspect the committed
-catalog before constructing the Plan definition. A local Plan definition does
-not itself provision a connection, grant privileges or prove SQL completion.
+**New table grain.** For an employee master, decide whether a row denotes an
+employee or an employee assignment; choose the stable key accordingly. Specify
+required/default values and unique constraints.
 
 **Lookup.** For `Employee.DepartmentID` referencing `Department.DepartmentID`,
 store the key and display the requested label, e.g. `DepartmentName`. Require
 compatible types and a unique target key. Repeated labels do not uniquely
-identify rows. A lookup configuration is not a join and must not overwrite
-the stored key. Preserve unrelated column metadata, editing and row actions.
-
-**Row access selection.** A configured PowerTable row action must include its
-audience selection, not only `settings.enabled`. Existing-table and from-scratch
-constructors use **All Users** by default: `ROW_ADD` and `ROW_UPDATE` receive one
-filter named `all_users` with `filterType: 1` and `filter: {}`. `ROW_DELETE`
-remains disabled and has no filter until explicitly configured. If an action is
-enabled later, add a valid row-access selection before publishing; validation
-rejects enabled row actions with no filters.
+identify rows. A lookup configuration is not a join and must not overwrite the
+stored key. Preserve unrelated column metadata, editing and row actions.
 
 ```sh
 python plan.py repair-powertable-config --baseline current-definition.json --input repair-request.json --out candidate

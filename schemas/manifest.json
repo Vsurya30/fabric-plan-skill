@@ -113,6 +113,24 @@
       "file": "061b3d23cc81d845.json",
       "sha256": "b1043964ce814d51d3f6cd8509545f96fd357a8b275c8c0bb57480bf1e8fefb6",
       "status": "downloaded"
+    },
+    {
+      "url": "https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/PowerTable/Forms/1.0.0/schema.json",
+      "file": "7e2cb13d41b095d7.json",
+      "sha256": "a5efe566ba2481714320632c44c3d56f0190031f573d2089f33ac36d62b81a7a",
+      "status": "downloaded"
+    },
+    {
+      "url": "https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/PowerTable/Approvals/1.0.0/schema.json",
+      "file": "465486d23d4cd475.json",
+      "sha256": "d316d26f736121b9b556a1e99da93924323f6d8dfa909367be7c47f3ef2f3c50",
+      "status": "downloaded"
+    },
+    {
+      "url": "https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/PowerTable/Automations/1.0.0/schema.json",
+      "file": "ad9d2d11c87e4fba.json",
+      "sha256": "296cf12ee4b77008111ea5a2fef326ee0adde6c14b1ba0fa3b1b89fc2a4166f8",
+      "status": "downloaded"
     }
   ]
 }

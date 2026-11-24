@@ -2,7 +2,7 @@
 Implements only keywords present in the bundled schema closure. Unknown validation
 keywords fail closed; annotation/default fields do not construct application state.
 """
-import re, uuid, urllib.parse, decimal, copy
+import re, uuid, urllib.parse, decimal, copy, json
 from pathlib import Path
 from .codec import load,sha,pointer_get,dumps
 from .identity import native_id
@@ -164,7 +164,61 @@ def check_powertable_parts(raw,prefix):
         raise ValueError('PowerTable visual column catalog differs from columnConfigs')
     if not isinstance(measures,list) or [item.get('id') for item in measures]!=names:
         raise ValueError('PowerTable managed-column order differs from columnConfigs')
-    return {'sourceId':source_id,'columns':len(names),'settings':len(settings)}
+    features=check_powertable_features(raw,prefix,set(concrete_guids))
+    return {'sourceId':source_id,'columns':len(names),'settings':len(settings),**features}
+
+def _native_json(value):
+    """Exported workload records may hold a JSON object as a string; None if unparseable."""
+    if isinstance(value,str):
+        try:value=json.loads(value) if value.strip() else {}
+        except ValueError:return None
+    return value if isinstance(value,dict) else None
+
+def check_powertable_features(raw,prefix,column_guids):
+    """Optional Forms, Automations and Approvals parts that the Plan import consumes.
+
+    Accepts product-export shapes (string configs, empty layouts, automations
+    without recordGuid); the constructors that author new records stay strict.
+    """
+    found={}
+    if prefix+'forms.json' in raw:
+        forms=raw[prefix+'forms.json'].get('forms')
+        if not isinstance(forms,list):raise ValueError('PowerTable forms.json requires a forms list')
+        guids=[]
+        for form in forms:
+            if not isinstance(form,dict) or not isinstance(form.get('recordGuid'),str) or not form['recordGuid']:
+                raise ValueError('PowerTable form record identity required')
+            layout=_native_json(form.get('layoutMeta',{}))
+            if not isinstance(form.get('title'),str) or (layout is not None and 'children' in layout and not isinstance(layout['children'],list)):
+                raise ValueError('PowerTable form requires a title and list layout children')
+            for field in form.get('formFields') or []:
+                if not isinstance(field,dict) or not isinstance(field.get('recordGuid'),str):raise ValueError('PowerTable form field identity required')
+                # Import resolves columnConfigId through column recordGuids; a stale one is silently dropped.
+                if 'columnConfigId' in field and field['columnConfigId'] not in column_guids:
+                    raise ValueError('PowerTable form field references an unknown column recordGuid')
+                if field.get('required',0) not in (0,1):raise ValueError('PowerTable form field required must be 0 or 1')
+            guids.append(form['recordGuid'])
+        if len(guids)!=len(set(guids)):raise ValueError('Duplicate PowerTable form identity')
+        found['forms']=len(forms)
+    if prefix+'automations.json' in raw:
+        automations=raw[prefix+'automations.json'].get('automations')
+        if not isinstance(automations,list):raise ValueError('PowerTable automations.json requires an automations list')
+        for automation in automations:
+            trigger=automation.get('triggerType') if isinstance(automation,dict) else None
+            if not isinstance(automation,dict) or not isinstance(automation.get('name'),str) or not (
+                    type(trigger) is int or (isinstance(trigger,str) and trigger.isdigit())):
+                raise ValueError('PowerTable automation requires a name and numeric triggerType')
+            config=_native_json(automation.get('config'))
+            if config is not None and isinstance(config.get('groups'),dict) and 'entryGroupId' in config and config['entryGroupId'] not in config['groups']:
+                raise ValueError('PowerTable automation entry group is unresolved')
+        found['automations']=len(automations)
+    if prefix+'approvals.json' in raw:
+        approval=raw[prefix+'approvals.json'].get('approvals')
+        # Import iterates both lists without a null check; an omitted list fails the whole import.
+        if not isinstance(approval,dict) or not isinstance(approval.get('approvalLevels'),list) or not isinstance(approval.get('approvalFilter'),list):
+            raise ValueError('PowerTable approvals.json requires approvalLevels and approvalFilter lists')
+        found['approvals']=1
+    return found
 
 def measure_references(value):
     found=set()
@@ -293,6 +347,17 @@ def public_schema_view(path,obj):
                 for child in item:normalize_input_policy(child)
         normalize_input_policy(value)
         if normalized:extensions.append('Native target-input policy is newer than the pinned public DataInput schema')
+    if path.endswith('/automations.json') and isinstance(value.get('automations'),list):
+        # The automation engine evaluates one {combinator, rules} group; the public
+        # schema describes conditions as an array. Check the group as a one-item array.
+        normalized=False
+        for automation in value['automations']:
+            config=automation.get('config') if isinstance(automation,dict) else None
+            trigger=config.get('trigger') if isinstance(config,dict) else None
+            trigger_config=trigger.get('triggerConfig') if isinstance(trigger,dict) else None
+            if isinstance(trigger_config,dict) and isinstance(trigger_config.get('conditions'),dict):
+                trigger_config['conditions']=[trigger_config['conditions']];normalized=True
+        if normalized:extensions.append('Native automation conditions are one rule group; the public schema lists an array')
     return value,extensions
 
 def schema_report(raw):

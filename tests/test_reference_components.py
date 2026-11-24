@@ -60,9 +60,10 @@ class TableTests(unittest.TestCase):
         meta=self.metadata();meta[0]['columns'][0]['isPrimaryKey']=False
         with self.assertRaises(ValueError):column_config(db(),'database-lookup',lookup=self.lookup(),lookup_catalog=meta)
         with self.assertRaises(ValueError):column_config(db(),'database-lookup',lookup=self.lookup(),lookup_catalog=[])
-    def test_identity_is_readonly_hidden_not_mandatory(self):
+    def test_identity_is_readonly_displayed_not_mandatory(self):
+        # The product shows every column, including an identity key, on the Columns tab.
         c=column_config(db('RowKey',identity=True),'integer')
-        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,1,0))
+        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,0,0))
     def test_date_decimal_keep_physical_metadata(self):
         for kind,typ in [('date','date'),('decimal','decimal')]:
             source=db('Value',typ);c=column_config(source,kind)
