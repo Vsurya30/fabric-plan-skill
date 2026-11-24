@@ -6,7 +6,7 @@ supported subset. They do not prevent independent application work.
 from pathlib import Path
 from .codec import load,save,sha,dumps,pack
 from .transport import Client,plan_operation
-from .validate import validate_plan,schema_report
+from .validate import validate_plan,require_public_schema_acceptance
 from .surfaces import home_item,home_layout
 from .home_fit import readable_home_layout
 
@@ -82,8 +82,9 @@ def provision(config,model,spec,run):
         if authored['signature']!=signature: raise ValueError('Resume input drift; reconcile explicitly without recreating the Plan')
     else:
         authored=build_application(model,spec);validate_plan(authored['raw']);check_application(authored['raw'])
-        authored.update(signature=signature,publicSchemas=schema_report(authored['raw']))
+        authored.update(signature=signature,publicSchemas=require_public_schema_acceptance(authored['raw']))
         save(cp,authored)
+    require_public_schema_acceptance(authored['raw'])
     from .application_defaults import check_application_defaults,require_delivery_phases
     # Resumed/cached constructions must satisfy the same mandatory baseline.
     check_application_defaults(authored['raw'],authored.get('home'))

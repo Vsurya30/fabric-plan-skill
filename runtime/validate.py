@@ -244,10 +244,61 @@ def validate_plan(raw):
         slugs.add(slug)
         if not set(b['cloudMeta']['bookmarkVisualMeta'])<=owners.keys(): raise ValueError('Bookmark visual unresolved')
     return {'status':'passed-structural-invariants','sheets':len(sheets),'directVisuals':len(owners),'measureRecords':n,'publicBookmarks':len(bookmarks),'nativeRuntime':'not-run'}
+
+def public_schema_view(path,obj):
+    """Normalize reviewed native extensions only for historical public schemas."""
+    value=copy.deepcopy(obj); extensions=[]
+    if path=='definition.json':
+        reporting_types={'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS','BI_RUNTIME_INPUT'}
+        normalized=False
+        for sheet in value.get('sheets',[]):
+            if sheet.get('sheetType')!='REPORTING':continue
+            for visual in sheet.get('workloadItemEntityVisuals',[]):
+                if not visual.get('isEmbedded') and visual.get('visualType') in reporting_types:
+                    visual['visualType']='PLANNING';normalized=True
+        if normalized:extensions.append('Reporting visual types are native Plan extensions absent from the pinned public schema')
+    if path=='planProperties.json' and value.get('properties',{}).get('homeLayout')=={'show':True}:
+        value['properties']['homeLayout']=''
+        extensions.append('Native object homeLayout replaces the historical public string format')
+    if path.endswith('/dataInput.json'):
+        normalized=False
+        def normalize_input_policy(item):
+            nonlocal normalized
+            if isinstance(item,dict):
+                policy=item.get('allow_input')
+                if policy=='Edit' or (isinstance(policy,dict) and set(policy)=={'BasedOnFormula'} and
+                                     isinstance(policy['BasedOnFormula'],str) and policy['BasedOnFormula']):
+                    item['allow_input']='ReadAndEdit';normalized=True
+                if 'bound_to_filter_context' in item and isinstance(item['bound_to_filter_context'],bool):
+                    item.pop('bound_to_filter_context');normalized=True
+                for key in ('min_value','max_value'):
+                    tagged=item.get(key)
+                    if isinstance(tagged,dict) and set(tagged)=={'Static'} and isinstance(tagged['Static'],(int,float)) and not isinstance(tagged['Static'],bool):
+                        item[key]=tagged['Static'];normalized=True
+                for child in item.values():normalize_input_policy(child)
+            elif isinstance(item,list):
+                for child in item:normalize_input_policy(child)
+        normalize_input_policy(value)
+        if normalized:extensions.append('Native target-input policy is newer than the pinned public DataInput schema')
+    return value,extensions
+
 def schema_report(raw):
     s=Schemas(); result=[]
     for path,obj in raw.items():
         if not isinstance(obj,dict) or '$schema' not in obj: result.append({'path':path,'status':'uncovered','reason':'No declared schema'}); continue
-        try: s.check(obj,obj['$schema']); result.append({'path':path,'status':'passed-public-schema'})
-        except (Invalid,SchemaGap) as e: result.append({'path':path,'status':'schema-gap' if isinstance(e,SchemaGap) else 'schema-conflict','reason':str(e)})
+        candidate,extensions=public_schema_view(path,obj)
+        try:
+            s.check(candidate,candidate['$schema'])
+            result.append({'path':path,'status':'passed-native-extension' if extensions else 'passed-public-schema',
+                           **({'reason':'; '.join(extensions)} if extensions else {})})
+        except Invalid as e: result.append({'path':path,'status':'schema-conflict','reason':str(e)})
+        except SchemaGap as e: result.append({'path':path,'status':'schema-gap','reason':str(e)})
     return result
+
+def require_public_schema_acceptance(raw):
+    report=schema_report(raw)
+    blocked=[item for item in report if item['status'] in ('schema-conflict','schema-gap')]
+    if blocked:
+        details='; '.join(item['path']+': '+item['reason'] for item in blocked)
+        raise ValueError('PUBLIC_SCHEMA_VALIDATION: '+details)
+    return report
