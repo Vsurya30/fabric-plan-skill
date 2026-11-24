@@ -33,7 +33,7 @@ Choose a reference directly; the list is a menu, not a reading sequence.
 | Task | Guides |
 |---|---|
 | Build, validate or update a definition | [Runtime guide](references/runtime-guide.md) |
-| Configure sheet measures and embedded dashboards | [Planning measures](references/planning-measures.md), [presentation](references/planning-presentation.md) |
+| Configure sheet measures and embedded dashboards | [Planning measures](references/planning-measures.md), [presentation](references/planning-presentation.md). Super Filters in a top band use dropdown mode; Super Filters in a left rail use hierarchy mode. |
 | Plan over time | [Forecast](references/forecast-authoring.md), [roll-forward balances (short default)](references/roll-forward-authoring.md), [formula equality](references/formula-equality.md). Only for full worked cases: [roll-forward formula patterns](references/roll-forward-formula-patterns.md). |
 | Connect sources | [InfoBridge](references/infobridge-construction.md), [PowerTable](references/powertable.md) |
 | Design input and allocations | [Editability](references/input-editability.md), [numeric constraints](references/numeric-input-constraints.md), [anchor measures](references/anchor-measures.md), [measure-weighted distribution](references/measure-weighted-distribution.md) |

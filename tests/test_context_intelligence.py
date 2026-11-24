@@ -6,7 +6,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from runtime.construct import build
 from runtime.identity import Registry
 from runtime.filters import selection,forward_filters,audit_context,prepare_context
-from runtime.intelligence import slicer,card,rectangles
+from runtime.intelligence import slicer,card,rectangles,slicer_placement
 from runtime.intelligence_api import visibility
 from runtime.readback import verify_authored
 from runtime.codec import pack,unpack,parts
@@ -70,8 +70,23 @@ class ContextConstruction(unittest.TestCase):
     def test_range_has_no_stale_values_and_type_checks(self):
         m,s=example();p=slicer(m,s['dashboards'][0]['slicers'][0]);d=p['visualState']['slicerFilterAssignments']
         self.assertEqual(len(d),1);self.assertEqual(d[0]['filterType'],'RANGE');self.assertNotIn('valuesFilter',d[0])
+        self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'dropdown')
+        self.assertFalse(p['visualState']['facetSettings']['enableFacetMode'])
         for kwargs in [{'values':['2030']},{'between':[2031,2030]},{'between':[True,2030]},{'values':[2030],'between':[2030,2031]}]:
             with self.assertRaises(ValueError):selection(m,'Time[Year]',**kwargs)
+    def test_super_filter_mode_follows_top_or_left_placement(self):
+        m,s=example()
+        top=slicer(m,s['dashboards'][0]['slicers'][0],placement='top')
+        left=slicer(m,s['dashboards'][0]['slicers'][0],placement='left')
+        self.assertEqual(top['visualState']['facetSettings']['facetViewType'],'dropdown')
+        self.assertFalse(top['visualState']['facetSettings']['enableFacetMode'])
+        self.assertEqual(left['visualState']['facetSettings']['facetViewType'],'hierarchy')
+        self.assertTrue(left['visualState']['facetSettings']['enableFacetMode'])
+        stacked=rectangles(2,0,layout='stacked')['rectangles']
+        rail=rectangles(2,0,layout='left-rail')['rectangles']
+        self.assertEqual(slicer_placement(stacked,'slicer:0'),'top')
+        self.assertEqual(slicer_placement(rail,'slicer:0'),'left')
+        with self.assertRaises(ValueError):slicer(m,s['dashboards'][0]['slicers'][0],placement='right')
     def test_forwarding_preserves_context(self):
         m,s=example();p,_=owner_parts(build(m,s));before=copy.deepcopy(p['superFilterAssignments'])
         forward_filters(p,selection(m,'Geography[Area]',values=['West']));self.assertEqual(p['superFilterAssignments'],before)
@@ -96,7 +111,18 @@ class DashboardConstruction(unittest.TestCase):
                 self.assertEqual(json.loads(p['visualState']['hiddenProperties_!!!_chartsMode'])['visualMode'],'CARD')
                 self.assertIn('[$Value]',json.loads(p['visualState']['hiddenProperties_!!!_kpiControls'])['gridLayout'][0]['staticText'])
                 self.assertEqual(len(p['visualState']['embeddedSuperFilter']['superFilterAssignments']),3)
+            if x['visualType']=='SUPER_FILTER':
+                self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'hierarchy')
+                self.assertTrue(p['visualState']['facetSettings']['enableFacetMode'])
             if x['visualType']=='BI_TEXT':self.assertEqual(json.loads(p['visualState']['text'])['root']['type'],'root')
+    def test_stacked_dashboard_uses_dropdown_super_filters(self):
+        m,s=example();s['dashboards'][0]['layout']='stacked';b=build(m,s)
+        page=b['raw']['definition.json']['sheets'][1]
+        for v in page['workloadItemEntityVisuals']:
+            if v['visualType']!='SUPER_FILTER':continue
+            p=b['raw'][f'sheets/{page["recordGuid"]}/visuals/{v["visualId"]}/properties.json']['properties']
+            self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'dropdown')
+            self.assertFalse(p['visualState']['facetSettings']['enableFacetMode'])
     def test_layout_grid_is_last_full_width_and_all_rows_aligned(self):
         for width,n,k in [(1000,4,3),(1600,7,5),(2400,12,9)]:
             l=rectangles(n,k,width=width,layout='stacked');r=l['rectangles'];g=r['grid']

@@ -21,3 +21,18 @@ evidence that a UI rendered it. For totals, distinguish **placement** (e.g.
 column total on the left) from **calculation** (e.g. closing balance at last
 period, not a sum over time). Preserve units, source bindings and storage keys
 when changing expansion, widths, scale, hierarchy icons or header height.
+
+## Super Filter placement
+
+Choose Super Filter presentation from its dashboard placement:
+
+| Placement | Required presentation |
+|---|---|
+| Top band, including `stacked` layouts | Dropdown mode |
+| Left rail, including the default `left-rail` layout | Hierarchy mode |
+
+The bundled dashboard builder applies this rule from the slicer's actual
+rectangle. Top-band filters keep `facetViewType: "dropdown"` with facet mode
+disabled. Left-rail filters use `facetViewType: "hierarchy"` with facet mode
+enabled and a vertical layout. Do not place a generated Super Filter between the
+top band and left rail; reject an ambiguous custom layout instead of guessing.

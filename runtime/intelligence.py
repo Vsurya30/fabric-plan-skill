@@ -57,14 +57,26 @@ def page_navigator(direction='horizontal'):
     p['visualState']['navigatorState']=nav
     return p
 
-def slicer(model,spec):
+def slicer_placement(rectangles, slot):
+    slicer=rectangles[slot];grid=rectangles['grid']
+    if slicer['x']+slicer['width'] <= grid['x']:
+        return 'left'
+    if slicer['y']+slicer['height'] <= grid['y']:
+        return 'top'
+    raise ValueError('Super Filter must be placed in the top band or left rail: '+slot)
+
+def slicer(model,spec,*,placement='top'):
+    if placement not in ('top','left'):
+        raise ValueError('Super Filter placement must be top or left')
     reg=registration(model,spec); single=reg['configuration']['singleSelect'];required=spec.get('required',False)
     key=spec['field'];label=spec.get('label',reg['pivotAssignments'][0]['name'])
     p=base(60,label);p['pivotAssignments']=copy.deepcopy(reg['pivotAssignments']);p['superFilterAssignments']=[reg]
+    hierarchy=placement=='left'
     vs=p['visualState'];vs.update(slicerFilterAssignments=copy.deepcopy(reg['filter']),
-        facetSettings={'facetViewType':'dropdown','facetLayout':'vertical','singleSelect':single,'cascadeFilter':True,
+        facetSettings={'facetViewType':'hierarchy' if hierarchy else 'dropdown',
+            'facetLayout':'vertical','singleSelect':single,'cascadeFilter':True,
             'enableCategorySearch':True,'showSearchBarIcon':True,'showSelectionState':True,'showFacetHeader':False,
-            'displayMode':'label','enableFacetMode':False,'influencedAutoSelect':'none'},
+            'displayMode':'label','enableFacetMode':hierarchy,'influencedAutoSelect':'none'},
         displaySettings={'fontFamily':'Arial','forcedSelection':required,'displaySelectAll':not required,'hideBlank':True,
             'defaultVisualBackground':'#FFFFFF','selectAllLabel':'Select All','blankLabel':'(Blank)','emptyLabel':'(Empty)'},
         toolbarSettings={'customTitleText':label,'titleLabel':label,'showTitle':True,'titleFontBold':True,
@@ -268,7 +280,9 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
     add('BI_TEXT','header',banner)
     all_filters=[]
     for i,s in enumerate(spec['slicers']):
-        p=slicer(model,s);all_filters+=copy.deepcopy(p['visualState']['slicerFilterAssignments']);add('SUPER_FILTER',f'slicer:{i}',p)
+        slot=f'slicer:{i}'
+        p=slicer(model,s,placement=slicer_placement(layout['rectangles'],slot))
+        all_filters+=copy.deepcopy(p['visualState']['slicerFilterAssignments']);add('SUPER_FILTER',slot,p)
     for i,c in enumerate(spec['cards']):
         p=card(model,c,registry,query_fields=query_fields)
         # KPI consumers receive selected scenario scope. This is a hidden filter
