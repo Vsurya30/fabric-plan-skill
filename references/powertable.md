@@ -67,6 +67,86 @@ Therefore:
 - keep import-file, semantic-model and template source creation documented as
   unsupported until an approved public contract or external adapter exists.
 
+## Approvals and Forms
+
+Approvals and Forms are source-scoped workload-service records, not Plan
+definition parts. They cannot be satisfied by changing
+`properties.json` or `sourceSettings.json`.
+
+Use `plan.py powertable-service` only with an approved external profile:
+
+```json
+{
+  "apiBase": "https://resolved-approved-workload-service-host",
+  "allowedHosts": ["resolved-approved-workload-service-host"],
+  "tokenEnvironment": "FABRIC_PLAN_POWERTABLE_TOKEN",
+  "authScheme": "Bearer",
+  "contextHeaders": {
+    "x-ms-workload-resource-moniker": "<current Plan ID>"
+  },
+  "approvedExternalAdapter": true,
+  "authorizedMutation": true
+}
+```
+
+Resolve the runtime `sourceId` from the configured table; do not substitute the
+Plan definition's `recordGuid`. The adapter's source-resolution request returns
+the configured `dataSourceId`, runtime `visualId` and column catalog. Resolve
+approver Graph IDs and each form field's runtime `columnConfigId` through the
+authorized directory/current source context; never use display names as IDs.
+
+```sh
+python plan.py powertable-service source-resolve \
+  --config service.json --input source.request.json --run run --label source
+
+python plan.py powertable-service approval-create \
+  --config service.json --input approval.request.json --run run --label approval
+
+python plan.py powertable-service form-create \
+  --config service.json --input form.request.json --run run --label form
+```
+
+Approval input:
+
+```json
+{
+  "sourceId": "<runtime sourceId>",
+  "approvers": [
+    {"graphId": "<Microsoft Graph user ID>", "entityType": "USER"}
+  ],
+  "ruleType": 10,
+  "multiLevelEnabled": 0,
+  "approvalLevel": 1
+}
+```
+
+Form input:
+
+```json
+{
+  "sourceId": "<runtime sourceId>",
+  "title": "New employee",
+  "fields": [
+    {
+      "columnConfigId": "<runtime column config ID>",
+      "description": "",
+      "mandatory": 1,
+      "defaultValue": ""
+    }
+  ]
+}
+```
+
+The adapter writes only these exact source-scoped routes:
+
+- `POST /v2/powertable/sources/{sourceId}/approvals/`
+- `POST /v2/powertable/sources/{sourceId}/forms/`
+
+It rejects unapproved hosts, missing mutation approval, missing runtime
+identities, invalid approver entity types, and empty/non-identified form fields.
+Re-read the approval/form source after the call and report the saved state
+separately from Plan definition creation.
+
 ## Existing-table workflow
 
 Use this skill for the Plan definition. For live Fabric SQL Database work,

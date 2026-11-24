@@ -5,6 +5,7 @@
   "coverageMeaning": {
     "local": "Construct or inspect candidates locally; no remote change.",
     "public-api": "Includes explicitly selected Fabric Plan definition operations.",
+    "external-adapter": "Requires an explicitly approved workload-service profile and current runtime identities.",
     "guide-only": "Scope and limitations only; no executable operation."
   },
   "actions": {
@@ -231,6 +232,26 @@
       "command": "python plan.py repair-powertable-config --baseline current-definition.json --input repair.request.json --out candidate",
       "symbols": [
         "runtime.powertable_config.repair_definition"
+      ]
+    },
+    "powertable-approvals": {
+      "phase": "external-write",
+      "description": "Configure PowerTable approvers through an explicitly approved workload-service profile and current runtime source identity.",
+      "inputs": "Approved external profile, resolved runtime sourceId, approver Graph IDs/entity types and explicit mutation authorization.",
+      "command": "python plan.py powertable-service approval-create --config service.json --input approval.request.json --run run --label approval",
+      "symbols": [
+        "runtime.powertable_service.approval_payload",
+        "runtime.powertable_service.create_approval"
+      ]
+    },
+    "powertable-forms": {
+      "phase": "external-write",
+      "description": "Create a PowerTable form through an explicitly approved workload-service profile using current runtime column config identities.",
+      "inputs": "Approved external profile, resolved runtime sourceId, title, fields and runtime columnConfigId values; explicit mutation authorization.",
+      "command": "python plan.py powertable-service form-create --config service.json --input form.request.json --run run --label form",
+      "symbols": [
+        "runtime.powertable_service.form_payload",
+        "runtime.powertable_service.create_form"
       ]
     },
     "format-matrix": {
@@ -919,13 +940,18 @@
         "powertable",
         "table-source",
         "table-column",
-        "table-config-repair"
+        "table-config-repair",
+        "powertable-approvals",
+        "powertable-forms"
       ],
       "aliases": [
         "employee master",
         "PowerTable from scratch",
         "compare PowerTable sheets",
         "analyze PowerTable",
+        "configure PowerTable approvals",
+        "create a PowerTable form",
+        "add approval users",
         "database lookup",
         "master data"
       ],
@@ -933,11 +959,13 @@
         "Connect verified existing tables to PowerTable",
         "Create new SQL tables with sqldb-cli and add them to PowerTable",
         "Analyze an existing PowerTable source through its saved definition",
+        "Configure approvers for PowerTable submissions",
+        "Create a PowerTable form from current column configuration identities",
         "Distinguish supported public routes from private PowerTable CoreAPI modes"
       ],
       "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-inspect the committed table. Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 1 for from scratch, 2 for existing table.",
-      "limitations": "This skill does not execute SQL directly or call private PowerTable CoreAPI upload/template/semantic routes. From-scratch requires external sqldb-cli DDL followed by public Plan definition creation. Creation modes 3, 4 and 5 are unavailable without an approved external adapter.",
-      "coverage": "local"
+      "limitations": "This skill does not execute SQL directly or call private CoreAPI creation routes. From-scratch requires external sqldb-cli DDL followed by public Plan definition creation. Approval and Form setup use only the explicitly approved workload-service adapter and current runtime identities; upload/template/semantic creation modes remain unavailable without another approved adapter.",
+      "coverage": "external-adapter"
     },
     {
       "id": "RULES",

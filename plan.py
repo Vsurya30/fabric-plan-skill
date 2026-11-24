@@ -55,6 +55,10 @@ def main():
     fre.add_argument('--baseline',required=True);fre.add_argument('--input',required=True);fre.add_argument('--out',required=True)
     pt=sp.add_parser('repair-powertable-config',help='Local lookup/source metadata candidate; preserves editability, row actions and unrelated parts')
     pt.add_argument('--baseline',required=True);pt.add_argument('--input',required=True);pt.add_argument('--out',required=True)
+    pts=sp.add_parser('powertable-service',help='Approved external-profile PowerTable source, approval and form operations')
+    pts.add_argument('action',choices=['source-resolve','approval-create','approval-read','form-create','forms-read'])
+    pts.add_argument('--config',required=True);pts.add_argument('--input',required=True)
+    pts.add_argument('--run',required=True);pts.add_argument('--label',required=True)
     ib=sp.add_parser('construct-bridge');ib.add_argument('action',choices=['query','planning-source','append','merge','join','sql','editable-source']);ib.add_argument('--input',required=True);ib.add_argument('--out',required=True)
     for command in ('bridge-planning-catalog','check-bridge-mappings','resolve-bridge-output','bind-bridge-outputs'):
         bm=sp.add_parser(command,help='Local Planning-source lineage construction, graph check, or current query-output identity resolution')
@@ -91,6 +95,43 @@ def main():
         out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
         save(out/'definition.json',candidate);save(out/'changes.json',manifest)
         print(dumps(manifest))
+    elif args.cmd=='powertable-service':
+        from runtime.powertable_service import (
+            approval_payload, client_from_config, create_approval, create_form,
+            form_payload, read_approval, read_forms, resolve_source,
+        )
+        config=load(args.config); request=load(args.input)
+        client=client_from_config(config,Path(args.run)/'power-table-service')
+        if args.action=='source-resolve':
+            result=resolve_source(client,request,label=args.label)
+        else:
+            source_id=request.get('sourceId')
+            source=request.get('source')
+            if bool(source_id)==bool(source):
+                raise ValueError('Supply exactly one of runtime sourceId or source-resolution object')
+            if source:
+                source_id=resolve_source(client,source,label=args.label+'-source')['sourceId']
+            if args.action=='approval-create':
+                payload=approval_payload(request['approvers'],
+                    rule_type=request.get('ruleType',10),
+                    multi_level_enabled=request.get('multiLevelEnabled',0),
+                    approval_level=request.get('approvalLevel',1))
+                saved=create_approval(client,source_id,payload,label=args.label)
+                result={'created':saved,'readback':read_approval(client,source_id,label=args.label+'-readback')}
+            elif args.action=='approval-read':
+                result=read_approval(client,source_id,label=args.label)
+            elif args.action=='form-create':
+                payload=form_payload(request['title'],request['fields'],
+                    description=request.get('description',''),
+                    restrict_multiple_entry=request.get('restrictMultipleEntry',1),
+                    config=request.get('config'),layout_meta=request.get('layoutMeta'),
+                    logo=request.get('logo'))
+                saved=create_form(client,source_id,payload,label=args.label)
+                result={'created':saved,'readback':read_forms(client,source_id,label=args.label+'-readback')}
+            else:
+                result=read_forms(client,source_id,label=args.label)
+        save(Path(args.run)/('powertable-'+args.action+'.json'),result)
+        print(dumps(result))
     elif args.cmd=='usecase':
         from runtime import usecases
         if args.case and args.recipe:raise ValueError('Select --case or --recipe, not both')
