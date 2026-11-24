@@ -26,6 +26,16 @@ class PowerTableAlmTests(unittest.TestCase):
         settings=next(v for k,v in parts.items() if k.endswith('/sourceSettings.json'))['sourceSettings']
         self.assertTrue(all(s['sourceId']==ids['sourceGuid'] for s in settings))
         self.assertEqual([s['settings']['enabled'] for s in settings],[True,True,False])
+        add=next(s for s in settings if s['name']=='ROW_ADD')
+        update=next(s for s in settings if s['name']=='ROW_UPDATE')
+        delete=next(s for s in settings if s['name']=='ROW_DELETE')
+        for setting in (add,update):
+            self.assertEqual(len(setting['filters']),1)
+            self.assertEqual(setting['filters'][0]['name'],'all_users')
+            self.assertEqual(setting['filters'][0]['filterType'],1)
+            self.assertEqual(setting['filters'][0]['filter'],{})
+            self.assertTrue(setting['filters'][0]['recordGuid'])
+        self.assertNotIn('filters',delete)
         self.assertEqual((col['mandatory'],col['hideColumn'],col['allowEdit']),(1,0,1))
         schema=Schemas()
         for v in parts.values():schema.check(v,v['$schema'])
@@ -61,6 +71,10 @@ class PowerTableAlmTests(unittest.TestCase):
         settings[0]['sourceId']='other'
         with self.assertRaises(ValueError):check_powertable_parts(parts,prefix)
         settings[0]['sourceId']=parts[prefix+'source.json']['source']['recordGuid']
+        settings[0].pop('filters')
+        with self.assertRaisesRegex(ValueError,'row-access selection'):
+            check_powertable_parts(parts,prefix)
+        settings[0]['filters']=[{'recordGuid':'filter-guid','name':'all_users','filterType':1,'filter':{}}]
         state=parts[prefix+'properties.json']['properties']['properties']['visualState']
         state['columnMeta']['Other']={'width':150}
         with self.assertRaises(ValueError):check_powertable_parts(parts,prefix)

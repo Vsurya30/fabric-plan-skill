@@ -94,6 +94,14 @@ compatible types and a unique target key. Repeated labels do not uniquely
 identify rows. A lookup configuration is not a join and must not overwrite
 the stored key. Preserve unrelated column metadata, editing and row actions.
 
+**Row access selection.** A configured PowerTable row action must include its
+audience selection, not only `settings.enabled`. Existing-table and from-scratch
+constructors use **All Users** by default: `ROW_ADD` and `ROW_UPDATE` receive one
+filter named `all_users` with `filterType: 1` and `filter: {}`. `ROW_DELETE`
+remains disabled and has no filter until explicitly configured. If an action is
+enabled later, add a valid row-access selection before publishing; validation
+rejects enabled row actions with no filters.
+
 ```sh
 python plan.py repair-powertable-config --baseline current-definition.json --input repair-request.json --out candidate
 ```

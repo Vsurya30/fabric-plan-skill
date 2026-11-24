@@ -140,6 +140,19 @@ def check_powertable_parts(raw,prefix):
             raise ValueError('Incomplete PowerTable source setting')
         if type(setting['settings'].get('enabled')) is not bool:
             raise ValueError('PowerTable source setting requires Boolean enabled')
+        if setting['name'] in ('ROW_ADD','ROW_UPDATE','ROW_DELETE'):
+            filters=setting.get('filters',[])
+            if not isinstance(filters,list):
+                raise ValueError('PowerTable row-access filters must be a list')
+            if setting['settings']['enabled'] and not filters:
+                raise ValueError('Enabled PowerTable row action requires a row-access selection')
+            for access in filters:
+                if not isinstance(access,dict) or not isinstance(access.get('recordGuid'),str) or not access['recordGuid']:
+                    raise ValueError('PowerTable row-access filter record identity required')
+                if not isinstance(access.get('name'),str) or not access['name']:
+                    raise ValueError('PowerTable row-access filter name required')
+                if access.get('filterType') not in (1,2,3) or not isinstance(access.get('filter'),dict):
+                    raise ValueError('Invalid PowerTable row-access filter')
         setting_names.append(setting['name'])
     if len(setting_names)!=len(set(setting_names)): raise ValueError('Duplicate PowerTable source setting')
     outer=raw[prefix+'properties.json'].get('properties')

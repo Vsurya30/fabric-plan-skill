@@ -9,6 +9,13 @@ from pathlib import Path
 from .codec import dumps
 from .surfaces import powertable_source
 
+def row_access_setting(name,source_id,enabled):
+    from .construct import guid
+    setting={'name':name,'recordGuid':guid(),'sourceId':source_id,'settings':{'enabled':enabled}}
+    if name in ('ROW_ADD','ROW_UPDATE'):
+        setting['filters']=[{'recordGuid':guid(),'name':'all_users','filterType':1,'filter':{}}]
+    return setting
+
 def configured_table(name, table, connection, columns, *, explicit=False, creation_mode=2,
                      allow_add=True, allow_update=True, allow_delete=False):
     """Complete ALM grid from verified target source/schema; no old report/template.
@@ -45,7 +52,7 @@ def configured_table(name, table, connection, columns, *, explicit=False, creati
         prefix+'source.json':source,
         prefix+'columnConfigs.json':{'$schema':schema('PowerTable/ColumnConfigs'),'columnConfigs':copy.deepcopy(columns)},
         prefix+'sourceSettings.json':{'$schema':schema('PowerTable/Settings'),'sourceSettings':[
-            {'name':action,'recordGuid':guid(),'sourceId':source['source']['recordGuid'],'settings':{'enabled':enabled}}
+            row_access_setting(action,source['source']['recordGuid'],enabled)
             for action,enabled in [('ROW_ADD',allow_add),('ROW_UPDATE',allow_update),('ROW_DELETE',allow_delete)]]}}
     declaration={'recordGuid':sid,'displayName':name,'sheetType':'POWERTABLE','isHidden':False,
         'workloadItemEntityVisuals':[{'visualId':vid,'visualType':'POWERTABLE','isEmbedded':False}]}
