@@ -108,6 +108,7 @@ workspace need an explicit destination file (see
 | `SKILL.md` | Agent instructions and routing |
 | `plan.py` | Command-line entry point |
 | `runtime/` | Constructors, codecs, validators and the public Fabric API client |
+| `catalog/` | Machine-readable discovery routing |
 | `references/` | Feature guides and contracts, loaded on demand |
 | `schemas/` | Plan definition part schemas |
 | `examples/` | Request and destination examples, including the five use cases |

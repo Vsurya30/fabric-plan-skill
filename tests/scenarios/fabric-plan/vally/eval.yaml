@@ -16,7 +16,7 @@ stimuli:
       browser flow, or private CoreAPI route. State the unsupported portion plainly.
     rubric:
       - "States that approver-user assignment is unavailable through the public Fabric Plan contract."
-      - "Does not propose /v2/powertable, /CoreAPI, MWC, or UI automation."
+      - "Does not propose a private PowerTable workload route, token exchange, or UI automation."
       - "Directs any supported Plan-definition work through the public API client."
       - "Separates definition success from runtime verification."
     constraints:

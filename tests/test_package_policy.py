@@ -48,16 +48,23 @@ class PackagePolicyTests(unittest.TestCase):
         )
 
     def test_request_examples_use_deterministic_synthetic_id_ranges(self):
-        for relative in (
-            "examples/planning-presentation.request.json",
-            "examples/measure-display.request.json",
-        ):
-            text = (ROOT / relative).read_text()
+        examples = [
+            ROOT / "examples/planning-presentation.request.json",
+            ROOT / "examples/measure-display.request.json",
+            ROOT / "examples/five-usecases/destination.example.json",
+        ]
+        for path in examples:
+            relative = path.relative_to(ROOT)
+            text = path.read_text()
             for identifier in SYNTHETIC_GUID.findall(text):
-                self.assertTrue(identifier.lower().startswith("f0000000-0000-4000-8000-"),
+                self.assertTrue(
+                    identifier.lower().startswith(
+                        ("f0000000-0000-4000-8000-", "10000000-0000-4000-8000-")
+                    ),
                                 f"{relative}: non-synthetic UUID {identifier}")
             for identifier in LARGE_NUMBER.findall(text):
-                self.assertTrue(identifier.startswith("100000000000000"),
+                self.assertTrue(
+                    identifier.startswith(("100000000000000", "200000000000000")),
                                 f"{relative}: non-synthetic numeric identity")
 
 

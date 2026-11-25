@@ -50,7 +50,9 @@
   },
   "limits": {
     "references_markdown_max_bytes": 20000,
-    "references_machine_data_allowed": false,
+    "references_machine_data_allowed": [
+      "references/preservation-manifest.json"
+    ],
     "tracked_bytecode_allowed": false
   }
 }
