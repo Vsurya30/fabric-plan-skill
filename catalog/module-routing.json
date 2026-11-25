@@ -668,6 +668,16 @@
         "runtime.dimension_hash.generate_dimension_hash"
       ]
     },
+    "visual-type-coverage": {
+      "phase": "local",
+      "description": "Name an Intelligence dashboard visual from its persisted discriminator and keep unnamed types unchanged.",
+      "inputs": "Exported or locally built properties for one dashboard visual.",
+      "command": null,
+      "symbols": [
+        "runtime.intelligence.tree_visual_types",
+        "runtime.intelligence.classify_visual"
+      ]
+    },
     "home-fit": {
       "phase": "local",
       "description": "Build readable native Home content and audit or assert its layout fit.",
@@ -2441,6 +2451,35 @@
       "prerequisites": "Current artifact session and entity/visual ETags.",
       "limitations": "Saved readback only; rendering requires separate verification. Preserve unrelated report styling. Not available in this package: saved native typography readback.",
       "coverage": "guide-only"
+    },
+    {
+      "id": "INTELLIGENCE-VISUAL-TYPES",
+      "name": "Cover every Intelligence dashboard visual type",
+      "guides": [
+        {
+          "file": "intelligence-visual-types.md"
+        }
+      ],
+      "operations": [
+        "visual-type-coverage"
+      ],
+      "aliases": [
+        "decomposition tree",
+        "organizational tree",
+        "row tree",
+        "measure tree",
+        "tree visual",
+        "visual type coverage",
+        "unknown visual type"
+      ],
+      "businessRequests": [
+        "The Intelligence dashboard skill must cover tree visuals, not only slicers, cards and charts.",
+        "A dashboard already contains a decomposition or organizational tree that later edits must not flatten.",
+        "A requested dashboard visual type is not one this package can build."
+      ],
+      "prerequisites": "A current export or locally built properties for each dashboard visual being classified.",
+      "limitations": "Recognition and preservation only. No tree visual definition part is constructed here; see catalog/api-contract-gaps.json.",
+      "coverage": "local"
     }
   ]
 }

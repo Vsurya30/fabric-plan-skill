@@ -9,12 +9,40 @@ from .construct import field, guid, schema, sheet_properties
 from .codec import dumps,load
 from .semantic_values import semantic_value
 
+TREE_VISUAL_TYPES = {'DECOMPOSITION_TREE': 'Decomposition tree',
+                     'ORGANIZATION_TREE': 'Organizational tree',
+                     'ROW_TREE': 'Row tree',
+                     'COLUMN_TREE': 'Measure tree'}
+
+
+def tree_visual_types():
+    """Return the persisted Intelligence tree discriminators and their display names."""
+    return dict(TREE_VISUAL_TYPES)
+
+def classify_visual(props):
+    """Name an exported dashboard visual from its discriminator without changing it.
+
+    Returns None for a discriminator this package does not name, so the caller keeps
+    the visual as it is instead of restyling it into a supported type.
+    """
+    chart_type = props.get('chartType', props.get('visualState', {}).get('chartType'))
+    if chart_type in TREE_VISUAL_TYPES:
+        return {'family': 'tree', 'chartType': chart_type,
+                'visual_type': TREE_VISUAL_TYPES[chart_type]}
+    if chart_type == 'CARD':
+        return {'family': 'card', 'chartType': chart_type, 'visual_type': 'KPI card'}
+    return None
+
 def complete_card_state(props):
     """Fill active KPI store slices, preserving authored labels and layout.
 
     Supplying a partial store slice can replace frontend defaults. Include
     variance.style even with showVariance=False: theme updates access it.
     """
+    observed = classify_visual(props)
+    if observed and observed['family'] == 'tree':
+        raise ValueError('Refusing to retype a ' + observed['visual_type'] +
+                         ' as a KPI card; no tree authoring route is bundled here')
     from .construct import merge
     from .codec import loads
     defaults=load(Path(__file__).resolve().parents[1]/'fixtures/card-defaults.json')

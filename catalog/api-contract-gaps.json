@@ -108,6 +108,17 @@
       "docs": [
         "references/sql-definition-discovery.md"
       ]
+    },
+    {
+      "id": "tree-visual-authoring",
+      "status": "no-public-route",
+      "request": "Add a decomposition, organizational, row or measure tree to an Intelligence dashboard, or style its nodes.",
+      "reason": "No exported Plan definition part shipped in this package carries a tree visual, so its declaration, field roles and node configuration would have to be invented. The tree discriminator value used inside the host application belongs to a different numeric domain than the one this package has observed in exported visual properties, and the measure tree additionally depends on a tenant feature switch.",
+      "publicPart": "runtime.intelligence.tree_visual_types and runtime.intelligence.classify_visual name the type from current properties, the bundled card writer refuses to retype a tree, and the visual stays untouched until its own export is inspected.",
+      "docs": [
+        "references/intelligence-visual-types.md",
+        "SKILL.md"
+      ]
     }
   ],
   "documentationNotBundled": [
