@@ -108,7 +108,7 @@ workspace need an explicit destination file (see
 | `SKILL.md` | Agent instructions and routing |
 | `plan.py` | Command-line entry point |
 | `runtime/` | Constructors, codecs, validators and the public Fabric API client |
-| `catalog/` | Machine-readable discovery routing |
+| `catalog/` | Machine-readable discovery routing and the ledger of capabilities with no public route |
 | `references/` | Feature guides and contracts, loaded on demand |
 | `schemas/` | Plan definition part schemas |
 | `examples/` | Request and destination examples, including the five use cases |
@@ -132,7 +132,10 @@ python -m unittest discover tests
 
 - Workspace writes need an explicit destination file that names the workspace,
   the allowed public hosts and `authorizedMutation`; local commands never write.
-- Operations without a supported public route are out of scope.
+- Operations without a supported public route are out of scope. They are recorded
+  with their reason and the public part that remains in
+  [`catalog/api-contract-gaps.json`](catalog/api-contract-gaps.json); report them as
+  unavailable rather than routing around them.
 - Public Fabric requests include
   `x-ms-fabric-skill: fabric-plan-skill` for skill-level telemetry.
 - Credentials come only from environment variables; none are stored.
