@@ -16,7 +16,6 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from runtime.codec import load, loads, pack, unpack
-from runtime.home_api import decode_roles
 from runtime.identity import Registry
 from runtime.layout import audit, verify_unchanged
 from runtime.pivots import compile_pivots
@@ -24,6 +23,11 @@ from runtime.transport import Client
 from runtime.workflow import preflight, provision
 
 TOKEN_ENV = 'FABRIC_PLAN_INDEPENDENT_TEST_TOKEN'
+
+def decode_roles(payload,node):
+    result=subprocess.run([node,str(ROOT/'tools/decode-lzutf8.cjs')],input=payload,
+                          text=True,encoding='utf-8',capture_output=True,timeout=30,check=True)
+    return loads(result.stdout)
 
 
 def rectangle(x=20, y=20, width=200, height=100):
@@ -52,6 +56,8 @@ class WorkflowServer:
         self.expired_create = self.expired_update = False
 
     def public(self, method, url, headers, body):
+        if headers.get('x-ms-fabric-skill') != 'fabric-plan-skill':
+            raise AssertionError('Missing x-ms-fabric-skill telemetry header')
         if method == 'POST' and url.endswith('/plans'):
             self.creates += 1
             self.raw=unpack(loads(body.decode('utf-8')))

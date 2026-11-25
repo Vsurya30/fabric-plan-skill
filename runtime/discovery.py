@@ -8,7 +8,7 @@ STOP = set('a an and as at be by for from i in into is it me my of on or please 
 
 
 def catalog():
-    data = json.loads((ROOT / 'references/module-routing.json').read_text(encoding='utf-8'))
+    data = json.loads((ROOT / 'catalog/module-routing.json').read_text(encoding='utf-8'))
     for module in data['modules']:
         for guide in module['guides']:
             guide['command'] = 'python plan.py reference ' + guide['file']

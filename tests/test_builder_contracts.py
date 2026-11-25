@@ -1,13 +1,19 @@
 """Contract fixtures test compatibility, precision, and mutation/readback boundaries."""
-import base64,copy,os,tempfile,unittest,socket
+import base64,copy,os,tempfile,unittest,socket,subprocess
 from pathlib import Path
 from decimal import Decimal
 from unittest.mock import patch
 from runtime import input_factories as inputs,rule_factories as rules
 from runtime.cube_contract import multi_dimension_settings
-from runtime import powertable_factory as pt,home_api,navigator_api
+from runtime import powertable_factory as pt,navigator_api
 from runtime.transport import Client,HttpError
 from runtime.codec import loads
+ROOT=Path(__file__).resolve().parents[1]
+
+def decode_roles(payload,node):
+    result=subprocess.run([node,str(ROOT/'tools/decode-lzutf8.cjs')],input=payload,
+                          text=True,encoding='utf-8',capture_output=True,timeout=30,check=True)
+    return loads(result.stdout)
 
 class BuilderContracts(unittest.TestCase):
     def setUp(self):
@@ -81,7 +87,7 @@ class BuilderContracts(unittest.TestCase):
         meta=[{'id':'id','isPrimaryKey':True,'isEditable':False},{'id':'Name'},{'id':'Amount'},{'id':'ExternalKey'}]
         rows=[['地域 – Málaga',Decimal('123.456789012345678901'),18446744073709551615]]
         p=pt.row_save(meta,'insert',rows,generated_keys=['id'],visual_meta={'rowIds':[],'optionsMeta':{}},node=self.node())
-        out=home_api.decode_roles(p['data'],self.node())
+        out=decode_roles(p['data'],self.node())
         self.assertEqual(out['createData']['records'],rows)
         self.assertEqual([m['id'] for m in p['metaData']],['Name','Amount','ExternalKey'])
         with self.assertRaises(ValueError):pt.row_save(meta,'insert',rows,visual_meta={'rowIds':[],'optionsMeta':{}},node=self.node())

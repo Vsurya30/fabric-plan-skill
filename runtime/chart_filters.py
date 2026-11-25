@@ -1,6 +1,6 @@
 """Ordinary Intelligence visual-level filters, separate from hidden scope.
 
-Observed DXT numeric filter and MSIT grouped chart/semantic-measure shapes.
+Observed numeric-filter and grouped chart/semantic-measure export shapes.
 Call after assigning or resolving chart fields; preserve selections and Context.
 """
 import copy
@@ -84,7 +84,7 @@ def audit_chart_filters(props):
         def normalize(assignments):
             out=copy.deepcopy(assignments)
             for item in out:
-                # DXT ALM adds customSource=true to top-level semantic measures
+                # Public export normalization may add customSource=true to top-level semantic measures.
                 # while preserving the same filter assignment without that flag.
                 # It does not change their PowerBI field identity. False and
                 # InfoBridge flags remain significant and are not normalized.

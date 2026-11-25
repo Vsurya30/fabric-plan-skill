@@ -90,7 +90,7 @@
         "distinctValueCount": 0,
         "isFlatHierarchy": false,
         "isHierarchyItemInMeasure": false,
-        "measureGuid": "9080479580834374903",
+        "measureGuid": "1000000000000000008",
         "customName": "CanEdit"
       },
       {
@@ -110,13 +110,13 @@
         "distinctValueCount": 0,
         "isFlatHierarchy": false,
         "isHierarchyItemInMeasure": false,
-        "measureGuid": "4800218235927602244",
+        "measureGuid": "1000000000000000006",
         "customName": "BasePay"
       }
     ],
     "superFilterAssignments": [
       {
-        "id": "filter_24e1850d-8e94-4c12-802d-035eefaed435",
+        "id": "filter_f0000000-0000-4000-8000-0000000000c9",
         "pivotAssignments": [
           {
             "id": "Region[Region]",
@@ -178,7 +178,7 @@
         "filterLevel": "visual"
       },
       {
-        "id": "filter_6fb02a06-d734-4621-8b1a-b81a8d7916f9",
+        "id": "filter_f0000000-0000-4000-8000-0000000000cc",
         "pivotAssignments": [
           {
             "id": "Employee[Employee]",
@@ -240,7 +240,7 @@
         "filterLevel": "visual"
       },
       {
-        "id": "filter_561da2f7-e2c0-469e-aef7-505f2b742d36",
+        "id": "filter_f0000000-0000-4000-8000-0000000000cb",
         "pivotAssignments": [
           {
             "id": "Version[Version]",
@@ -302,7 +302,7 @@
         "filterLevel": "visual"
       },
       {
-        "id": "filter_a4fbc67a-d19a-4aff-88d2-df87213f69b1",
+        "id": "filter_f0000000-0000-4000-8000-0000000000ce",
         "pivotAssignments": [
           {
             "id": "Period[Month]",
@@ -364,7 +364,7 @@
         "filterLevel": "visual"
       },
       {
-        "id": "filter_759d2ced-165c-4250-b59a-205380144754",
+        "id": "filter_f0000000-0000-4000-8000-0000000000cd",
         "pivotAssignments": [
           {
             "id": "Region[Region]",
@@ -455,7 +455,7 @@
             "distinctValueCount": 0,
             "isFlatHierarchy": false,
             "isHierarchyItemInMeasure": false,
-            "measureGuid": "9080479580834374903",
+            "measureGuid": "1000000000000000008",
             "customName": "CanEdit"
           }
         ],
@@ -509,7 +509,7 @@
         "filterLevel": "visual"
       },
       {
-        "id": "filter_1d7874d8-0586-4238-9b9d-204394ef6c83",
+        "id": "filter_f0000000-0000-4000-8000-0000000000c8",
         "pivotAssignments": [
           {
             "id": "Region[Region]",
@@ -600,7 +600,7 @@
             "distinctValueCount": 0,
             "isFlatHierarchy": false,
             "isHierarchyItemInMeasure": false,
-            "measureGuid": "4800218235927602244",
+            "measureGuid": "1000000000000000006",
             "customName": "BasePay"
           }
         ],
@@ -657,25 +657,25 @@
     "visualState": {
       "manage_measures": [
         {
-          "id": "9080479580834374903",
+          "id": "1000000000000000008",
           "label": "CanEdit",
           "order": 0,
           "visible": true
         },
         {
-          "id": "4800218235927602244",
+          "id": "1000000000000000006",
           "label": "BasePay",
           "order": 1,
           "visible": true
         },
         {
-          "id": "10039641788472639594",
+          "id": "1000000000000000009",
           "label": "Monthly Salary",
           "order": 2,
           "visible": true
         },
         {
-          "id": "1427080859442232256",
+          "id": "1000000000000000003",
           "label": "Compensation",
           "order": 3,
           "visible": true
@@ -683,19 +683,19 @@
       ],
       "aggregation_config": {
         "measure_aggregation": {
-          "9080479580834374903": {
+          "1000000000000000008": {
             "row": "Sum",
             "column": "Sum"
           },
-          "4800218235927602244": {
+          "1000000000000000006": {
             "row": "Sum",
             "column": "Sum"
           },
-          "10039641788472639594": {
+          "1000000000000000009": {
             "row": "Sum",
             "column": "Sum"
           },
-          "1427080859442232256": {
+          "1000000000000000003": {
             "row": "Sum",
             "column": "Sum"
           }
@@ -709,7 +709,7 @@
         "column": {},
         "cell": {},
         "measure": {
-          "9080479580834374903": [
+          "1000000000000000008": [
             {
               "format": {
                 "4": "Arial",
@@ -725,7 +725,7 @@
               "order": 4
             }
           ],
-          "4800218235927602244": [
+          "1000000000000000006": [
             {
               "format": {
                 "4": "Arial",
@@ -741,7 +741,7 @@
               "order": 5
             }
           ],
-          "10039641788472639594": [
+          "1000000000000000009": [
             {
               "format": {
                 "4": "Arial",
@@ -757,7 +757,7 @@
               "order": 6
             }
           ],
-          "1427080859442232256": [
+          "1000000000000000003": [
             {
               "format": {
                 "4": "Arial",
@@ -787,19 +787,19 @@
       "rowDimensions": [
         {
           "externalKey": "Region[Region]",
-          "id": "727229777356808254",
+          "id": "1000000000000000002",
           "isNative": true,
           "label": "Region"
         },
         {
           "externalKey": "Employee[Employee]",
-          "id": "595969242269306258",
+          "id": "1000000000000000001",
           "isNative": true,
           "label": "Employee"
         },
         {
           "externalKey": "Version[Version]",
-          "id": "5925888673205606840",
+          "id": "1000000000000000007",
           "isNative": true,
           "label": "Version"
         }
@@ -807,7 +807,7 @@
       "columnDimensions": [
         {
           "externalKey": "Period[Month]",
-          "id": "4713858660256075655",
+          "id": "1000000000000000005",
           "isNative": true,
           "label": "Month"
         }
@@ -867,7 +867,7 @@
       },
       "tableState": {
         "columnHierarchyLevel": {
-          "4713858660256075655": {
+          "1000000000000000005": {
             "collapsed": "Expanded"
           }
         }
@@ -924,7 +924,7 @@
       "columnMeta": {
         "data_type": "Number",
         "description": "",
-        "id": "9080479580834374903",
+        "id": "1000000000000000008",
         "label": "CanEdit",
         "measure_type": {
           "Native": {
@@ -934,15 +934,15 @@
       },
       "dataInputType": 6,
       "description": null,
-      "measureGuid": "9080479580834374903",
+      "measureGuid": "1000000000000000008",
       "name": "CanEdit",
-      "visualId": "a2b069a3-76e7-4bbc-a4c7-a166623d2e93"
+      "visualId": "f0000000-0000-4000-8000-000000000002"
     },
     {
       "columnMeta": {
         "data_type": "Number",
         "description": "",
-        "id": "4800218235927602244",
+        "id": "1000000000000000006",
         "label": "BasePay",
         "measure_type": {
           "Native": {
@@ -952,26 +952,26 @@
       },
       "dataInputType": 6,
       "description": null,
-      "measureGuid": "4800218235927602244",
+      "measureGuid": "1000000000000000006",
       "name": "BasePay",
-      "visualId": "a2b069a3-76e7-4bbc-a4c7-a166623d2e93"
+      "visualId": "f0000000-0000-4000-8000-000000000002"
     },
     {
       "columnMeta": {
         "data_type": "Number",
         "description": "",
-        "id": "10039641788472639594",
+        "id": "1000000000000000009",
         "label": "Monthly Salary",
         "measure_type": {
           "DataInput": {
             "allow_input": {
-              "BasedOnFormula": "M_9080479580834374903 > 0"
+              "BasedOnFormula": "M_1000000000000000008 > 0"
             },
             "bound_to_filter_context": true,
             "column_type": {
               "Number": {
                 "default_value": {
-                  "Measure": "4800218235927602244"
+                  "Measure": "1000000000000000006"
                 },
                 "min_value": {
                   "Static": 0
@@ -988,28 +988,28 @@
       },
       "dataInputType": 6,
       "description": null,
-      "measureGuid": "10039641788472639594",
+      "measureGuid": "1000000000000000009",
       "name": "Monthly Salary",
-      "visualId": "a2b069a3-76e7-4bbc-a4c7-a166623d2e93",
+      "visualId": "f0000000-0000-4000-8000-000000000002",
       "boundToFilterContext": 10
     },
     {
       "columnMeta": {
         "data_type": "Number",
         "description": "",
-        "id": "1427080859442232256",
+        "id": "1000000000000000003",
         "label": "Compensation",
         "measure_type": {
           "Formula": {
-            "formula": "M_10039641788472639594 * 1.20"
+            "formula": "M_1000000000000000009 * 1.20"
           }
         }
       },
       "dataInputType": 6,
       "description": null,
-      "measureGuid": "1427080859442232256",
+      "measureGuid": "1000000000000000003",
       "name": "Compensation",
-      "visualId": "a2b069a3-76e7-4bbc-a4c7-a166623d2e93"
+      "visualId": "f0000000-0000-4000-8000-000000000002"
     }
   ],
   "overwrite_scaling": true,

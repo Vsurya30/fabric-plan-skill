@@ -7,7 +7,6 @@ from runtime.construct import build
 from runtime.identity import Registry
 from runtime.filters import selection,forward_filters,audit_context,prepare_context
 from runtime.intelligence import slicer,card,rectangles,slicer_placement
-from runtime.intelligence_api import visibility
 from runtime.readback import verify_authored
 from runtime.codec import pack,unpack,parts
 from runtime.scope import prepare_scope
@@ -180,20 +179,6 @@ class DashboardConstruction(unittest.TestCase):
         with self.assertRaises(ValueError):card(m,spec,Registry())
 
 class GeometryTransaction(unittest.TestCase):
-    def test_visibility_only_changes_selected_sheet_and_preserves_other_part_bytes(self):
-        m,s=example();b=build(m,s);d=b['dashboardIdentities'][0]
-        next(s for s in b['raw']['definition.json']['sheets'] if s['recordGuid']==d['sheetGuid'])['isHidden']=True
-        original=pack(b['raw']);state=copy.deepcopy(original);writes=[]
-        def operation(client,ws,action,plan,**kw):
-            nonlocal state
-            if action=='update':writes.append(kw['definition']);state=copy.deepcopy(kw['definition'])
-            return {'body':copy.deepcopy(state)}
-        with patch('runtime.transport.plan_operation',side_effect=operation):
-            result=visibility(None,'w','p',d['sheetGuid'],True,'show');self.assertTrue(result['visible'])
-            for key,value in parts(original).items():
-                if key!='definition.json':self.assertEqual(value,parts(state)[key])
-            self.assertFalse(unpack(state)['definition.json']['sheets'][1]['isHidden'])
-            result=visibility(None,'w','p',d['sheetGuid'],True,'show');self.assertEqual(result['write'],'already-matched');self.assertEqual(len(writes),1)
     def test_readback_phased_override_does_not_skip_context_or_direct_visuals(self):
         m,s=example();b=build(m,s);d=b['dashboardIdentities'][0];actual=copy.deepcopy(b['raw'])
         actual['definition.json']['sheets'][1]['isHidden']=False

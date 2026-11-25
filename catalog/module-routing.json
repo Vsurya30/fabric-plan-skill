@@ -5,7 +5,6 @@
   "coverageMeaning": {
     "local": "Construct or inspect candidates locally; no remote change.",
     "public-api": "Includes explicitly selected Fabric Plan definition operations.",
-    "external-adapter": "Requires an explicitly approved workload-service profile and current runtime identities.",
     "guide-only": "Scope and limitations only; no executable operation."
   },
   "actions": {
@@ -234,16 +233,6 @@
       "command": "python plan.py repair-powertable-config --baseline current-definition.json --input repair.request.json --out candidate",
       "symbols": [
         "runtime.powertable_config.repair_definition"
-      ]
-    },
-    "powertable-approvals": {
-      "phase": "external-write",
-      "description": "Assign PowerTable approver users through an explicitly approved workload-service profile; approvers are not definition content.",
-      "inputs": "Approved external profile, resolved runtime sourceId, approver Graph IDs/entity types and explicit mutation authorization.",
-      "command": "python plan.py powertable-service approval-create --config service.json --input approval.request.json --run run --label approval",
-      "symbols": [
-        "runtime.powertable_service.approval_payload",
-        "runtime.powertable_service.create_approval"
       ]
     },
     "powertable-forms": {
@@ -964,8 +953,7 @@
         "table-config-repair",
         "powertable-row-access",
         "powertable-forms",
-        "powertable-automations",
-        "powertable-approvals"
+        "powertable-automations"
       ],
       "aliases": [
         "employee master",
@@ -989,12 +977,12 @@
         "Analyze an existing PowerTable source through its saved definition",
         "Create PowerTable forms and automations in the Plan definition",
         "Repair a PowerTable with no Row access selection",
-        "Configure approvers for PowerTable submissions",
+        "Report PowerTable approver-user assignment as unavailable without a public route",
         "Distinguish supported public routes from private PowerTable CoreAPI modes"
       ],
       "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-read the committed catalog (PHYSICAL_METADATA_SQL and UNIQUE_METADATA_SQL). Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 2 for an existing table, 1 for tables created by DDL (from scratch, file, template or snapshot). Author forms and automations on a fresh export.",
-      "limitations": "This skill does not execute SQL directly or call private CoreAPI creation routes. New tables need external sqldb-cli DDL followed by public Plan definition creation; file, template and snapshot tables record creation mode 1. Semantic-model live sync is unavailable. Approver users need the explicitly approved workload-service adapter and current runtime identities. Scheduled, form-submitted and button automations are not authored.",
-      "coverage": "external-adapter"
+      "limitations": "This skill does not execute SQL directly or call private CoreAPI routes. New tables need external sqldb-cli DDL followed by public Plan definition creation. Approver-user assignment, semantic-model live sync, and private creation modes have no supported public route. Scheduled, form-submitted and button automations are not authored.",
+      "coverage": "local"
     },
     {
       "id": "RULES",
@@ -1150,6 +1138,9 @@
         },
         {
           "file": "roll-forward-formula-patterns.md"
+        },
+        {
+          "file": "roll-forward-formula-patterns-part-02.md"
         }
       ],
       "operations": [

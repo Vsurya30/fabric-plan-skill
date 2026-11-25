@@ -1,6 +1,6 @@
 """Planning column presentation with current, grain-specific identities.
 
-Expansion-only recovery was confirmed by the user in MSIT on 2026-11-14.
+Expansion-only recovery was confirmed through a saved-definition observation on 2026-11-14.
 Sizing, explicit total defaults and native measure cards are additional requested
 defaults, not independently proven causes of that disappearing-column issue.
 """

@@ -13,9 +13,9 @@ authorizes a database write.
 |---|---|---|
 | Import existing table | Read the catalog with `sqldb-cli`, then `powertable-table` | 2 |
 | Create from scratch | Approved DDL through `sqldb-cli`, re-read the catalog, then `powertable-table` | 1 |
-| Import from file (CSV/XLSX) | Infer columns from the file, approved DDL plus an approved row load through `sqldb-cli`, re-read the catalog, then `powertable-table` | 1 |
-| Create from template | Design the template's tables as from-scratch DDL (keys, lookups, sample rows only if approved), then `powertable-table` | 1 |
-| Import from semantic model | Not available as a live sync: the sync relies on workload records the public definition cannot create. Offer a one-time snapshot (query the model, then the file route) and say it will not refresh | 1 |
+| Import from file (CSV/XLSX) | No public route. Prepare SQL tables explicitly through approved `sqldb-cli` DDL/DML, then use the from-scratch Plan route and label the result accordingly. | 1 |
+| Create from template | No workload route. Design and create the template's tables explicitly through approved `sqldb-cli` DDL, then use the from-scratch Plan route. | 1 |
+| Import from semantic model | No public live-sync route. A separately approved snapshot-to-SQL flow may create a from-scratch table, but must not claim native semantic-model synchronization. | 1 |
 | Existing-sheet analysis | Decode the Plan definition, confirm database/schema/table and column mappings, then query read-only with `sqldb-cli` | n/a |
 
 Tables built through the file, template or snapshot routes record
@@ -191,44 +191,11 @@ every automation after publishing.
 
 `approvals.json` holds the approval workflow (rule type, levels, filters) and
 travels with the definition: preserve it. Approver users are not definition
-content. Assigning them needs the bounded `powertable-service` adapter with an
-approved external profile:
-
-```json
-{
-  "apiBase": "https://resolved-approved-workload-service-host",
-  "allowedHosts": ["resolved-approved-workload-service-host"],
-  "tokenEnvironment": "FABRIC_PLAN_POWERTABLE_TOKEN",
-  "authScheme": "Bearer",
-  "contextHeaders": {"x-ms-workload-resource-moniker": "<current Plan ID>"},
-  "approvedExternalAdapter": true,
-  "authorizedMutation": true
-}
-```
-
-Resolve the runtime `sourceId` from the configured table; do not substitute the
-definition's `recordGuid`. Resolve approver Graph IDs through the authorized
-directory; never use display names as IDs.
-
-```sh
-python plan.py powertable-service source-resolve --config service.json --input source.request.json --run run --label source
-python plan.py powertable-service approval-create --config service.json --input approval.request.json --run run --label approval
-```
-
-```json
-{
-  "sourceId": "<runtime sourceId>",
-  "approvers": [{"graphId": "<Microsoft Graph user ID>", "entityType": "USER"}],
-  "ruleType": 10, "multiLevelEnabled": 0, "approvalLevel": 1
-}
-```
-
-The adapter writes only `POST /v2/powertable/sources/{sourceId}/approvals/`
-(and, for legacy runs, `.../forms/`; prefer the definition route for forms). It
-rejects unapproved hosts, missing mutation approval, missing runtime identities
-and invalid approver entity types. Re-read the approval after the call and
-report it separately from the Plan definition update. Whether an approval
-created through the definition import appears in the UI needs a live readback.
+content. Assigning approver users has no supported public route. Do not use a
+workload endpoint, MWC token exchange, browser session or private CoreAPI call.
+Report the workflow as partially configured: the definition can carry approval
+structure, but user assignment remains a manual product operation until a
+supported public API exists.
 
 ## Existing tables: keys, lookups and analysis
 

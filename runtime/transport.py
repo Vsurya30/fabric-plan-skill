@@ -5,6 +5,8 @@ import urllib.request, urllib.error, urllib.parse, email.utils, datetime, time, 
 from pathlib import Path
 from .codec import load, loads, dumps, save, sha, definition_hash
 from uuid import uuid4
+FABRIC_SKILL_HEADER='x-ms-fabric-skill'
+FABRIC_SKILL_NAME='fabric-plan-skill'
 class HttpError(RuntimeError):
     def __init__(self,status,body=None):
         self.status=status
@@ -87,7 +89,8 @@ class Client:
                 if result['status']>=400: raise HttpError(result['status'],result.get('body'))
                 return result
             raise RuntimeError('UNCERTAIN_SUBMISSION: reconcile server state before resubmitting '+label)
-        headers={'Authorization':'Bearer '+token,'Content-Type':content_type}
+        headers={'Authorization':'Bearer '+token,'Content-Type':content_type,
+                 FABRIC_SKILL_HEADER:FABRIC_SKILL_NAME}
         if accept is not None:
             if not isinstance(accept,str) or '\r' in accept or '\n' in accept:raise ValueError('Invalid Accept header')
             headers['Accept']=accept

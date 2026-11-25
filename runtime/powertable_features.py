@@ -6,8 +6,7 @@ through the public definition APIs. Form fields and layout nodes reference a
 column by its columnConfigs ``recordGuid``; import maps it to the runtime ID.
 
 ``approvals.json`` carries only the approval workflow (rule type, levels and
-filters). Approver users are not definition content; assigning them needs the
-separate workload-service adapter in ``powertable_service``.
+filters). Approver users are not definition content and have no supported public route.
 
 An update that omits an existing ``automations.json`` or ``approvals.json``
 deletes those records on import, so always start from a fresh export.
@@ -258,5 +257,5 @@ def add_features(envelope,*,sheet_guid,forms=None,automations=None):
     warnings+=automation_identity_warnings({**raw,**changes})
     return candidate,{'sheetGuid':sheet_guid,'addedForms':summary['forms'],'addedAutomations':summary['automations'],
         'changedParts':sorted(existing),'addedParts':sorted(added),'preservedPartCount':len(original)-len(existing),
-        'warnings':warnings,'approvers':'not in definition; use powertable-service approval-create',
+        'warnings':warnings,'approvers':'not in definition; no supported public route',
         'deployment':'not run','runtimeValidation':'not run'}

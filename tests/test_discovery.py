@@ -47,13 +47,9 @@ class DiscoveryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 discover(module=module)
         for action in data['actions'].values():
-            self.assertIn(action['phase'], {'local', 'public-read', 'public-write', 'external-write'})
+            self.assertIn(action['phase'], {'local', 'public-read', 'public-write'})
             if action['phase'] in {'public-read','public-write'}:
                 self.assertIn(action['command'].split()[2:4], [['api', 'export'], ['api', 'create'], ['api', 'update']])
-            if action['phase']=='external-write':
-                self.assertEqual(action['command'].split()[2],'powertable-service')
-                # Only approver assignment lacks a public route; forms are definition parts.
-                self.assertEqual(action['command'].split()[3],'approval-create')
 
     def test_every_advertised_callable_exists(self):
         for op in catalog()['actions'].values():

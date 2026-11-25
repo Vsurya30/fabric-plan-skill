@@ -1,9 +1,12 @@
 [
   {
-    "bundled": "references/roll-forward-formula-patterns.md",
+    "bundled": "references/roll-forward-formula-patterns.md + references/roll-forward-formula-patterns-part-02.md",
     "source": "Fabric Plan Roll-Forward Formula Patterns.md",
-    "sha256": "93c146a298040ed7aa9c023b8409f8c5b16f461d1410f4edc1312dbff3992335",
-    "preservation": "byte-exact",
-    "preservedFile": "references/roll-forward-formula-patterns.md"
+    "sha256": "91b1c4a65749b622094112d28e291ca432740f1ce7c5170915ef489a40c65c39",
+    "preservation": "content-complete split; each part under 20 KB",
+    "preservedFiles": [
+      "references/roll-forward-formula-patterns.md",
+      "references/roll-forward-formula-patterns-part-02.md"
+    ]
   }
 ]

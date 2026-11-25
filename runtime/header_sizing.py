@@ -86,7 +86,7 @@ def vertical_margins(p):
 
 class PortableFontWidths:
     def __init__(self):
-        path=Path(__file__).resolve().parent.parent/'references/arial-header-metrics.json'
+        path=Path(__file__).resolve().parent.parent/'fixtures/arial-header-metrics.json'
         self.sizes=json.loads(path.read_text(encoding='utf-8'))['sizes']
     def width(self,text,size,bold):
         key=str(int(size)) if size==int(size) else str(size)

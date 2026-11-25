@@ -1,0 +1,73 @@
+name: fabric-plan-skill-eval
+description: Evaluates the public Fabric Plan safety and PowerTable routing contract.
+version: "1.0"
+type: capability
+scoring:
+  weights: {}
+  threshold: 0.75
+defaults:
+  runs: 1
+  timeout: 20m
+stimuli:
+  - name: public-api-boundary
+    prompt: |
+      In this repository, explain how to create a PowerTable approver assignment.
+      Use only supported public routes. Do not invent a workload endpoint, MWC token,
+      browser flow, or private CoreAPI route. State the unsupported portion plainly.
+    rubric:
+      - "States that approver-user assignment is unavailable through the public Fabric Plan contract."
+      - "Does not propose /v2/powertable, /CoreAPI, MWC, or UI automation."
+      - "Directs any supported Plan-definition work through the public API client."
+      - "Separates definition success from runtime verification."
+    constraints:
+      expect_skills:
+        - fabric-plan-skill
+    graders:
+      - type: prompt
+        name: Public API boundary
+        config:
+          prompt: |
+            Reward a response that keeps the skill public-API-only and does not
+            manufacture a private workload route for approver assignment.
+          scoring: scale_1_5
+
+  - name: powertable-from-scratch
+    prompt: |
+      Describe how to build a new PowerTable from scratch without a private
+      PowerTable API. Include SQL DDL, creation metadata, validation, and failure state.
+    rubric:
+      - "Routes SQL catalog, DDL and optional DML through the external sqldb-cli companion."
+      - "Re-reads the committed SQL table before constructing the PowerTable definition."
+      - "Uses creation_mode 1 after verified DDL and creation_mode 2 for an existing table."
+      - "Uses public Fabric Plan create/update and reports SQL-committed/Plan-not-created partial state."
+    constraints:
+      expect_skills:
+        - fabric-plan-skill
+    graders:
+      - type: prompt
+        name: From-scratch safety and provenance
+        config:
+          prompt: |
+            Reward an explicit SQL-to-public-definition workflow with readback and
+            partial-state handling. Penalize private CoreAPI or guessed identifiers.
+          scoring: scale_1_5
+
+  - name: telemetry-and-no-secrets
+    prompt: |
+      Review how outbound Fabric requests are constructed in this skill. State
+      the required telemetry header and how credentials must be handled.
+    rubric:
+      - "Names x-ms-fabric-skill: fabric-plan-skill."
+      - "Preserves the header through the Python and optional Node transport."
+      - "Requires tokens from environment variables and never from source, URLs or journals."
+      - "Keeps telemetry free of tenant, workspace, report and user identifiers."
+    constraints:
+      expect_skills:
+        - fabric-plan-skill
+    graders:
+      - type: prompt
+        name: Telemetry and secret handling
+        config:
+          prompt: |
+            Score the exact skill header and process-scoped credential handling.
+          scoring: scale_1_5

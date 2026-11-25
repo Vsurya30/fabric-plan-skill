@@ -85,8 +85,8 @@ class RollForwardTests(unittest.TestCase):
 
     def test_complete_source_matches_preservation_manifest(self):
         entries=load(ROOT/'references/preservation-manifest.json')
-        entry=next(x for x in entries if x['bundled']=='references/roll-forward-formula-patterns.md')
-        b=(ROOT/entry['preservedFile']).read_bytes()
+        entry=entries[0]
+        b=b''.join((ROOT/path).read_bytes() for path in entry['preservedFiles'])
         self.assertEqual(hashlib.sha256(b).hexdigest(),entry['sha256'])
         text=b.decode('utf-8-sig')
         for heading in ['Treasury cash flow forecast','Inventory and replenishment forecast','Accounts receivable and collections forecast','Headcount and hiring forecast','Deferred revenue forecast','Instructions to add to the authoring skill']:

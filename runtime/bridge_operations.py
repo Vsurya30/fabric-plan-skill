@@ -20,7 +20,7 @@ def projected_signature(query,*,measures=False):
 def append_compatibility(inputs,*,allow_measure_union=False):
     """General Append contract. Financial contributions use stricter append_check.
 
-    A union of optional measures is observed in DXT, not permission to treat missing
+    A union of optional measures is an observed export shape, not permission to treat missing
     financial contributions as zero. Return missing-measure names for explicit policy.
     """
     if len(inputs)<2:raise ValueError('Append needs at least two queries')

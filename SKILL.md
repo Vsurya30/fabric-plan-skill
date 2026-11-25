@@ -22,6 +22,13 @@ Use the Python CLI from this skill's directory. Use a separate task directory fo
 5. Export the result from the destination and compare it with the intended changes. Preserve native numeric identities as decimal strings. Placement identifies where a grid appears; its source owner and measure identify what formulas and bindings consume. Check both using saved identities, not sheet order. Neither check proves stored values survived.
 6. Report what was built, validated locally, persisted, and verified interactively as separate outcomes. A saved definition does not prove that navigation, input or rendered layout works. After a failed write, read back current state before retrying; do not assume rollback.
 
+## Telemetry
+
+Every bundled public Fabric API request carries
+`x-ms-fabric-skill: fabric-plan-skill`. The Python client preserves the header
+when using the optional Node adapter. The value identifies this skill only and
+must not include tenant, workspace, report, user or credential data.
+
 ## Packaging and publication boundary
 
 Distribute only tracked, reviewed planning instructions, runtime, schemas, references, reusable examples, fixtures, tools and their licences. Never package the whole working folder. Keep task briefs, handoff notes, model exports, report samples, credentials and generated output outside the distribution. To publish a Plan, send only its validated public definition and required report resources, not this skill.
@@ -34,12 +41,12 @@ Choose a reference directly; the list is a menu, not a reading sequence.
 |---|---|
 | Build, validate or update a definition | [Runtime guide](references/runtime-guide.md) |
 | Configure sheet measures and embedded dashboards | [Planning measures](references/planning-measures.md), [presentation](references/planning-presentation.md). Super Filters in a top band use dropdown mode; Super Filters in a left rail use hierarchy mode. |
-| Plan over time | [Forecast](references/forecast-authoring.md), [roll-forward balances (short default)](references/roll-forward-authoring.md), [formula equality](references/formula-equality.md). Only for full worked cases: [roll-forward formula patterns](references/roll-forward-formula-patterns.md). |
-| Connect or author PowerTable data | [PowerTable modes](references/powertable.md). `powertable-table` builds existing-table, from-scratch, file and template tables (new tables after approved `sqldb-cli` DDL) with the product's column defaults: Text for VARCHAR, Date or Date time by SQL type, displayed keys, All users row access. Forms and Automations are definition parts (`powertable-features`). Approver users need the approved `powertable-service` adapter. Semantic-model live sync is unavailable. |
+| Plan over time | [Forecast](references/forecast-authoring.md), [roll-forward balances (short default)](references/roll-forward-authoring.md), [formula equality](references/formula-equality.md). Only for full worked cases: [formula principles](references/roll-forward-formula-patterns.md) and [worked cases](references/roll-forward-formula-patterns-part-02.md). |
+| Connect or author PowerTable data | [PowerTable modes](references/powertable.md). `powertable-table` builds verified existing tables and approved `sqldb-cli` from-scratch results with the product column defaults and All users row access. Forms and Automations use public Plan definition parts (`powertable-features`). Approver-user assignment and private file/template/semantic workload routes have no public API and remain unavailable. |
 | Connect other sources | [InfoBridge](references/infobridge-construction.md) |
 | Design input and allocations | [Editability](references/input-editability.md), [numeric constraints](references/numeric-input-constraints.md), [anchor measures](references/anchor-measures.md), [measure-weighted distribution](references/measure-weighted-distribution.md) |
 | Bind and aggregate measures | [Measure sources](references/measure-source-bindings.md), [numeric Values](references/numeric-column-values.md), [dimension leaf keys](references/dimension-leaf-keys.md), [storage context](references/storage-context.md), [totals](references/planning-totals-defaults.md) |
 | Review forecasts | [Actuals versus forecast](references/actual-forecast-review.md), [forecast time intelligence](references/forecast-time-intelligence.md) |
 | Format a grid or chart | [Column presentation](references/planning-column-presentation.md), [measure display](references/measure-display-defaults.md), [conditional formatting](references/conditional-formatting.md), [integrated variance](references/integrated-variance.md), [chart filters](references/chart-visual-filters.md) |
 
-Machine-readable resources (not required reading): [discovery catalog](references/module-routing.json), [header metrics](references/arial-header-metrics.json), [preservation manifest](references/preservation-manifest.json).
+Machine-readable resources (not required reading): [discovery catalog](catalog/module-routing.json), [header metrics](fixtures/arial-header-metrics.json), [preservation manifest](references/preservation-manifest.json).

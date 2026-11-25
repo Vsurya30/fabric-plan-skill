@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "package": "fabric-plan-skill",
+  "classification": {
+    "runtime-required": [
+      "SKILL.md",
+      "README.md",
+      "LICENSE",
+      "apm.yml",
+      "plan.py",
+      "runtime/",
+      "catalog/",
+      "references/",
+      "fixtures/",
+      "schemas/",
+      "tools/",
+      "vendor/"
+    ],
+    "manual-examples": [
+      "examples/"
+    ],
+    "offline-tests": [
+      "tests/"
+    ],
+    "excluded-from-package": [
+      "_brief/",
+      "_build/",
+      "_samples/",
+      "assets/",
+      "graft/",
+      "**/__pycache__/",
+      "**/*.pyc",
+      "**/*.pyo"
+    ]
+  },
+  "retained-unreferenced-assets": {
+    "examples/business-intent/quarterly-targets.recipe.json": "manual-example",
+    "examples/five-usecases/business-prompts.txt": "manual-example",
+    "examples/five-usecases/destination.example.json": "manual-example",
+    "examples/forecast-repair.request.json": "manual-example",
+    "examples/forecast-review.request.json": "manual-example",
+    "examples/header-fit.request.json": "manual-example",
+    "examples/hierarchy-icons.request.json": "manual-example",
+    "examples/measure-display.request.json": "manual-example",
+    "examples/planning-integrity.properties.json": "manual-example",
+    "examples/planning-presentation.request.json": "manual-example",
+    "fixtures/navigator-spec-*.json": "offline-test",
+    "fixtures/negative-variance-rule.json": "offline-test",
+    "tools/audit_report_definitions.py": "maintenance-tool"
+  },
+  "limits": {
+    "references_markdown_max_bytes": 20000,
+    "references_machine_data_allowed": false,
+    "tracked_bytecode_allowed": false
+  }
+}
