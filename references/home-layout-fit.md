@@ -1,6 +1,6 @@
 # Native Home: readable content and layout sizing
 
-Use this when creating or repairing the report's Home page. Native Home rows are separate from Intelligence dashboard rectangles, visual grid coordinates and HTML/CSS. Preserve the existing F24 storage, rich-text, role, asset and ETag contracts.
+Use this when preparing Home content for a new or existing Plan. Native Home rows are separate from Intelligence dashboard rectangles, visual grid coordinates and HTML/CSS. Preserve existing rich-text, role and asset content. Role-specific Home content has no public publication route in this package: prepare and check it locally, publish only Home visibility in the definition, and report the content as not published.
 
 ## Authoring defaults
 
@@ -28,17 +28,18 @@ report = audit_home_fit(layout)
 assert report['passed'] and not report['issues']
 ```
 
-The low-level `surfaces.home_layout` and native `save_home` reject explicit text widths below the 240px authoring floor. They also reject nonfinite or invalid dimension values. `audit_home_fit` reports fixed-text-height and unknown-width risks, and can detect row overflow or a narrow flexible remainder when given an available content width. Passing these static checks is **not rendered acceptance**. An intentionally fixed-height existing design needs actual wrapping/fit evidence; do not silently rewrite it just to silence a warning.
+The low-level `surfaces.home_layout` rejects explicit text widths below the 240px authoring floor. It also rejects nonfinite or invalid dimension values. `audit_home_fit` reports fixed-text-height and unknown-width risks, and can detect row overflow or a narrow flexible remainder when given an available content width. Passing these static checks is **not rendered acceptance**. An intentionally fixed-height existing design needs actual wrapping/fit evidence; do not silently rewrite it just to silence a warning.
 
-## Existing report repair and readback
+## Existing Home content
 
-1. Read the actual role content through the external profile's `home-role`
-   operation. A Plan export with empty `homeLayout.roles` does not establish
-   that the Home page is empty; never guess a service host.
-2. Keep a lossless snapshot. Inspect row widths, height, `defaultHeightRatio` and `isHeightManual` alongside decoded text length. Preserve item/instance identities, rich text, image references, role priorities, sheet-card exclusions and unrelated configuration.
-3. Correct only the affected geometry. For the demonstrated narrow-text failure, use flexible widths and content-sized height; stack the two prose items if the target content width is unknown. Preserve the first row identity and allocate a new row identity only if splitting a row. Do not rebuild unrelated report content or change financial measures.
-4. Save through the provider-supported method with the freshly read ETag, then re-read role content and compare the intended fields. Priority and Home visibility have separate readbacks. A missing effective-user route does not invalidate successful role-content readback.
-5. Inspect the result in ordinary reading mode and the Home editor when that validation is available and authorized. Require no character-by-character wrapping, clipping, overlap, excessive empty row space or unreadable text at the target viewport. If working API-only, report saved/static checks separately and leave rendered acceptance explicitly unverified. Do not claim the JSON alone guarantees appearance in every viewport.
+Role-specific Home content and its metadata have no public read or write route in
+this package. A Plan export with empty `homeLayout.roles` does not establish that
+the Home page is empty; never guess a service host.
+
+1. Work from Home content the user supplies. Keep a lossless snapshot. Inspect row widths, height, `defaultHeightRatio` and `isHeightManual` alongside decoded text length. Preserve item/instance identities, rich text, image references, role priorities, sheet-card exclusions and unrelated configuration.
+2. Correct only the affected geometry. For a narrow-text failure, use flexible widths and content-sized height; stack the two prose items if the target content width is unknown. Preserve the first row identity and allocate a new row identity only if splitting a row. Do not rebuild unrelated report content or change financial measures.
+3. Run `audit_home_fit` on the candidate and return it as a prepared change with its checks. Do not report it as saved: publishing role content has no public route here. Home visibility is checked separately in an export.
+4. Once the content is published outside this package, inspect it in ordinary reading mode and the Home editor when that validation is available and authorized. Require no character-by-character wrapping, clipping, overlap, excessive empty row space or unreadable text at the target viewport. If working API-only, report saved/static checks separately and leave rendered acceptance explicitly unverified. Do not claim the JSON alone guarantees appearance in every viewport.
 
 ## Evidence boundary
 

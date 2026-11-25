@@ -59,7 +59,7 @@ python plan.py fit-planning-header --input header-fit.request.json --out candida
 Input: `{"properties": <current native Planning properties>, "available_width": 1000}`.
 `available_width` is optional and is not written as a new native property.
 Output: `{"properties": <updated properties>, "sizing": <calculation details>}`.
-Save only `properties` using the supported visual-property writer and fresh ETags.
+Apply only `properties` to the visual in a fresh export and publish it with `api update`.
 See `examples/header-fit.request.json` for a synthetic local candidate.
 
 This is dynamic **content-dependent authoring**, not browser runtime auto-resize.
@@ -105,12 +105,10 @@ Output is the updated properties object. See
 merely because a new skill default exists. Use these keys only in visual families
 that expose this native hierarchy contract.
 
-## Evidence and current release boundary
+## Evidence boundary
 
-The exact icon values came from a sanitized reference fixture and were applied to
-the five roll-forward reports. The user approved the subsequent content-sized
-header trial and explicitly requested both rules as universal skill defaults.
-This approval is evidence for the observed trial, not a runtime check of every
-future report. The v20 packaging task did not run tests, validation or live APIs,
-as requested. Header sizing and icons alter presentation only; formulas, input
-permissions, storage/source mappings and user edits remain independent.
+The icon values come from a sanitized reference fixture, and both rules were
+approved as universal skill defaults after a content-sized header trial. That
+approval covers the trial, not a runtime check of every future report. Header
+sizing and icons alter presentation only; formulas, input permissions,
+storage/source mappings and user edits remain independent.

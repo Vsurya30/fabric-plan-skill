@@ -1,24 +1,15 @@
-> v29 execution rule: follow the authoring workflow in the skill instructions. Import supported inputs, formulas, Forecast and CF together. Use documented native phases only; no reference-only staging shortcut or automatic reduced-scope deployment. The original request and import-contract checks remain authoritative. This supersedes older partial-deployment fallback wording.
-
-> v21 Planning-source mappings: read the infobridge planning identity guide. Constructors derive DI/FORMULA lineage from owner records; destination output reconciliation is bundled. Route it with the discovery step in the skill instructions using `--module INFOBRIDGE-MAPPING`.
-
-> 2026-11-14 active formatting and identity update: read the dimension leaf keys guide. Use `plan.py format-matrix` for selected typed formatting and `plan.py leaf-key-mapping` for stable leaf storage defaults. These newer, revision-qualified contracts supersede conflicting older general examples; original source documents remain intact. Formatting is offline-tested, not render-certified. The complete existing native CF seed is not claimed to be an exact copy of the newer source constants.
-
-> Current module routing: use the machine-readable routing catalog or the discovery step in
-> the skill instructions with `--module <ID>` for all F01-F30 and cross-cutting workflows.
-> It connects business examples to real commands/callables and distinguishes base
-> provisioning, separate phases and actual gaps. Preserve the latest targeted
-> fixes; historical coverage statements below are release-scoped.
-
-> Forecast review update: From Sheets SUM, quarterly commentary and variance, negative formatting and comparison charts are constructed by `runtime/forecast_review.py`, which this package exposes as a library only. That executable phase has no registered command here, so report it as unavailable and use `forecast-repair` for a scoped ALM update from a working reference sheet. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
-
-> Maintenance fallback: when a requested PowerTable cannot be bound, deploy a visible native PowerTable sheet with deferred connection as the deferred PowerTable connections guide describes. Do not omit the sheet solely for a connection gap. Preserve chart Visual level field registrations using the chart visual filters guide.
-
 # Connected application construction and graceful deployment
 
-> Active Context/Intelligence construction addendum: read the context intelligence guide. External Context stays outside the grid and passes the selected scope into Planning; ordinary semantic slicers are separate. The executable constructor now covers Context, slicers, cards, text and page-local embedded geometry. Scenario rows and grid-only dashboards are not equivalent substitutes. Preserve feature-level omissions and separate saved-state checks from behavior verification.
+These constructors cover dimension mappings, P&L appends, linked values, embedded Planning, PowerTable columns and reference audits. Their shapes describe saved configuration, not calculation, rendering, refresh, SQL writes or rename persistence. No reference report, source checkout, export file, credential or environment ID is needed. All business names and field choices below are illustrative parameters.
 
-This supplement adds reusable code from an authorized live Plan export inspected on 2026-11-13. It is evidence of saved configuration, not proof of calculation, rendering, refresh, SQL writes or rename persistence. The application contained 21 sheets, 12 InfoBridge queries, five embedded Planning references, three configured dimension mappings and 14 database lookup columns. No reference report, source checkout, export file, credential or environment ID is needed by these constructors. All business names and field choices below are illustrative parameters.
+Related routes:
+
+- Route each feature with the discovery step in the skill instructions (`--module <ID>`) or the machine-readable routing catalog. It connects business examples to real commands and callables and separates base provisioning, separate phases and actual gaps.
+- Planning-source InfoBridge mappings: read the infobridge planning identity guide (`--module INFOBRIDGE-MAPPING`). Constructors derive DI/FORMULA lineage from owner records.
+- Typed formatting and stable leaf storage: `plan.py format-matrix` and `plan.py leaf-key-mapping`; read the dimension leaf keys guide. Formatting is offline-tested, not render-certified.
+- External Context, slicers, cards, text and page-local embedded geometry: read the context intelligence guide. Scenario rows and grid-only dashboards are not equivalent substitutes.
+- Forecast review: `runtime/forecast_review.py` constructs From Sheets SUM, quarterly commentary and variance, negative formatting and comparison charts as a library only. With no registered command, report that phase as unavailable and use `forecast-repair` for a scoped ALM update from a working reference sheet. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
+- An unbindable PowerTable becomes a visible PowerTable sheet with a deferred connection, as the deferred PowerTable connections guide describes; never omit the sheet solely for a connection gap. Keep chart visual-level field registrations (chart visual filters guide).
 
 ## Continue independent work
 
@@ -41,7 +32,7 @@ replace unknown data with zero or deploy formulas with unresolved dependencies.
 
 Use `runtime.dimension_mapping.dimension_mapping(model, assignments, mappings, descriptor_only_assignments=(), skip_support=None)` or `construct-native dimension-mapping`. The normal Planning builder accepts `dimensionIdMappings`, `dimensionSkipSupport` and `lookupContextAssignments` and writes the result at `properties.visualState.dimension_id_mapping`.
 
-Example business grain: Employee Ãƒâ€” Month, with Scenario as storage context. Display employee names, but persist coordinates against a same-table stable employee key. Department is a descriptive grouping only if the retained Employee key already identifies the intended entity. The observed native strategies are:
+Example business grain: Employee × Month, with Scenario as storage context. Display employee names, but persist coordinates against a same-table stable employee key. Department is a descriptive grouping only if the retained Employee key already identifies the intended entity. The observed native strategies are:
 
 ```json
 {
@@ -81,15 +72,15 @@ Audit every transform for unavailable Year/date fields and lost scenario/currenc
 
 The assignment uses `sourceType:"InfoBridge"`, `customSource:true`, `bucketId:"ameasure"`, `queryId`, exact `id/sourceId`, `measureGuid` and the selected aggregation. The companion Native record uses the same measure identity and destination visual ID. Add all four objects through the existing registration/property writers; assignment-only construction is incomplete. Keep source declaration GUIDs, portable query GUIDs, execution query IDs, output field IDs and runtime visual IDs separate. Use existing reconciliation helpers and fresh catalogs after import.
 
-Initial connected refresh is optional for deployment; the user may refresh manually. Validate saved wiring independently of materialization. When refresh testing is requested, execute upstream source/query jobs in dependency order using the bundled reload/poll/stream adapters and check terminal success, materialized columns, row counts, values and downstream recalculation. Do not seed `recordCount`, `parquetVersion`, `flatData`, success/error caches, old runtime IDs or source job state from a report. A saved graph does not prove edit-trigger propagation. Business navigation has no public route in this package; report it as unavailable.
+Initial connected refresh is optional for deployment; the user may refresh manually. Validate saved wiring independently of materialization. InfoBridge query execution and polling have no public route in this package, so report refresh testing as unavailable rather than claiming materialized columns, row counts, values or downstream recalculation. Do not seed `recordCount`, `parquetVersion`, `flatData`, success/error caches, old runtime IDs or source job state from a report. A saved graph does not prove edit-trigger propagation. Business navigation has no public route in this package; report it as unavailable.
 
 ## Embedded planning: one owner, page-local placement
 
 Use `embedded_planning(owner_sheet, visual_id)` to construct a portable dashboard reference to a directly owned Planning visual. The report export contained five such references. The hidden Planning owner keeps its properties, formulas and inputs; the Intelligence dashboard declares the same portable visual GUID with `isEmbedded:true`. Do not create a second visual identity or duplicate the owner's dataInput part beneath the dashboard.
 
-After API creation/import, read the dashboard's complete native inventory and resolve actual runtime visual IDs. Place the embedded visual in the dashboard's `reactiveVisualProperties` entry using `runtime.layout.place_native`, fresh page ETags and `runtime.layout.audit`. An override's runtime `visualId` is not the portable GUID. Its `originEntityId` must belong to the destination runtime; do not copy the example's small integer strings.
+Place the embedded visual in the dashboard's `reactiveVisualProperties` entry inside the public definition: `runtime.public_alignment.embedded_placement` builds that entry and `check_placements` verifies it. In a fresh build the runtime derives the report-local `visualId` and `originEntityId` from the generated declaration sequence; for an existing Plan, take them from the destination's saved mapping in a fresh export. Neither is the portable GUID; do not copy the example's small integer strings. Moving a visual through the native page API has no public route here.
 
-The example uses a 1600 Ãƒâ€” 1002 canvas with `elementScalingUnit:"percentage"`: position and dimensions are fractions from 0 to 1, not percentages from 0 to 100 and not pixels. It reserves the lower area for a broad rectangular workbench. Derive a fresh layout for the requested content: consistent margins, aligned filter/card rows, a compact navigator and a readable full-width workbench. Validate all neighbors, reserved regions and bounds; preserve source-owner geometry. Use the native page readback to verify the effective rectangle. API geometry does not establish pixel-perfect rendering.
+The example uses a 1600 × 1002 canvas with `elementScalingUnit:"percentage"`: position and dimensions are fractions from 0 to 1, not percentages from 0 to 100 and not pixels. It reserves the lower area for a broad rectangular workbench. Derive a fresh layout for the requested content: consistent margins, aligned filter/card rows, a compact navigator and a readable full-width workbench. Validate all neighbors, reserved regions and bounds with `runtime.layout.audit`; preserve source-owner geometry. Export the saved Plan to verify the effective rectangle. API geometry does not establish pixel-perfect rendering.
 
 ## PowerTable lookup and column construction
 
@@ -115,7 +106,7 @@ This abbreviated example omits the generated record GUID, physical `dbMeta` and 
 
 Wrap complete records in `PowerTable/ColumnConfigs/1.0.0/schema.json` as `columnConfigs:[...]`. Reconcile with existing records using the bundled preservation-aware helper; omission does not mean delete. Keep these separate from row-save metadata. The portable PowerTable properties part has an additional nested `properties` envelope. The source owns its `recordGuid`; `sourceSettings[*].sourceId` refers to that source record, not the visual. A reference's `creationMode:3` is import-file provenance, not an existing-table requirement. Use native `creationMode:2` when initializing an existing SQL table; do not change modes to conceal a credential failure.
 
-Select authorized SQL base tables with verified keys/lineage. Use the existing initialization, schema/readback and compressed insert/update adapters. Preserve actual returned IDs and settings. Do not copy broad `all_users` row-access filters or enable row deletion just because a sample contains them. Rendering a lookup and saving its underlying SQL key require separate acceptance evidence.
+Select authorized SQL base tables with verified keys/lineage, and build configured tables with `powertable-table` from that metadata. `construct-native powertable-source` and `powertable-rows` only assemble local payloads: PowerTable source initialization, schema readback and row writes have no public route in this package, so report them as unavailable. Preserve actual saved IDs and settings. Do not copy broad `all_users` row-access filters or enable row deletion just because a sample contains them. Rendering a lookup and saving its underlying SQL key require separate acceptance evidence.
 
 ## Intelligence state hygiene and reference auditing
 
@@ -127,6 +118,6 @@ Run `python plan.py audit-definition decoded.json --out audit.json`. The auditor
 
 ## Verification and delivery
 
-Run `python plan.py test` after extraction. New synthetic tests cover lookup-key/label separation, generated keys, descriptor-only context, missing mapping pairs, duplicate IDs, Decimal filters, append grain/types, scenario loss, Year drift, consumer companions and embedded ownership. Independently test scope fallback with mixed supported/unsupported modules. Preserve the original feature/business/property documents and report their hashes during packaging.
+Run `python plan.py test` after extraction. Synthetic tests cover lookup-key/label separation, generated keys, descriptor-only context, missing mapping pairs, duplicate IDs, Decimal filters, append grain/types, scenario loss, Year drift, consumer companions and embedded ownership. Independently test scope fallback with mixed supported/unsupported modules. Preserve the original feature/business/property documents and report their hashes during packaging.
 
 Return the actual saved artifact and the coverage ledger. Clearly separate construction, definition persistence, runtime registration, data operations and visual verification. A narrower deliverable is acceptable only when that is the requested scope; claiming omitted or unverified functionality as complete is not.

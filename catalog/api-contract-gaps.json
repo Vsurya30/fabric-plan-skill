@@ -86,14 +86,14 @@
       "id": "forecast-review-command",
       "status": "library-only",
       "request": "Run the forecast review update phase as one command.",
-      "reason": "runtime/forecast_review.py ships as a library and runs inside usecase deploy; no standalone forecast-review command is registered.",
+      "reason": "runtime/forecast_review.py ships as a library used by the recipe helpers; no standalone forecast-review command is registered.",
       "publicPart": "runtime.forecast_review functions; forecast-repair for a scoped ALM update."
     },
     {
       "id": "storage-context-command",
       "status": "library-only",
       "request": "Audit storage context through a dedicated command.",
-      "reason": "runtime/storage_context.py is applied by build, construct-native and usecase deploy; no standalone audit subcommand is registered.",
+      "reason": "runtime/storage_context.py is applied by build, construct-native and the usecase recipe checks; no standalone audit subcommand is registered.",
       "publicPart": "runtime.storage_context signature, require_same, query_contract, require_query, audit_links.",
       "docs": [
         "references/storage-context.md"

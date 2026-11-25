@@ -1,4 +1,4 @@
-# Planning-source InfoBridge mappings (v21)
+# Planning-source InfoBridge mappings
 
 Use this guide when building an InfoBridge source from a Planning owner, adding
 transformations, importing it into a destination, or repairing unresolved query
@@ -91,11 +91,13 @@ does not require UI or business validation.
 
 ## Resolve destination outputs after import
 
-Import and finish the supported operation, then fetch the exact destination query
-metadata with `builder-api bridge-query` (and inventory when resolving ownership).
-Keep the portable query GUID distinct from its native `sqlPk` and selected output
-IDs. Neither array position, a matching label, nor the old input-record ID proves
-the query output identity.
+Import and finish the supported operation, then export the definition and take the
+exact destination query metadata from its InfoBridge part. If the export lacks the
+native identities a binding needs, report that binding as unresolved: reading
+native query metadata through a workload route is outside this package. Keep the
+portable query GUID distinct from its native `sqlPk` and selected output IDs.
+Neither array position, a matching label, nor the old input-record ID proves the
+query output identity.
 
 ```python
 from runtime.bridge_identity import resolve_planning_output
@@ -145,9 +147,9 @@ all InfoBridge queries referenced by this visual. The command returns a scoped
 `properties` candidate and resolved mappings. It requires existing InfoBridge
 assignments and Native companions, updates their matching filter/sort references,
 and preserves internal aliases, formulas, inputs, locks, formatting and storage.
-It performs no API writes. Apply the candidate through the supported properties
-writer with fresh visual/page ETags. Never overwrite the entire report from an
-old construction snapshot to make a binding repair.
+It performs no API writes. Apply the candidate to the visual in a fresh export and
+publish it with `api update`. Never overwrite the entire report from an old
+construction snapshot to make a binding repair.
 
 The Planning integrity guard understands query sort IDs such as `77[12]`:
 `12` is an opaque output key, not the physical field name. It compares the sort

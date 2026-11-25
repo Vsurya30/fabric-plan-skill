@@ -11,7 +11,7 @@
    chosen expansion policy; do not replay foreign runtime member IDs.
 3. Use explicit authoring defaults for missing column positions: grand total
    `"Left"`, subtotal `null` (OFF). Preserve existing explicit null and non-null
-   choices. This supersedes the earlier recipe that removed null overrides.
+   choices; do not remove explicit null overrides.
 
 Row grand total and subtotal default to `Top` for new sheets.
 

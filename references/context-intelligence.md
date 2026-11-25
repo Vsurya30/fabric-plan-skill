@@ -1,24 +1,14 @@
-> v39: Rows/Columns already define storage grain. External Context is only for additional stored selections, never ordinary page/global filtering. Connected Planning owners must match Context; query outputs must retain it. Read the storage context guide for the bundled guards and build-time query evidence.
-
-> Direct numeric-column Values (v28): use the numeric column values guide. Planning, KPI cards and charts default semantic Columns to source Sum when no explicit aggregation is supplied. Planning `sourceAggregation` is independent of grid total settings; saved measure IDs are preserved.
-
-> v27 mandatory navigation: every Intelligence dashboard includes a visible native Page Navigator, even when omitted from the prompt. The standard builder reserves space and the public Plan definition carries its complete state. The completion gate rejects missing controls. Read the navigation contract. All v26 padding and earlier fixes remain.
-
-> v18: the measure display defaults guide is the default: assigned measure cards stay visible at **All**, with no selected values/ranges. Numeric Planning measures use per-measure Auto (`13: "auto"`). Apply dimension selections only to the dimension card itself; preserve all source bindings and intentional existing filters.
-
-> v15: For the five end-to-end business examples, read the five usecase recipes guide. `usecase` packages every local and native phase; basic build/provision alone does not execute these complete linked workflows.
-
-> v14 required default: use native integrated variance for bar/column baseline comparisons. Read the integrated variance guide for exact selectors, source-preserving commands and business examples. Ordinary single-series bars are unchanged.
-
 # External Context and rich Intelligence workspaces
 
 For each chart/KPI assignment, also construct its visible ordinary visual-level filter with `runtime.chart_filters`. Read the chart visual filters guide. Hidden embedded scope and Planning Context registrations do not replace these cards.
 
-This is the active construction guide for these features. It supersedes any older suggestion to put Scenario in Rows when an external Context constructor is unavailable.
+Every dashboard also keeps the mandatory baseline in the application defaults guide, including a visible Page Navigator, measure cards at All, integrated variance for baseline comparisons and source Sum for numeric Columns. For the five end-to-end business examples, read the five usecase recipes guide.
 
 ## Business meaning first
 
 A planner chooses a version outside the grid, then works on employee, product or account rows within that version. The Context selection is passed into the embedded Planning visual. Scenario/version does not become a visible row or column unless the business explicitly asks for a comparison layout. Context also identifies the input coordinate; an ordinary dashboard filter alone does not configure that storage binding.
+
+Rows and Columns already define storage grain. External Context is only for additional stored selections, never ordinary page or global filtering. Connected Planning owners must match the Context, and query outputs must retain it; read the storage context guide for the bundled guards and build-time query evidence.
 
 Separate four concepts:
 
@@ -119,43 +109,32 @@ The public create carries the canvas, direct visual rectangles and embedded matr
 - The fresh reference export confirms saved native shapes; generated constructors have offline tests and mocked API transactions. Newly generated visual initialization, rendering and dynamic propagation still require destination acceptance. The bundled public schema currently omits some observed Intelligence declaration enums and disagrees with the native `Edit` input enum; preserve the native evidence and record schema conflicts rather than falsely claiming all schemas pass.
 - If an optional KPI/slicer cannot bind, omit that visual with a coverage entry and relayout the rest. If Context cannot be built safely, do not silently turn it into Scenario rows or unbound editable data. Retain independent sheets and report the affected scope. A page with missing controls is a partial workspace, not equivalent to the requested rich dashboard.
 
-Detailed original feature use cases are retained. These additions supply the executable construction route without source repositories, old artifacts, cached filter hashes or manual JSON repair.
+The constructors need no source repositories, old artifacts, cached filter hashes or manual JSON repair.
 
+## Filters, KPI stores and query identity
 
-## 2026-11-13 filter, KPI, query-identity and connection correction
+Follow the consumer repair guide for complete KPI stores, the uppercase `RIGHT` filter-pane position and the rule that native input-record row IDs are never query output-column IDs. It also covers semantic-model and workspace intake and generic FabricSql OAuth connection selection. A definition readback is not proof of rendering or financial propagation.
 
-The self-contained consumer repair contract supersedes sparse KPI-store examples, lowercase filter-pane positions and any assumption that native input-record row IDs are query output-column IDs. It also records semantic-model/workspace intake and generic FabricSql OAuth connection selection. Preserve the detailed business/use-case guidance above. API readback is not rendered or financial-propagation proof.
+## Presentation, source binding and Home
 
-## Required presentation defaults (v9)
+- Read the planning presentation guide. Normal application builds require rich
+  Intelligence dashboards above their embedded Planning grids. `present-planning`
+  writes the complete native TEXT header and semantic measure palette; build and
+  provision apply these new-application defaults, and
+  `check-application-presentation` checks coverage offline. An explicit request
+  to skip runtime validation still takes precedence.
+- Read the measure source bindings guide before assigning or replacing measures.
+  `resolve-measure-binding` constructs exact PowerBI, Visual and InfoBridge
+  identities with typed metadata. Native companion records are not sheet outputs.
+  Reconcile ordinary filter cards with changed chart assignments; captions alone
+  do not identify a source.
+- Home is mandatory alongside rich Planning headers, measure colors and embedded
+  Intelligence dashboards. Read the application defaults guide and run
+  `check-application-defaults`. Home visibility is published in the definition;
+  role-specific Home content is prepared locally only. Do not silently downgrade a
+  complete application to grids or dashboards without its landing page.
 
-Read the planning presentation guide. Normal application builds
-require rich Intelligence dashboards above their embedded Planning grids. The
-complete native TEXT header writer and semantic measure palette are executable
-through present-planning; build/provision apply new-application defaults. Use
-check-application-presentation for offline coverage. These defaults preserve the
-v8 integrity checks and all prior Forecast, formatting, From Sheets and storage fixes.
-Explicit requests to skip runtime validation still take precedence; use the
-verified identity/ETag reads and save-only placement options described there.
-
-
-## Measure source binding (v10)
-
-Read the measure source bindings guide before assigning or
-replacing measures. Use `resolve-measure-binding` for exact PowerBI/Visual/InfoBridge
-identities and typed metadata. Native companion records are not sheet outputs.
-Reconcile ordinary filter cards with changed chart assignments; captions alone
-do not identify a source. Preserve the prior formatting, forecasting and layout fixes.
-
-
-## Required application baseline (v11)
-
-Home is mandatory alongside rich Planning headers, measure colors and embedded
-Intelligence dashboards. Read the application defaults guide.
-Use `check-application-defaults`; verify Home content, role metadata and workload
-visibility separately. Do not silently downgrade a complete application to grids
-or dashboards without its native landing page. Retain all source-binding fixes.
-
-### Fit a layout to a Reading viewport
+## Fit a layout to a Reading viewport
 
 Measure the drawable area between the open panes and toolbars at fit-to-width. Set `dashboard.viewport` to an object such as `{"width": 1600, "height": 1000}`. For the default layout the builder uses this aspect ratio and reserves enough space for the page count, slicers and matrix. The stacked preset can grow its bottom matrix. Content that needs more space keeps its height.
 

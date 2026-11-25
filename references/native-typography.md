@@ -1,18 +1,18 @@
 # Native chart typography completion
 
-Creation path: `runtime.usecases.finish_native` invokes
-`runtime.application_typography.finish_native_typography(client)` after native
-chart bindings and before publication. For explicit new-application composition,
-invoke that same bundled phase after your last chart update. It performs fresh
-reads on every run and skips unchanged visuals. It never clones embedded inputs.
+New applications use Arial on all authored text. The builder authors it into the
+definition, and `check-application-defaults` rejects non-Arial fonts, including
+effective Matrix overrides and service-expanded `hiddenProperties_!!!_*` JSON.
 
-The source of the issue is service-expanded `hiddenProperties_!!!_*` JSON,
-including appearance, axes and secondary visual styles. These are documented
-serialized style boundaries. `normalize_arial` handles their existing font keys,
+To normalize existing fonts in a candidate, apply
+`runtime.application_typography.normalize_arial(properties)` to each affected
+visual's properties in a fresh export. It covers the documented serialized style
+boundaries (appearance, axes and secondary visual styles), existing font keys,
 rich-text CSS and matrix font overrides without interpreting arbitrary strings.
-Unknown formulas, field assignments and data remain unchanged. Save uses current
-visual/entity ETags; fresh readback must match. A successful write alone is not
-enough. This checks saved styling, not UI rendering.
+Unknown formulas, field assignments and data remain unchanged, and embedded inputs
+are never cloned. Publish the candidate with `api update`, then export again and
+compare. Reading saved fonts back from a native expansion has no public route.
+This checks saved definition styling, not UI rendering.
 
-For an unrelated existing-report repair, retain intentional typography. The phase
-is for new application defaults or an expressly requested font change.
+For an unrelated existing-report repair, retain intentional typography. Normalize
+only for new application defaults or an expressly requested font change.

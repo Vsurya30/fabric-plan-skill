@@ -429,7 +429,7 @@
     "check-application-defaults": {
       "phase": "local",
       "description": "Require Arial, enabled native Home content/navigation, rich headers, role colors and Intelligence coverage for every Planning owner.",
-      "inputs": "Current decoded Plan definition and saved/native Home layout data (items/rows).",
+      "inputs": "Current decoded Plan definition and the locally constructed Home layout (items/rows).",
       "command": "python plan.py check-application-defaults --input decoded.json --home home.json --out defaults-check.json",
       "symbols": [
         "runtime.application_defaults.home_defaults",
@@ -567,7 +567,7 @@
     },
     "usecase": {
       "phase": "local",
-      "description": "Discover five complete business recipes, original prompts, exact symbolic specs, expected output and all native phases. usecase show/build/deploy selects a case. --recipe accepts an adapted full recipe; show --out exports one for editing.",
+      "description": "Discover five complete business recipes, original prompts, exact symbolic specs, expected output and the phases still to author. usecase show/build selects a case; publishing is a separate public create. --recipe accepts an adapted full recipe; show --out exports one for editing.",
       "inputs": "Case ID, current semantic model catalog, explicit authorized destination and a dedicated resumable run directory. New names default to business title plus Unix seconds.",
       "command": "python plan.py usecase list",
       "symbols": [
@@ -581,7 +581,7 @@
     },
     "usecase-01-sales-targets": {
       "phase": "local",
-      "description": "Complete recipe for Regional Sales Targets; usecase deploy executes every required phase.",
+      "description": "Complete recipe for Regional Sales Targets; usecase build constructs the local base and lists the remaining phases.",
       "inputs": "Case ID, current semantic model catalog, explicit authorized destination and a dedicated resumable run directory. New names default to business title plus Unix seconds.",
       "command": "python plan.py usecase show --case 01-sales-targets",
       "symbols": [
@@ -595,7 +595,7 @@
     },
     "usecase-02-workforce-merit": {
       "phase": "local",
-      "description": "Complete recipe for Workforce Merit Planning; usecase deploy executes every required phase.",
+      "description": "Complete recipe for Workforce Merit Planning; usecase build constructs the local base and lists the remaining phases.",
       "inputs": "Case ID, current semantic model catalog, explicit authorized destination and a dedicated resumable run directory. New names default to business title plus Unix seconds.",
       "command": "python plan.py usecase show --case 02-workforce-merit",
       "symbols": [
@@ -609,7 +609,7 @@
     },
     "usecase-03-expense-budget": {
       "phase": "local",
-      "description": "Complete recipe for Department Expense Budget; usecase deploy executes every required phase.",
+      "description": "Complete recipe for Department Expense Budget; usecase build constructs the local base and lists the remaining phases.",
       "inputs": "Case ID, current semantic model catalog, explicit authorized destination and a dedicated resumable run directory. New names default to business title plus Unix seconds.",
       "command": "python plan.py usecase show --case 03-expense-budget",
       "symbols": [
@@ -623,7 +623,7 @@
     },
     "usecase-04-rolling-review": {
       "phase": "local",
-      "description": "Complete recipe for Rolling Forecast and Quarterly Review; usecase deploy executes every required phase.",
+      "description": "Complete recipe for Rolling Forecast and Quarterly Review; usecase build constructs the local base and lists the remaining phases.",
       "inputs": "Case ID, current semantic model catalog, explicit authorized destination and a dedicated resumable run directory. New names default to business title plus Unix seconds.",
       "command": "python plan.py usecase show --case 04-rolling-review",
       "symbols": [
@@ -637,7 +637,7 @@
     },
     "usecase-05-currency-risk": {
       "phase": "local",
-      "description": "Complete recipe for Risk Adjusted Currency Outlook; usecase deploy executes every required phase.",
+      "description": "Complete recipe for Risk Adjusted Currency Outlook; usecase build constructs the local base and lists the remaining phases.",
       "inputs": "Case ID, current semantic model catalog, explicit authorized destination and a dedicated resumable run directory. New names default to business title plus Unix seconds.",
       "command": "python plan.py usecase show --case 05-currency-risk",
       "symbols": [
@@ -2042,7 +2042,7 @@
         "Keep Planning columns visible across edit/read switching and supply complete column presentation and measure cards.",
         "Compare actuals, forecasts, targets, salary or risk-adjusted outlook against a baseline with integrated variance bars."
       ],
-      "prerequisites": "One true Planning owner per sheet and current destination runtime IDs/ETags.",
+      "prerequisites": "One true Planning owner per sheet and, for an existing Plan, the saved embed mapping from a fresh export.",
       "limitations": "Preserve source inputs and geometry; the embedding page owns placement overrides. A portable visual GUID is not the runtime visual ID. Not available in this package: native visual placement.",
       "coverage": "local"
     },
@@ -2448,7 +2448,7 @@
       "businessRequests": [
         "Keep new dashboard fonts consistently Arial after saving."
       ],
-      "prerequisites": "Current artifact session and entity/visual ETags.",
+      "prerequisites": "A decoded Plan definition from a local build or a fresh export.",
       "limitations": "Saved readback only; rendering requires separate verification. Preserve unrelated report styling. Not available in this package: saved native typography readback.",
       "coverage": "guide-only"
     },

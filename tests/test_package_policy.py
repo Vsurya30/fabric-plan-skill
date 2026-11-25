@@ -9,9 +9,73 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC_GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
 LARGE_NUMBER = re.compile(r"(?<![A-Za-z0-9])\d{16,20}(?![A-Za-z0-9])")
+# Release-history tags such as "v29" or "(v10)"; API paths like "/v1/" are excluded.
+VERSION_TAG = re.compile(r"(?<![/\w.])v\d{1,2}\b")
+ISO_DATE = re.compile(r"\b20\d\d-[01]\d-[0-3]\d\b")
+# Private PowerTable service route, request header and error-code family.
+PRIVATE_DETAIL = re.compile(r"/v2/powertable|x-target-visual|\bPT_WB_\d+", re.I)
+TEXT_SUFFIXES = {".md", ".json", ".py", ".yml", ".yaml", ".txt", ".cjs", ".js"}
+
+
+def shipped_guides():
+    return sorted((ROOT / "references").glob("*.md")) + [ROOT / "SKILL.md", ROOT / "README.md"]
+
+
+def prose_lines(path):
+    """Yield numbered lines outside fenced code, where sample data may carry dates."""
+    fenced = False
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+        elif not fenced:
+            yield number, line
+
+
+def double_encoded_runs(text):
+    """Runs of UTF-8 bytes that were decoded as Windows-1252, such as an encoded multiplication sign."""
+    runs = []
+    for run in re.findall(r"[^\x00-\x7f]+", text):
+        try:
+            repaired = run.encode("cp1252").decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            continue
+        if repaired != run:
+            runs.append(run)
+    return runs
 
 
 class PackagePolicyTests(unittest.TestCase):
+    def test_guides_carry_no_release_history_or_dated_evidence(self):
+        findings = [
+            f"{path.relative_to(ROOT).as_posix()}:{number}: {line.strip()[:80]}"
+            for path in shipped_guides()
+            for number, line in prose_lines(path)
+            if VERSION_TAG.search(line) or ISO_DATE.search(line)
+        ]
+        self.assertEqual(findings, [])
+
+    def test_shipped_text_names_no_private_service_detail(self):
+        sources = shipped_guides() + sorted((ROOT / "catalog").glob("*.json"))
+        findings = [
+            path.relative_to(ROOT).as_posix()
+            for path in sources
+            if PRIVATE_DETAIL.search(path.read_text(encoding="utf-8"))
+        ]
+        self.assertEqual(findings, [])
+
+    def test_tracked_text_has_no_double_encoded_characters(self):
+        tracked = subprocess.check_output(
+            ["git", "ls-files", "-z"], cwd=ROOT, text=False
+        ).decode().split("\0")
+        findings = {}
+        for name in tracked:
+            path = ROOT / name
+            if path.suffix in TEXT_SUFFIXES and path.is_file():
+                runs = double_encoded_runs(path.read_text(encoding="utf-8"))
+                if runs:
+                    findings[name] = runs[:3]
+        self.assertEqual(findings, {})
+
     def test_manifest_covers_public_package_roots(self):
         manifest = json.loads((ROOT / "package-manifest.json").read_text())
         required = {"runtime/", "references/", "fixtures/", "schemas/", "tools/", "vendor/"}

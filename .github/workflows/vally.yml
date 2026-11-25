@@ -6,7 +6,7 @@ on:
       - "SKILL.md"
       - "references/**"
       - "runtime/**"
-      - "tests/scenarios/**/vally/**"
+      - "tests/evals/**"
       - ".github/workflows/vally.yml"
   push:
     branches: [main]
@@ -14,7 +14,8 @@ on:
       - "SKILL.md"
       - "references/**"
       - "runtime/**"
-      - "tests/scenarios/**/vally/**"
+      - "tests/evals/**"
+      - ".github/workflows/vally.yml"
   workflow_dispatch:
 
 permissions:
@@ -36,11 +37,11 @@ jobs:
       - name: Install Vally
         run: npm install -g @microsoft/vally-cli@0.10.0
       - name: Lint evaluations
-        run: vally lint --eval-spec tests/scenarios/fabric-plan/vally/eval.yaml --strict
+        run: vally lint --eval-spec tests/evals/fabric-plan-skill-fulleval/eval.yaml --strict
       - name: Run evaluations
         run: |
           mkdir -p vally-results
-          vally eval -e tests/scenarios/fabric-plan/vally/eval.yaml \
+          vally eval -e tests/evals/fabric-plan-skill-fulleval/eval.yaml \
             --junit --output-dir vally-results --workers 1
       - name: Upload results
         if: always()

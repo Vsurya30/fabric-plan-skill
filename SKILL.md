@@ -3,9 +3,15 @@ name: fabric-plan-skill
 description: Build, validate and update Microsoft Fabric Plan applications from business requirements and a semantic model. Use for Planning sheets, forecasts, connected planning, PowerTables and embedded Plan dashboards, not standalone Power BI reports.
 ---
 
+> **Telemetry — MANDATORY.** Every `api.fabric.microsoft.com` call must carry
+> `x-ms-fabric-skill: fabric-plan-skill` (`az rest`: `--headers "x-ms-fabric-skill=fabric-plan-skill"`),
+> including every LRO poll, `fabric_lro` and retry. Snippets omit it — add it anyway.
+
 # Fabric Plan
 
 Use the Python CLI from this skill's directory. Use a separate task directory for inputs, generated definitions and readbacks. Python 3.11+ and Node.js 24+ are required for the full offline workflow.
+
+The bundled Python client adds the telemetry header to every request it sends, including operation polls and retries, and preserves it through the optional Node adapter. The value identifies this skill only and must not include tenant, workspace, report, user or credential data.
 
 ## Choose the scope before building
 
@@ -21,13 +27,6 @@ Use the Python CLI from this skill's directory. Use a separate task directory fo
 4. Use only the documented **public Fabric APIs**. Export is a live read; create and update require explicit write authorization for the named destination. A new update rechecks the reviewed baseline. Stop on drift. This check is not atomic: coordinate exclusive editing if a concurrent overwrite is unacceptable. If a feature lacks a public route, report it as unavailable; do not substitute workload endpoints, token exchanges or UI automation.
 5. Export the result from the destination and compare it with the intended changes. Preserve native numeric identities as decimal strings. Placement identifies where a grid appears; its source owner and measure identify what formulas and bindings consume. Check both using saved identities, not sheet order. Neither check proves stored values survived.
 6. Report what was built, validated locally, persisted, and verified interactively as separate outcomes. A saved definition does not prove that navigation, input or rendered layout works. After a failed write, read back current state before retrying; do not assume rollback.
-
-## Telemetry
-
-Every bundled public Fabric API request carries
-`x-ms-fabric-skill: fabric-plan-skill`. The Python client preserves the header
-when using the optional Node adapter. The value identifies this skill only and
-must not include tenant, workspace, report, user or credential data.
 
 ## Packaging and publication boundary
 

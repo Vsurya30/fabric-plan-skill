@@ -1,18 +1,3 @@
-> v24 non-negotiable baseline: Arial, enabled native Home with saved overview/navigation, and Intelligence dashboard coverage for every Planning sheet apply regardless of prompt context. Read the application defaults guide; use the full application builder and completion gate. A component build or a successful definition save alone is incomplete.
-
-> v19: Every new Planning grid uses explicit row GT Top, row subtotal Top,
-> column GT Left, column subtotal null/OFF. Preserve intentional overrides.
-> Read the planning totals defaults guide. Measure-based
-> roll-forwards recommend Measures in Rows + native Measure Model; discover
-> ROLL-FORWARD and read the roll forward authoring guide
-> plus the complete supplied formula reference.
-
-> v18: the measure display defaults guide is the default: assigned measure cards stay visible at **All**, with no selected values/ranges. Numeric Planning measures use per-measure Auto (`13: "auto"`). Apply dimension selections only to the dimension card itself; preserve all source bindings and intentional existing filters.
-
-> v17: New editable inputs explicitly default to ReadAndEdit. Business-dependent
-> locking uses BasedOnFormula with a real, resolved expression. See
-> the input editability guide; preserve intentional existing locks.
-
 # Author from business meaning, not a remembered example
 
 Use this guide for every new application or materially changed request. The five
@@ -35,8 +20,10 @@ unit, horizon, calculation or control requirements must change those decisions.
    documented product default, or an explicitly stated assumption. Unresolved
    source, unit, time-boundary or security semantics are not arbitrary defaults.
 5. Execute the graph in dependency order. Resolve source measures before links,
-   links before dependent formulas, then charts and formatting. Finish Home and
-   dashboard save phases. A base definition alone is not the completed workflow.
+   links before dependent formulas, then charts and formatting. Finish the
+   dashboard and Home visibility phases in the public definition; role-specific
+   Home content is prepared locally and reported as not published. A base
+   definition alone is not the completed workflow.
 
 Do this reasoning even when `discover` returns no match or the highest-ranked
 result looks plausible. `discover` is a literal lookup aid. The authoring agent
@@ -61,6 +48,12 @@ Apply these established defaults unless the user explicitly changes them:
   AverageLeaf input distribution enabled unless disabled; whole-number static
   min/max bounds, using resolved measure bounds for fractional limits.
 
+Arial, enabled Home and Intelligence dashboard coverage for every Planning sheet
+apply regardless of prompt context. The application defaults guide lists the
+complete mandatory baseline, including totals, input editability and measure-card
+defaults. Use the full application builder and completion gate: a component build
+or a successful definition save alone is incomplete.
+
 Do **not** carry over sample dates, growth rates, currency, salary limits, monthly
 grain, field names, selected markets, assumptions or sheet counts. In particular,
 Jan-Dec 2026, `COLUMN.ADDMONTH(-1) * 1.1`, 3% inflation, a 15% merit cap and USD belong
@@ -77,11 +70,11 @@ assumption is not a substitute for a necessary business or authorization decisio
 
 | Business distinction | Select | Do not substitute | Guide and execution route |
 |---|---|---|---|
-| Managers enter an amount, rate or assumption | Typed numeric Data Input; choose unit, default, aggregation and limits | Formula-only values for requested edits | the numeric input constraints guide; `input`, `column-create`, `column-register` |
-| A value is derived from other values | Formula with resolved references and correct total behavior | A duplicate editable input or invented DAX | the formula equality guide, FORMULAS; `formula`, create/register phases; F02 |
-| Historical periods follow actuals and future periods accept estimates | Native Forecast with requested closure/open policy | Ordinary numeric input merely labelled Forecast | the forecast authoring guide; F09, `forecast`, `forecast-review` |
+| Managers enter an amount, rate or assumption | Typed numeric Data Input; choose unit, default, aggregation and limits | Formula-only values for requested edits | the numeric input constraints guide; `input`, `build` |
+| A value is derived from other values | Formula with resolved references and correct total behavior | A duplicate editable input or invented DAX | the formula equality guide, FORMULAS; `formula`, `build`; F02 |
+| Historical periods follow actuals and future periods accept estimates | Native Forecast with requested closure/open policy | Ordinary numeric input merely labelled Forecast | the forecast authoring guide; F09, `forecast`; `forecast-repair` for a scoped update |
 | Reuse an original semantic-model measure in another view | Its original PowerBI source assignment | A Native companion misclassified as From Sheets | the measure source bindings guide; `resolve-measure-binding` |
-| Reuse a produced input/Forecast/formula at the same or compatible coarser grain | Direct From Sheets, with source and target identity/grain resolved | Duplicate inputs or writeback/reimport just to link | no bundled guide here; `forecast-repair` covers a scoped update; F19, `quarterly_review`, `extend_sheet` |
+| Reuse a produced input/Forecast/formula at the same or compatible coarser grain | Direct From Sheets, with source and target identity/grain resolved | Duplicate inputs or writeback/reimport just to link | no bundled guide here; `forecast-repair` covers a scoped update; F19, `resolve-measure-binding` |
 | Join mappings, transform/append sources, or derive a different query output | InfoBridge and its actual query outputs | A direct link that cannot supply the required dimensionality | the infobridge construction guide; F18, bridge source/transform/query/reload/poll/consumer |
 | Show performance against a baseline | Integrated variance; keep current/baseline semantics and units | Grouped bars with only comparison assignments | the integrated variance guide; F27, `comparison_chart` |
 | Explain each period's number | Text measure at the requested time grain | An outside-axis column if commentary must repeat each period | no bundled guide here; typed LongText input |
@@ -143,12 +136,14 @@ python plan.py usecase build --recipe adapted-recipe.json --model current-model.
 
 ```
 
-`--recipe` and `--case` are alternatives. Only deploy writes externally and needs
-the user's deployment authorization. This runner supports the base Planning,
-Forecast, native linked/formula/commentary and comparison phases described in
-the five usecase recipes guide; it is not a generic executor for every module. Its recipe
+`--recipe` and `--case` are alternatives. `usecase build` writes local files only;
+publishing the result is a separate public create or update that needs the user's
+deployment authorization. The runner builds the base Planning, Forecast,
+formatting and dashboard definition and records the recipe's linked, formula,
+commentary and comparison phases as pending, as the five usecase recipes guide
+describes; it is not a generic executor for every module. Its recipe
 contract requires explicit comparison, period and complete-default structure for
-each owner. Its comparison phase uses one current/baseline pair per owner across
+each owner. Its comparison contract uses one current/baseline pair per owner across
 that owner's charts. For different workflows or per-chart comparison pairs,
 compose the selected module helpers separately
 and preserve the same requirement/phase ledger. Do not force unrelated requirements
@@ -163,8 +158,7 @@ a changed application. Retain the same directory only when resuming the same pla
 `examples/business-intent/quarterly-targets.recipe.json` is a complete adaptation
 example with Year/Quarter grain, 2027 selection and independently named owner and
 dashboard. Its model fields, currency and horizon are explicit sample choices,
-not defaults for other requests. The offline construction is recorded separately
-in `adaptive-business-evidence.json`.
+not defaults for other requests.
 
 Keep delivery evidence precise: selected route, constructed definition, successful
 save and rendered/calculated behavior are different claims. Respect a request to

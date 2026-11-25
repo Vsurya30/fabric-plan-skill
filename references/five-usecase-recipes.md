@@ -1,42 +1,33 @@
-> v39: Rows/Columns already define storage grain. External Context is only for additional stored selections, never ordinary page/global filtering. Connected Planning owners must match Context; query outputs must retain it. Read the storage context guide for the bundled guards and build-time query evidence.
-
-> v36: OneLake storage-mode From Sheets and From Queries. The bundled resolvers and native recipe phases accept OneLake catalogs without SQL id/sqlPk and retain the Fabric SQL profile. Use current owner/query metadata; no task-local repair.
-
-> v18: the measure display defaults guide is the default: assigned measure cards stay visible at **All**, with no selected values/ranges. Numeric Planning measures use per-measure Auto (`13: "auto"`). Apply dimension selections only to the dimension card itself; preserve all source bindings and intentional existing filters.
-
-> v17: New editable inputs explicitly default to ReadAndEdit. Business-dependent
-> locking uses BasedOnFormula with a real, resolved expression. See
-> the input editability guide; preserve intentional existing locks.
-
-> v16: Read the adaptive business authoring guide
-> before choosing features. Interpret business meaning, compose patterns and
-> record parameters and dependencies with `plan-intent`. The five cases are examples;
-> `usecase --recipe` accepts supported adaptations. Literal search does not choose
-> the business design, and no example rate, date, currency or grain is a default.
-
 # Reproduce the five business applications in a fresh session
 
 ## Reproducibility contract
 
 Use this guide when a request matches sales targets, workforce merit, expense
 budget, rolling forecast/quarterly review or connected currency/risk outlook.
-The package contains each original functional prompt, complete symbolic business
-spec, post-import dependency graph, styling/defaults and the orchestration that
-was previously task-local. No chat history, old report export, local task folder,
-source checkout or Codex-specific connector is required.
+The package contains each functional prompt, its complete symbolic business
+spec, post-import dependency graph and styling defaults. No chat history, old
+report export, local task folder or source checkout is required.
+
+Read the adaptive business authoring guide before choosing features. The five
+cases are worked examples: interpret business meaning, compose patterns and record
+parameters and dependencies with `plan-intent`. `usecase --recipe` accepts
+supported adaptations. Literal search does not choose the business design, and no
+example rate, date, currency or grain is a default. The mandatory baseline in the
+application defaults guide applies to every case. For external Context and storage
+grain, read the storage context guide; for artifacts whose metadata is stored in
+OneLake, read the onelake linked values guide.
 
 The intended repeatable output is the same sheets, measures, formulas, grain,
 filters, controls, chart comparisons, colors, headers, Home and layout. It is not
-byte-identical JSON: new Plan IDs, visual IDs, input IDs, ETags and timestamps must
+byte-identical JSON: new Plan IDs, visual IDs, input IDs and timestamps must
 be newly created/resolved. Current semantic-model data and the installed native
 renderer determine values and final rendering. Do not promise pixel-identical
 runtime behavior without checking that environment. User-added reference sheets,
 manual input values and unrelated later edits are not part of these creation recipes.
 
-The recipes incorporate v12-v14 corrections. Earlier unsupported decimal static
-bounds are replaced with hidden formula bounds at the same fractional units;
-AverageLeaf inputs default distribution on. The JSON `normalizationNotes` records
-these intentional changes rather than reproducing obsolete defects.
+Fractional limits use hidden formula bounds at the same fractional units rather
+than decimal static bounds, and AverageLeaf inputs default to distribution on. The
+recipe JSON `normalizationNotes` records these intentional choices.
 
 ## Business request -> complete recipe
 
@@ -74,9 +65,8 @@ python plan.py usecase show --case 02-workforce-merit
 For an authorized destination, copy
 `examples/five-usecases/destination.example.json` to `destination.json` and
 replace every synthetic identity with current metadata.
-It includes the explicit authorized environment/workspace/model/connection
-identities used by the five reports, but no token or old Plan IDs. Check that it
-is the user's intended destination. Set `FABRIC_TOKEN` securely in the process
+It holds synthetic environment, workspace, model and connection identities, and
+no token or Plan IDs. Check that it is the user's intended destination. Set `FABRIC_TOKEN` securely in the process
 environment. A config Boolean is not a substitute for the user's deployment request.
 For another destination, resolve its actual endpoints, workspace, model URL and
 PowerBIDatasets connection; do not change hostnames by string substitution.
@@ -94,20 +84,24 @@ other return types or TMDL/TMSL branches, supply the complete current catalog in
 the format described in the runtime guide. The actual connection identity is a
 separate required input; it is not inferred from a model's source SQL connection.
 
-`build` compiles the base application locally and records the remaining native
-phases. `deploy` creates a new Plan and completes them. It can also compile directly
-if build was not run. The default name is the business title plus Unix seconds;
-`--name` chooses a different explicit name. Reuse the same run directory to resume.
-The saved construction and identity registry must not be rebuilt mid-deployment.
+`build` compiles the base application locally and records the remaining phases in
+`phase-ledger.json`: create/import, the recipe's linked, formula, commentary and
+comparison extensions, and role-specific Home publication. No `usecase`
+subcommand writes to a workspace. Author the pending extensions into the
+definition, then publish the reviewed definition with `api create`, as the runtime
+guide describes, under the user's deployment authorization. The default name is
+the business title plus Unix seconds; `--name` chooses a different explicit name.
+Reuse a run directory only to resume the same build: a changed recipe, model or
+name is rejected rather than rebuilt.
 
-To create all five, invoke deploy once per case with separate run directories:
+To build all five, run `usecase build` once per case with separate run directories:
 `runs/sales`, `runs/merit`, `runs/expense`, `runs/rolling`, and `runs/currency`.
 The original short prompts are in `examples/five-usecases/business-prompts.txt`.
 Do not require a customer to paste a technical specification when these recipes
 match the requested outcome. A changed requirement should be reflected in an
 explicit adapted spec/graph using the same helpers, not hidden agent assumptions.
 
-## Execution phases that must not be omitted
+## Phases that must not be omitted
 
 1. Resolve model fields, numeric units, keys and calendar grain. Compile the base
    definition with Planning owners, registered numeric inputs/formulas/Forecast,
@@ -115,47 +109,44 @@ explicit adapted spec/graph using the same helpers, not hidden agent assumptions
 2. Apply the recipe's Planning year filters, percentage formatting and base
    negative-variance rules. Forecast source retains 2025 and 2026 for the previous
    month's actual; the review and other cases select 2026.
-3. Create/import once. Save receipts, wait for operation completion and resolve
-   current runtime owner/column IDs. Never reuse IDs from another report.
-4. Apply page-local embedded geometry, preserving direct owners.
-5. Run quarterly or ordered links/formulas/commentary steps. A pending column job
-   pauses dependent phases; do not invent a completion or fake chart data.
-6. Apply rich headers, source-role colors and all five column-presentation defaults
+3. Author the quarterly or ordered links, formulas and commentary in dependency
+   order, resolving every source owner and column identity from this build. Never
+   reuse IDs from another report or invent a completion or chart data.
+4. Apply rich headers, source-role colors and all five column-presentation defaults
    after the complete measure catalog exists.
-7. Resolve each chart's current and baseline from that catalog. Native DAX measures
+5. Resolve each chart's current and baseline from that catalog. Native DAX measures
    keep PowerBI identity; only produced measures are From Sheets. Select integrated
    variance and reconcile filter cards. Keep business comparison direction.
-8. Save native Home content. Dashboard visibility was set at creation.
-   Home visibility is already in the imported workload properties.
+6. Publish once through the public create route, with page-local embedded geometry,
+   dashboard visibility and Home visibility in the definition. Keep the receipt and
+   wait for the operation to finish. Role-specific Home content stays local.
+7. Export the new Plan and compare it with the intended definition.
 
-`runtime.usecases` ships this order. Native mutation routes are application APIs,
-not advertised public Fabric REST. Deploy performs required identity/ETag reads;
-it does not open a UI, query/calculate values, or run post-save validation.
-On uncertain write responses, changed ETags or unresolved job IDs, retain the run
-and reconcile before continuing. Do not blindly replay a whole deployment.
+`usecase build` performs phases 1 and 2 and lists the rest as pending. It does not
+open a UI, calculate values or run post-save validation. On an uncertain write
+response or an unresolved operation, keep the run and reconcile it against a fresh
+export before continuing. Do not blindly replay a whole deployment.
 
 ## Feature-to-guide-to-command map
 
 | Feature | Guide | Execution used by the recipe |
 |---|---|---|
-| Complete business flow | This guide | `usecase show/build/deploy`; `runtime.usecases` |
+| Complete business flow | This guide | `usecase show/build`; `runtime.usecases`; `api create` to publish |
 | Exact model and source binding | the measure source bindings guide | `resolve-measure-binding`; `registered_measure` |
 | Inputs, AverageLeaf and whole static bounds | the numeric input constraints guide | Numeric/Forecast constructors, hidden bound formulas |
 | Forecast and time-axis grain | the forecast authoring guide | `construct.planning`; native Forecast records |
-| From Sheets, commentary, variance | no bundled guide; `forecast-repair` | `quarterly_review`; `extend_sheet`; formula/input factories |
+| From Sheets, commentary, variance | no bundled guide; `forecast-repair` | `resolve-measure-binding`; `runtime.forecast_review` library; formula/input factories |
 | Percentage and matrix styles | `plan.py format-matrix` | `format-matrix`; `compile_formatting` |
 | Negative variance | `plan.py integrated-variance` | `apply_negative_variance` |
 | Leaf identity storage | the dimension leaf keys guide | `leaf-key-mapping`; constructor key groups |
-| Home, headers, source colors and embeds | the application defaults guide; the planning presentation guide; the context intelligence guide | `build_application`; `apply_presentation`; public sheet geometry; Home writer |
+| Home, headers, source colors and embeds | the application defaults guide; the planning presentation guide; the context intelligence guide | `build_application`; `apply_presentation`; public sheet geometry; public Home visibility |
 | Visible columns and native measure cards | the planning column presentation guide | `planning-column-presentation` |
 | Integrated variance | the integrated variance guide | `comparison_chart`; `integrated-variance` |
 
 ## Evidence and completion
 
 `recipe-contract.json` records symbolic dependency and output-shape checks;
-`phase-ledger.json` distinguishes constructed base from completed native saves.
-`completed.json` exists only after all prescribed save phases return. These are
-construction/save records, not proof of rendered behavior or calculated values.
-The five portable base builds and symbolic graphs were exercised offline in v15.
-The refactored end-to-end runner has not been redeployed from a fresh machine or
-independent Copilot session. Keep that limitation explicit.
+`phase-ledger.json` separates the constructed local base from pending phases.
+These are construction records, not proof of rendered behavior or calculated
+values. The offline tests exercise the five base builds and symbolic graphs; they
+do not publish the recipes. Keep that limitation explicit.

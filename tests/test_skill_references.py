@@ -1,10 +1,17 @@
+import argparse
+import contextlib
+import io
 import re
+import shlex
+import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 LINK = re.compile(r"\[[^]\n]*\]\(([^)\s]+)\)")
+PLAN_COMMAND = re.compile(r"python (plan\.py [^`\n]*)")
 
 
 def local_links(document):
@@ -23,3 +30,28 @@ class SkillReferences(unittest.TestCase):
         for guide in guides:
             with self.subTest(guide=guide.relative_to(ROOT)):
                 self.assertEqual(guides.intersection(local_links(guide)) - {guide}, set())
+
+    def test_documented_plan_commands_parse(self):
+        import plan
+
+        parse = argparse.ArgumentParser.parse_args
+
+        class Parsed(Exception):
+            pass
+
+        def parse_only(parser):
+            parse(parser)
+            raise Parsed
+
+        documents = sorted((ROOT / "references").glob("*.md")) + [ROOT / "SKILL.md", ROOT / "README.md"]
+        for document in documents:
+            for line in PLAN_COMMAND.findall(document.read_text(encoding="utf-8")):
+                argv = shlex.split(line.strip().rstrip("."))
+                if "--help" in argv:
+                    continue
+                with self.subTest(document=document.name, command=line), \
+                        patch.object(sys, "argv", argv), \
+                        patch.object(argparse.ArgumentParser, "parse_args", parse_only), \
+                        contextlib.redirect_stderr(io.StringIO()):
+                    with self.assertRaises(Parsed):
+                        plan.main()

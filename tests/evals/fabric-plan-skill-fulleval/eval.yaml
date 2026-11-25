@@ -1,5 +1,5 @@
-name: fabric-plan-skill-eval
-description: Evaluates the public Fabric Plan safety and PowerTable routing contract.
+name: fabric-plan-skill-fulleval
+description: Full evaluation of the public Fabric Plan safety, authoring, repair and PowerTable routing contract.
 version: "1.0"
 type: capability
 scoring:
@@ -70,4 +70,49 @@ stimuli:
         config:
           prompt: |
             Score the exact skill header and process-scoped credential handling.
+          scoring: scale_1_5
+
+  - name: new-plan-local-build
+    prompt: |
+      Using this skill, build a new Plan for monthly regional sales targets from a
+      supplied semantic model. Describe the steps up to the point where the Plan
+      would be created in a workspace, and what you report at the end.
+    rubric:
+      - "Resolves fields from the current model and does not deploy the synthetic fixtures."
+      - "Builds and validates a local candidate before any workspace write."
+      - "Requires explicit user authorization for the named destination before the public create."
+      - "Reports built, validated locally, persisted and verified interactively as separate outcomes."
+    constraints:
+      expect_skills:
+        - fabric-plan-skill
+    graders:
+      - type: prompt
+        name: Local-first new Plan
+        config:
+          prompt: |
+            Reward a local build and validation before any write, an explicit
+            authorization gate and separately reported outcomes. Penalize a write
+            without authorization or a claim that a saved definition proves behavior.
+          scoring: scale_1_5
+
+  - name: extension-or-repair
+    prompt: |
+      A user asks to add one input measure to an existing Plan in their workspace.
+      Explain how this skill makes and verifies that change.
+    rubric:
+      - "Starts from a fresh, complete export of the named Plan instead of rebuilding it from the model."
+      - "Preserves unknown fields, unrelated parts, identities, formulas and settings outside the change."
+      - "Uses the reviewed baseline so the update stops if the destination changed."
+      - "Exports again after the update and compares the result with the intended change."
+    constraints:
+      expect_skills:
+        - fabric-plan-skill
+    graders:
+      - type: prompt
+        name: Scoped update safety
+        config:
+          prompt: |
+            Reward a patch of a fresh export with preserved identities, a baseline
+            drift check before the update and a comparison of the exported result.
+            Penalize rebuilding the Plan or replaying a stale definition.
           scoring: scale_1_5

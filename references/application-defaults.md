@@ -1,29 +1,6 @@
-> v29 execution rule: follow the authoring workflow in the skill instructions. Import supported inputs, formulas, Forecast and CF together. Use documented native phases only; no reference-only staging shortcut or automatic reduced-scope deployment. The original request and import-contract checks remain authoritative. This supersedes older partial-deployment fallback wording.
-
-> Direct numeric-column Values (v28): use the numeric column values guide. Planning, KPI cards and charts default semantic Columns to source Sum when no explicit aggregation is supplied. Planning `sourceAggregation` is independent of grid total settings; saved measure IDs are preserved.
-
-> v27 mandatory navigation: every Intelligence dashboard includes a visible native Page Navigator, even when omitted from the prompt. The standard builder reserves space and the public Plan definition carries its complete state. The completion gate rejects missing controls. Read the navigation contract. All v26 padding and earlier fixes remain.
-
-> v26 Navigator defaults: current construction contract. New dashboard Navigators include complete DEFAULT icon/text/shape padding even when icons are disabled. Both factories and the create adapter use the shared completion helper; the application-default gate rejects incomplete authored states. Partial state overrides and current/legacy corner profiles remain distinct.
-
-> v19: Every new Planning grid uses explicit row GT Top, row subtotal Top,
-> column GT Left, column subtotal null/OFF. Preserve intentional overrides.
-> Read the planning totals defaults guide. Measure-based
-> roll-forwards recommend Measures in Rows + native Measure Model; discover
-> ROLL-FORWARD and read the roll forward authoring guide
-> plus the complete supplied formula reference.
-
-> v18: the measure display defaults guide is the default: assigned measure cards stay visible at **All**, with no selected values/ranges. Numeric Planning measures use per-measure Auto (`13: "auto"`). Apply dimension selections only to the dimension card itself; preserve all source bindings and intentional existing filters.
-
-> v17: New editable inputs explicitly default to ReadAndEdit. Business-dependent
-> locking uses BasedOnFormula with a real, resolved expression. See
-> the input editability guide; preserve intentional existing locks.
-
-> v14 required default: use native integrated variance for bar/column baseline comparisons. Read the integrated variance guide for exact selectors, source-preserving commands and business examples. Ordinary single-series bars are unchanged.
-
 # Required application defaults
 
-The v32 business navigation contract exposes Home,
+The business navigation contract exposes Home,
 Intelligence dashboards with embedded Planning workbenches, and PowerTables.
 Underlying Planning sheets are hidden. Initial InfoBridge refresh is optional;
 validate wiring and report untested materialization separately.
@@ -59,24 +36,58 @@ optional enhancements that depend on the business prompt mentioning them:
 Do not silently omit any default or call an application complete if a required
 phase failed. Native Home is not an ordinary sheet named Home and is not the same
 thing as an Intelligence dashboard. Home content, role priority/audience and the
-workload-level visibility switch are separate requirements.
+Plan's Home visibility switch are separate requirements.
+
+## Defaults owned by other guides
+
+These also apply to every new application. Preserve intentional existing
+overrides, locks, filters and source bindings.
+
+- **Totals:** every new Planning grid uses explicit row grand total Top, row
+  subtotal Top, column grand total Left and column subtotal off. Read the
+  planning totals defaults guide. Measure-based roll-forwards use Measures in
+  Rows with the native Measure Model; discover ROLL-FORWARD and read the roll
+  forward authoring guide with the complete supplied formula reference.
+- **Inputs:** new editable inputs default to ReadAndEdit. Business-dependent
+  locking uses BasedOnFormula with a real, resolved expression. Read the input
+  editability guide.
+- **Measure cards:** assigned measure cards stay visible at **All**, with no
+  selected values or ranges. Numeric Planning measures use per-measure Auto
+  (`13: "auto"`). Apply dimension selections only to the dimension card itself.
+  Read the measure display defaults guide.
+- **Numeric columns:** Planning, KPI cards and charts aggregate a semantic Column
+  in Values with source Sum when no aggregation is supplied. Planning
+  `sourceAggregation` is independent of grid total settings, and saved measure
+  IDs are preserved. Read the numeric column values guide.
+- **Baseline comparisons:** bar and column charts compared against a baseline use
+  native integrated variance; ordinary single-series bars are unchanged. Read the
+  integrated variance guide for selectors and source-preserving commands.
+- **Navigator padding:** new dashboard Navigators carry complete DEFAULT icon,
+  text and shape padding even when icons are disabled. Partial state overrides
+  and current versus legacy corner profiles remain distinct.
 
 ## Construct and deploy
+
+Import supported inputs, formulas, Forecast and conditional formatting together
+through the documented phases. There is no reference-only staging shortcut or
+automatic reduced-scope deployment; the original request and import-contract
+checks stay authoritative.
 
 `plan.py build` / `build_application` produce these requirements with hidden
 underlying Planning owners and dashboard access. The result
 includes `home.json`, `homeSpec.json`, and `defaultsCheck.json` in addition to the
 existing definition, dashboard and identity files. The generated Plan properties
-include `homeLayout.show: true`. Home content is saved through the native Home
-provider, not invented inside public definition roles. `provision` always executes
-the Home content/visibility phase and records failures as incomplete delivery.
+include `homeLayout.show: true`, so the public create request sets Home
+visibility. Role-specific Home content, layout and priority are prepared locally
+only, because no public route publishes them. `provision` records that phase as
+unsupported and never reports it as delivered.
 
 `home_defaults` preserves existing authored Home blocks, fills missing description
 and preview-card content, and requires show=true. New baseline content uses the
-native __everyone__ layout without changing security or granting access. Preserve
+__everyone__ layout without changing security or granting access. Preserve
 other role layouts, their ordering and audience rules. For an existing application,
-use current role metadata/ETags and reuse existing populated content; fill gaps
-without replacing unrelated content. A visible Home switch alone is insufficient.
+start from a fresh export and reuse existing populated content; fill gaps
+without replacing unrelated content.
 
 Use flexible Home text widths and content-sized rows; numeric widths are pixels,
 not percentages. Read the Home layout fit guide, whose contract the runtime guide also summarizes. Do not create
@@ -89,20 +100,22 @@ python plan.py check-application-defaults --input decoded.json --home home.json 
 This command checks Arial plus all five requirements in the supplied definition/content.
 It rejects non-Arial effective formatting overrides, not just the global font.
 It also rejects absent or hidden Page Navigators, wrong native kinds, orphan
-parts, restricted/empty targets and incomplete render defaults. The native
-geometry phase saves the full authored Navigator state alongside its position.
+parts, restricted/empty targets and incomplete render defaults. The public create
+definition carries the full authored Navigator state alongside its position.
 `check-application-presentation` retains its narrower dashboard-coverage meaning.
 Low-level `construct.build` is a component assembler; it is not the completion
 path for an application. Its evidence explicitly sets `applicationComplete:false`.
 Use the normal builder or compose every required phase.
 
-`runtime.application_defaults.require_delivery_phases(authored, home_saved=...,
-home_visible=..., dashboard_geometry=..., dashboard_visibility=...)` is the
-completion gate. Pass aligned dashboard GUIDs and the dashboard GUIDs declared visible in the successful public create. Home uses its content-save receipt and the visibility declared at creation.
+`runtime.application_defaults.require_delivery_phases(authored, home_visible=...,
+dashboard_geometry=..., dashboard_visibility=...)` is the completion gate. Pass
+the aligned dashboard GUIDs and the dashboard GUIDs declared visible in the
+successful public create; Home uses the visibility declared at creation.
 Pass real receipts, never optimistic placeholders. The gate reruns the authored
-baseline and rejects any missing required phase. Both `provision` and `usecase
-deploy` call it; cached builds are checked too. A custom composed workflow must
-use the same gate before writing a completed receipt or claiming full delivery.
+baseline, rejects any missing required phase and reports role-specific Home as
+not published. `provision` calls it, including for cached builds. A custom
+composed workflow must use the same gate before writing a completed receipt or
+claiming full delivery.
 
 No skip-Home, skip-dashboard or alternate-font opt-out is part of application
 authoring. Keep construction/save status separate from runtime validation. A
@@ -113,8 +126,8 @@ application baseline instead of describing the whole flow as complete.
 
 Construction guards always apply. When validation is requested:
 - Run the relevant offline regressions for defaults, source identity and formatting.
-- Read back saved Home content and role metadata, the effective user layout, and
-  `planProperties.properties.homeLayout.show`. Verify both content and visibility.
+- Export the saved definition and check `planProperties.properties.homeLayout.show`.
+  Role-specific Home content has no public readback; report it as not published.
 - Check rich descriptions, source-role colors, dashboard component coverage,
   page-local embed geometry, and exact PowerBI/Visual/InfoBridge field identities.
 - Check rendering/navigation in an authorized browser when available. Never work

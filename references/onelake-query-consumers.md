@@ -1,5 +1,3 @@
-> v39: Rows/Columns already define storage grain. External Context is only for additional stored selections, never ordinary page/global filtering. Connected Planning owners must match Context; query outputs must retain it. Read the storage context guide for the bundled guards and build-time query evidence.
-
 # Query Values in Fabric SQL and OneLake
 
 For both direct From Sheets and From Queries on artifacts in **OneLake storage
@@ -40,10 +38,11 @@ emits real Native companions, formula dependencies and teal linked-result
 formatting. Semantic-model master fields stay in Rows, Columns and slicers.
 Do not convert query outputs into pretend Power BI measures.
 
-The opaque-query form was verified against saved native Planning properties and
-current query metadata on 2026-11-16. The reference's computed output was a string
-hash; its qualified assignment and separate `queryId` matched the registry exactly.
-This establishes serialization, not every new artifact's runtime calculation.
+The opaque-query form matches saved Planning properties and query metadata: a
+computed output can be a string hash, while its qualified assignment and separate
+`queryId` match the registry exactly. That establishes serialization, not every
+new artifact's runtime calculation. Query outputs must retain the storage Context
+that connected owners use; the storage context guide holds the bundled guards.
 
 No initial refresh is required for a correctly wired deployment. Validate source
 ownership, selected output types, dependency edges and semantic dimension/context
@@ -51,7 +50,6 @@ mapping; report materialization and edit-to-P&L propagation separately. A metada
 read failure may use only documented bounded GET alternatives. Never replay
 mutations across API versions or switch storage modes automatically.
 
-The v36 source-aware `resolve_measure`, `registered_measure`, recipe comparison
-phase and output-rebinding helper also use this domain. An opaque ID is not only
-supported by the low-level constructor: callers must not pre-index sqlPk. Both
-routes were compared with fresh saved native and ALM metadata on 2026-11-17.
+The source-aware `resolve_measure`, `registered_measure`, recipe comparison phase
+and output-rebinding helper also use this domain, so callers must not pre-index
+sqlPk.

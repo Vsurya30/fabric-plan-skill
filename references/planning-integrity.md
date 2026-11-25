@@ -29,7 +29,7 @@ The synthetic `examples/planning-integrity.properties.json` can be repaired with
 ## Complete defaults, preserve intentional formatting
 
 The complete known `GlobalStyles` initializer is captured in
-`fixtures/matrix-global-defaults.json`, from the bundled v7 feature contracts'
+`fixtures/matrix-global-defaults.json`, from the bundled feature contracts'
 GlobalStyles default profile. It includes body/header typography, hierarchy and
 subtotal typography, header controls, variable color, variance/KPI sizes and chart
 scale. It is a versioned baseline, not a claim to contain every future property.
@@ -67,16 +67,17 @@ remains a separate migration concern under the dimension leaf keys guide.
 
 The constructor normalizes and checks newly generated Planning properties.
 The formatting compiler completes and checks styles. `validate`, `encode` and
-the bundled HTTP Client's Plan create/updateDefinition and native properties-batch
-writes reject incomplete defaults or noncanonical grouping references before the
-network adapter is called. The write guard does not silently repair payloads.
+the bundled HTTP Client's Plan create and updateDefinition requests reject
+incomplete defaults or noncanonical grouping references before the network
+adapter is called. The write guard does not silently repair payloads.
 Use the repair command explicitly on an older saved definition first. Non-Planning
 visuals and read requests are outside this guard. Direct HTTP outside the bundled
 Client is outside this enforcement boundary.
 
-For an authorized existing-report patch, fetch current owner properties and ETags,
-apply `repair_properties`, preserve unrelated records and submit the existing
-properties batch. No browser or post-save readback is needed when the user asks to
-skip runtime validation. A successful API receipt establishes saving only.
-Offline regressions cover missing defaults/types, independent style modes, all
-named reference surfaces, idempotence, preservation and both guarded write routes.
+For an authorized existing-report patch, start from a fresh export, apply
+`repair-planning-properties` to the owner's properties, preserve unrelated records
+and publish with `api update`. No browser or post-save readback is needed when the
+user asks to skip runtime validation. A successful API receipt establishes saving
+only. Offline regressions cover missing defaults/types, independent style modes,
+all named reference surfaces, idempotence, preservation and the guarded create and
+update routes.

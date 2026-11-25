@@ -13,7 +13,7 @@ runtime to construct, validate and deploy Plan content.
 > reports set sheet visibility in the initial public create request.
 > Role-specific Home layout is not supported by this skill.
 
-In v50, the public Create Plan request places each embedded Planning matrix on its dashboard. The original Planning sheet is hidden in Explorer when a visible dashboard embeds it. Its GUID continues to identify the grid for cross-sheet formulas and From Sheets bindings. For wide dashboards, the default layout puts navigation and slicers on the left, the matrix above the charts, and aligns the bottom edges. Supply the inner Reading viewport dimensions to size the layout for a particular display.
+The public Create Plan request places each embedded Planning matrix on its dashboard. The original Planning sheet is hidden in Explorer when a visible dashboard embeds it. Its GUID continues to identify the grid for cross-sheet formulas and From Sheets bindings. For wide dashboards, the default layout puts navigation and slicers on the left, the matrix above the charts, and aligns the bottom edges. Supply the inner Reading viewport dimensions to size the layout for a particular display.
 
 ## Release layout
 

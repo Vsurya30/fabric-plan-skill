@@ -102,10 +102,9 @@ not proof that this is the only possible cause.
 
 For new ALM construction, provide `connectionName`, `workspaceName` and
 `dbDisplayName` on the resolved connection input, alongside connectionId, dbHost,
-dbName, artifactId and workspaceId. `configured_table` now includes these in its
-source part and rejects missing labels. `existing_source` still creates the
-smaller native initialization request; that request alone is not a complete
-configured grid. Reconcile its response before exporting/importing an ALM source.
+dbName, artifactId and workspaceId. `configured_table` includes these in its
+source part and rejects missing labels. `existing_source` creates only a smaller
+source request; that request alone is not a complete configured grid.
 
 `runtime.powertable_config.enrich_source(source, connection, workspace, database)`
 accepts current API record objects (`id`, `displayName`) and rejects identity
@@ -152,7 +151,6 @@ PowerTable and an existing-definition repair. It needs no chat, local repair
 script, cached report, production IDs or credential. Replace illustrative records
 with current destination metadata before any authorized deployment.
 
-The properties above were observed in a user-supplied working report and compared
-with the incomplete Supply Policy definition. The attempted target save was still
-`Running` at the last status-only check on 2026-11-15. Its completion and the target
-UI behavior were not confirmed. Offline helper/package checks are separate evidence.
+The lookup and source properties above come from a working report compared with
+an incomplete definition. Offline helper and package checks are separate evidence:
+they do not confirm a pending save or the target UI behavior.

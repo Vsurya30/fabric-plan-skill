@@ -1,5 +1,3 @@
-> v39: Rows/Columns already define storage grain. External Context is only for additional stored selections, never ordinary page/global filtering. Connected Planning owners must match Context; query outputs must retain it. Read the storage context guide for the bundled guards and build-time query evidence.
-
 # OneLake storage mode: From Sheets and From Queries
 
 This contract is for **Fabric Plan artifacts whose metadata is stored in
@@ -7,6 +5,8 @@ OneLake**, whether newly created in that mode or migrated from Fabric SQL.
 The current native records determine the identity domain. It is not a change
 to the semantic model's Direct Lake connection, SQL database, or input data.
 Do not switch storage modes or request a SQL reader/token to resolve these links.
+Connected owners must match the storage Context, and query outputs must retain it;
+the storage context guide holds the bundled guards.
 
 ## Two storage profiles, two valid link routes
 
@@ -25,15 +25,16 @@ a valid direct From Sheets link with an InfoBridge query.
 
 1. Discover the actual model and build/import the supported complete owner sheets
    using the bundled builder. Preserve inputs, formulas, Forecast and CF. Resolve
-   new owner runtime IDs and current column catalogs using `session.entities`,
-   `session.page`, `session.columns` and their bounded metadata-read profiles.
-   Do not clone a reference report or copy its visual IDs.
+   the new owners' identities and current column catalogs from this build or a
+   fresh export of the Plan; reading native runtime catalogs through a metadata
+   session has no public route here. Do not clone a reference report or copy its
+   visual IDs.
 2. For compatible same/subset-grain direct links, call `resolve_measure` with
    `sourceType: Visual`, current runtime `visualId`, `sourceMeasureGuid`, optional
    `columnId`, and the current owner's columns/properties. `sheet_column_id`
    selects the correct external key; do not pre-index `record['id']` in a caller.
    `registered_measure` and `from_sheet_assignment` use the same contract.
-   The forecast-review and usecase native phases already call these helpers.
+   The forecast-review library and the usecase recipe checks already call them.
 3. For a query route, read the current query registry and selected post-transform
    output catalog. Use `binding_query_id`, `output_catalog`, `numeric_output_fields`
    and `resolve_measure`, not `query['sqlPk']`. Put these descriptors in build
@@ -92,9 +93,9 @@ The offline example uses only this package, creates new IDs and a new applicatio
 definition, and emits the direct-link native-phase payload. It uses synthetic
 current-catalog responses; it is not a live deployment or a refresh test.
 `fixtures/onelake-linked-values.json` contains a sanitized golden binding shape
-from a saved OneLake artifact captured on 2026-11-17. Its two consumer identities
-were matched to the source column and current query metadata. Its identifiers
-are test evidence only, never templates for a new application's identities.
+from a saved OneLake artifact, with consumer identities matched to the source
+column and query metadata. Its identifiers are test evidence only, never
+templates for a new application's identities.
 Tests exercise resolver, registered-companion, recipe, query and cold-build paths
 and preserve the SQL profile. No chat state, external repair script or earlier
 report export is needed to run the shipped constructors.

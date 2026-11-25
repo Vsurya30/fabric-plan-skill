@@ -21,8 +21,8 @@ authorizes a database write.
 Tables built through the file, template or snapshot routes record
 `creation_mode` 1 because the table is created by DDL. The product's 3/4/5 origins
 depend on upload tasks, sync records and templates owned by the workload service.
-Do not call `/CoreAPI/.../databases/create-table/...` or other private workload
-routes to imitate them, and do not present them as Fabric REST APIs.
+Do not call private CoreAPI table-creation or other private workload routes to
+imitate them, and do not present them as Fabric REST APIs.
 
 ## Column defaults
 
