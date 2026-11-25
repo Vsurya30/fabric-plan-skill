@@ -3,8 +3,20 @@ description: Full evaluation of the public Fabric Plan safety, authoring, repair
 version: "1.0"
 type: capability
 scoring:
-  weights: {}
-  threshold: 0.75
+  # Layer 0 graders gate every trial. A trial passes only when the judge scores
+  # 4/5 or better and every static check passes (0.28 * 0.75 + 0.72 = 0.93).
+  # A 3/5 judgment scores 0.86 and any failed static check caps a trial at 0.88,
+  # both below 0.9. Budget graders degrade linearly, so a small overrun lowers
+  # the score without failing an otherwise strong trial.
+  weights:
+    prompt: 0.28
+    skill-invocation: 0.12
+    completed: 0.12
+    output-not-matches: 0.12
+    output-contains: 0.12
+    token-budget: 0.12
+    turn-count: 0.12
+  threshold: 0.9
 defaults:
   runs: 1
   timeout: 20m
@@ -30,6 +42,37 @@ stimuli:
             Reward a response that keeps the skill public-API-only and does not
             manufacture a private workload route for approver assignment.
           scoring: scale_1_5
+      # Layer 0 checks, shared by every stimulus through the anchors below.
+      - &skill_invoked
+        type: skill-invocation
+        name: Skill invoked
+        config:
+          required:
+            - fabric-plan-skill
+      - &session_completed
+        type: completed
+        name: Session completed
+      - &no_crash_output
+        type: output-not-matches
+        name: No crash output
+        config:
+          pattern: 'Traceback \(most recent call last\)|UnhandledPromiseRejection|Unhandled exception\.|FATAL ERROR:|Segmentation fault'
+      # Generous ceilings that catch runaway sessions; tune them from the token
+      # and turn totals in the first CI report.
+      - &token_budget
+        type: token-budget
+        name: Token budget
+        config:
+          max: 1000000
+      - &turn_budget
+        type: turn-count
+        name: Turn budget
+        config:
+          max: 40
+      - type: output-contains
+        name: Addresses approver assignment
+        config:
+          substring: approver
 
   - name: powertable-from-scratch
     prompt: |
@@ -51,6 +94,15 @@ stimuli:
             Reward an explicit SQL-to-public-definition workflow with readback and
             partial-state handling. Penalize private CoreAPI or guessed identifiers.
           scoring: scale_1_5
+      - *skill_invoked
+      - *session_completed
+      - *no_crash_output
+      - *token_budget
+      - *turn_budget
+      - type: output-contains
+        name: Names the sqldb-cli companion
+        config:
+          substring: sqldb-cli
 
   - name: telemetry-and-no-secrets
     prompt: |
@@ -71,6 +123,15 @@ stimuli:
           prompt: |
             Score the exact skill header and process-scoped credential handling.
           scoring: scale_1_5
+      - *skill_invoked
+      - *session_completed
+      - *no_crash_output
+      - *token_budget
+      - *turn_budget
+      - type: output-contains
+        name: Names the telemetry header
+        config:
+          substring: x-ms-fabric-skill
 
   - name: new-plan-local-build
     prompt: |
@@ -94,6 +155,15 @@ stimuli:
             authorization gate and separately reported outcomes. Penalize a write
             without authorization or a claim that a saved definition proves behavior.
           scoring: scale_1_5
+      - *skill_invoked
+      - *session_completed
+      - *no_crash_output
+      - *token_budget
+      - *turn_budget
+      - type: output-contains
+        name: Mentions write authorization
+        config:
+          substring: authoriz
 
   - name: extension-or-repair
     prompt: |
@@ -116,3 +186,12 @@ stimuli:
             drift check before the update and a comparison of the exported result.
             Penalize rebuilding the Plan or replaying a stale definition.
           scoring: scale_1_5
+      - *skill_invoked
+      - *session_completed
+      - *no_crash_output
+      - *token_budget
+      - *turn_budget
+      - type: output-contains
+        name: Starts from an export
+        config:
+          substring: export
