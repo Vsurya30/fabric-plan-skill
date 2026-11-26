@@ -31,7 +31,7 @@ folder or `_build/`.
 
 | Area | Coverage |
 |---|---|
-| Plan lifecycle | Discover workspaces and models, create a new Plan, export and update its definition, deploy and read back |
+| Plan lifecycle | Discover workspaces and models, create a new Plan, export and update its definition, deploy and read back; list, inspect, rename and delete Plans |
 | Planning sheets | Input measures (number, text, checkbox, person, select, date), formulas and formula equality, forecasts and time intelligence, roll-forward balances, totals, measure hierarchies, anchors for business-grain assumptions, measure-weighted allocation rules, numeric input constraints |
 | Intelligence dashboards | Page Navigators, integrated variance charts, chart visual filters, Matrix formatting, conditional formatting, typography and layout defaults, embedded Planning and PowerTable visuals |
 | Home | Home content and business navigation within the public Plan definition |
@@ -132,6 +132,8 @@ python -m unittest discover tests
 
 - Workspace writes need an explicit destination file that names the workspace,
   the allowed public hosts and `authorizedMutation`; local commands never write.
+  Deleting a Plan also needs `confirmDeletePlanId` and the Plan's current
+  display name.
 - Operations without a supported public route are out of scope. They are recorded
   with their reason and the public part that remains in
   [`catalog/api-contract-gaps.json`](catalog/api-contract-gaps.json); report them as

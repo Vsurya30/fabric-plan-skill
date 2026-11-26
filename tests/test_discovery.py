@@ -49,7 +49,8 @@ class DiscoveryTests(unittest.TestCase):
         for action in data['actions'].values():
             self.assertIn(action['phase'], {'local', 'public-read', 'public-write'})
             if action['phase'] in {'public-read','public-write'}:
-                self.assertIn(action['command'].split()[2:4], [['api', 'export'], ['api', 'create'], ['api', 'update']])
+                self.assertIn(action['command'].split()[2:4], [['api', 'export'], ['api', 'create'], ['api', 'update'],
+                                                               ['api', 'list'], ['api', 'get'], ['api', 'rename'], ['api', 'delete']])
 
     def test_every_advertised_callable_exists(self):
         for op in catalog()['actions'].values():

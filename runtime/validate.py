@@ -358,6 +358,14 @@ def public_schema_view(path,obj):
             if isinstance(trigger_config,dict) and isinstance(trigger_config.get('conditions'),dict):
                 trigger_config['conditions']=[trigger_config['conditions']];normalized=True
         if normalized:extensions.append('Native automation conditions are one rule group; the public schema lists an array')
+    if path=='cube/cube.json' and isinstance(value.get('cubePartitionMeasures'),list):
+        # The schema's oneOf pairs the enum with plain text, so the documented values match both branches and fail.
+        normalized=False
+        for measure in value['cubePartitionMeasures']:
+            config=measure.get('config') if isinstance(measure,dict) else None
+            for key in ('data_type','dataType'):
+                if isinstance(config,dict) and config.get(key) in ('Number','Text'):config.pop(key);normalized=True
+        if normalized:extensions.append('The public cube schema rejects the documented data types Number and Text because both oneOf branches match them')
     return value,extensions
 
 def schema_report(raw):

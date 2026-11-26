@@ -62,6 +62,9 @@ class CodecTests(unittest.TestCase):
         for p in ['../x','/x','a\\b','C:x','a/./b']:
             with self.assertRaises(ValueError): safe_path(p)
         with self.assertRaises(ValueError): pack({'A.json':{},'a.json':{}})
+    def test_malformed_parts_are_value_errors(self):
+        for part in [None,'definition.json',{'payloadType':'InlineBase64','payload':''},{'path':7,'payloadType':'InlineBase64','payload':''}]:
+            with self.subTest(part=part),self.assertRaises(ValueError): parts({'definition':{'parts':[part]}})
 class ConstructionTests(unittest.TestCase):
     def test_finance_is_model_driven(self):
         b=built(); r=validate_plan(b['raw']); self.assertEqual(r['sheets'],4); self.assertEqual(r['measureRecords'],15)
@@ -243,6 +246,14 @@ class TransportTests(unittest.TestCase):
         c=self.client([{'status':202,'headers':{'Location':'https://api.fabric.microsoft.com/v1/operations/op','Retry-After':'0'},'body':None},
           {'status':200,'headers':{},'body':{'status':'Running'}},{'status':200,'headers':{},'body':{'status':'Succeeded'}},{'status':200,'headers':{},'body':{'definition':{'parts':[]}}}])
         r=c.finish(c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='export'),'export'); self.assertIn('definition',r['body']); self.assertTrue(self.calls[-1][1].endswith('/result'))
+    def test_failed_operation_keeps_service_error(self):
+        error={'errorCode':'CorruptedPayload','message':'Definition part is invalid.','requestId':'request'}
+        c=self.client([{'status':202,'headers':{'Location':'https://api.fabric.microsoft.com/v1/operations/op','Retry-After':'0'},'body':None},
+          {'status':200,'headers':{},'body':{'status':'Failed','error':error}}])
+        with self.assertRaisesRegex(RuntimeError,'Operation Failed: CorruptedPayload: Definition part is invalid'):
+            c.finish(c.request('POST','/workspaces/w/plans/p/updateDefinition',{},label='update'),'update')
+        checkpoint=load(Path(self.tmp.name)/'update.operation.json')
+        self.assertEqual((checkpoint['lastStatus'],checkpoint['phase'],checkpoint['error']),('Failed','failed',error))
     def test_read_throttle(self):
         c=self.client([{'status':429,'headers':{'retry-after':'0'},'body':{}},{'status':200,'headers':{},'body':{'value':1}}]); self.assertEqual(c.request('GET','/x')['status'],200)
     def test_uncertain_create_not_repeated(self):

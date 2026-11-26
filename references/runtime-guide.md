@@ -33,13 +33,16 @@ a smaller report when a requirement cannot be represented.
 **Public Fabric operations.** `api export` calls `getDefinition` for the
 selected workspace and Plan. `api create` takes a new name and complete
 definition; `api update` targets an existing Plan with `updateDefinition`.
+`api list` and `api get` read Plan metadata, `api rename` changes a Plan's
+display name or description, and `api delete` removes a Plan only after
+confirming its ID and current display name.
 Use an authorized identity and explicit destination config. For example:
 
 ```sh
 python plan.py api export --config destination.json --run run --label baseline
 ```
 
-Export is a read; create and update are writes. For asynchronous operations,
+Export, list and get are reads; create, update, rename and delete are writes. For asynchronous operations,
 retain the operation receipt and resume with the same journal rather than
 submitting a second create. A completed operation establishes API acceptance,
 not formula evaluation, persisted cell values or permission to edit a cell.

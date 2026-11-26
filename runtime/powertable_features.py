@@ -1,12 +1,14 @@
-"""PowerTable Forms and Automations as public Plan definition parts.
+"""PowerTable Forms, Automations and Approvals as public Plan definition parts.
 
-The Plan import reads ``forms.json`` and ``automations.json`` from the PowerTable
-visual folder, beside ``source.json`` and ``columnConfigs.json``, so they travel
-through the public definition APIs. Form fields and layout nodes reference a
-column by its columnConfigs ``recordGuid``; import maps it to the runtime ID.
+The Plan import reads ``forms.json``, ``automations.json`` and ``approvals.json``
+from the PowerTable visual folder, beside ``source.json`` and
+``columnConfigs.json``, so they travel through the public definition APIs. Form
+fields and layout nodes reference a column by its columnConfigs ``recordGuid``;
+import maps it to the runtime ID.
 
-``approvals.json`` carries only the approval workflow (rule type, levels and
-filters). Approver users are not definition content and have no supported public route.
+``approvals.json`` carries one approval workflow record (rule type, persist flag,
+levels and routing filters). Approver users are not definition content and have
+no supported public route.
 
 An update that omits an existing ``automations.json`` or ``approvals.json``
 deletes those records on import, so always start from a fresh export.
@@ -26,6 +28,9 @@ CONDITION_TYPES={1:'string',2:'string',6:'number',13:'number',11:'boolean'}
 AUTOMATION_NAME=re.compile(r'[A-Za-z][A-Za-z0-9\-_() ]*')
 EMAIL=re.compile(r'[^@\s]+@[^@\s]+\.[^@\s]+')
 FORM_CONFIG={'showTitle':bool,'showLogo':bool,'submissionMessage':str,'fieldLabel':str}
+APPROVAL_RULES={'DEFAULT':10,'MANUAL':20,'LOOKUP':30}
+PERSIST_FLAGS={'SAVE_AFTER_REVIEW':10,'SAVE_BEFORE_REVIEW':20}
+APPROVAL_REQUEST={'rule_type','persist_flag','levels','filters'}
 
 def _text(value,label,limit=255,*,allow_empty=False):
     if not isinstance(value,str) or len(value)>limit or (not allow_empty and not value.strip()):
@@ -196,10 +201,52 @@ def automation_record(name,trigger,actions,columns,*,watch_columns=None,conditio
     if source_guid is not None:record['sourceId']=source_guid
     return record
 
-def feature_parts(prefix,raw,*,forms=None,automations=None):
-    """New or extended forms.json/automations.json for one PowerTable visual folder."""
+def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,filters=None):
+    """The one approvals.json record of a PowerTable: rule type, persist flag, levels and routing filters.
+
+    ``levels`` is an ordered list of ``{"name", "description"}``, numbered from 1.
+    ``filters`` is a list of ``{"name", "filter": object|null, "order"}``. The
+    import reads both lists from this record, so both are always written.
+    """
+    from .validate import Schemas
+    if rule_type is None:raise ValueError('rule_type required; it has no default')
+    if not isinstance(rule_type,str) or rule_type not in APPROVAL_RULES:raise ValueError('rule_type must be DEFAULT, MANUAL or LOOKUP')
+    if persist_flag is None:raise ValueError('persist_flag required; it has no default')
+    if not isinstance(persist_flag,str) or persist_flag not in PERSIST_FLAGS:
+        raise ValueError('persist_flag must be SAVE_AFTER_REVIEW or SAVE_BEFORE_REVIEW')
+    if not isinstance(levels,list) or not levels:raise ValueError('Name at least one approval level')
+    approval_levels=[];names=set()
+    for number,level in enumerate(levels,1):
+        if not isinstance(level,dict) or set(level)!={'name','description'}:raise ValueError('Approval level supports name and description only')
+        name=_text(level['name'],'Approval level name')
+        if name.casefold() in names:raise ValueError('Duplicate approval level: '+name)
+        names.add(name.casefold())
+        approval_levels.append({'name':name,'description':_text(level['description'],'Approval level description',allow_empty=True),'level':number})
+    filters=[] if filters is None else filters
+    if not isinstance(filters,list) or any(not isinstance(f,dict) for f in filters):raise ValueError('filters must be a list of objects')
+    routing=[];names=set();orders=set()
+    for item in filters:
+        if not {'name','filter'}<=set(item) or set(item)-{'name','filter','order'}:raise ValueError('Approval filter needs name, filter and order')
+        name=_text(item['name'],'Approval filter name')
+        if item['filter'] is not None and not isinstance(item['filter'],dict):raise ValueError('Approval filter must be an object or null')
+        order=item.get('order')
+        if order is None:raise ValueError('Approval filter order required; it has no default')
+        if isinstance(order,bool) or not isinstance(order,int) or order<0:raise ValueError('Approval filter order must be a nonnegative integer')
+        if order in orders:raise ValueError('Approval filter order '+str(order)+' is taken')
+        if name.casefold() in names:raise ValueError('Duplicate approval filter: '+name)
+        names.add(name.casefold());orders.add(order)
+        routing.append({'name':name,'filter':copy.deepcopy(item['filter']),'order':order})
+    record={'recordGuid':guid(),'sourceId':source_guid,'ruleType':APPROVAL_RULES[rule_type],'persistFlag':PERSIST_FLAGS[persist_flag],
+            'multiLevelEnabled':1 if len(approval_levels)>1 else 0,'approvalLevels':approval_levels,'approvalFilter':routing}
+    # The published schema types these members at the top level; check the record's values against those definitions.
+    url=schema('PowerTable/Approvals')
+    Schemas().check({'$schema':url,**{k:v for k,v in record.items() if k not in ('recordGuid','sourceId')}},url)
+    return record
+
+def feature_parts(prefix,raw,*,forms=None,automations=None,approvals=None):
+    """New or extended forms.json/automations.json and a new approvals.json for one PowerTable visual folder."""
     columns=raw[prefix+'columnConfigs.json']['columnConfigs'];source_guid=raw[prefix+'source.json']['source']['recordGuid']
-    changes={};summary={'forms':[],'automations':[]}
+    changes={};summary={'forms':[],'automations':[],'approvals':None}
     for leaf,key,items,build,label,schema_name,allowed in (
         ('forms.json','forms',forms,lambda spec:form_record(columns=columns,source_guid=source_guid,**spec),'title','PowerTable/Forms',
          {'title','fields','description','restrict_multiple_entry','config'}),
@@ -218,7 +265,16 @@ def feature_parts(prefix,raw,*,forms=None,automations=None):
             if record[label].casefold() in names:raise ValueError('A '+key[:-1]+' with this '+label+' already exists: '+record[label])
             names.add(record[label].casefold());existing.append(record);summary[key].append(record[label])
         changes[prefix+leaf]=current
-    if not changes:raise ValueError('Request at least one form or automation')
+    if approvals is not None:
+        path=prefix+'approvals.json'
+        if path in raw:raise ValueError('approvals.json already exists; change the exported workflow instead of rebuilding it')
+        if not isinstance(approvals,dict) or set(approvals)-APPROVAL_REQUEST:
+            raise ValueError('Unsupported approval field: '+(', '.join(sorted(set(approvals)-APPROVAL_REQUEST)) if isinstance(approvals,dict) else 'object required'))
+        record=approval_record(source_guid=source_guid,**approvals)
+        changes[path]={'$schema':schema('PowerTable/Approvals'),'approvals':record}
+        summary['approvals']={'ruleType':{v:k for k,v in APPROVAL_RULES.items()}[record['ruleType']],
+                              'levels':[level['name'] for level in record['approvalLevels']]}
+    if not changes:raise ValueError('Request at least one form, automation or approval workflow')
     return changes,summary
 
 def automation_identity_warnings(raw):
@@ -238,11 +294,11 @@ def powertable_prefix(raw,sheet_guid):
     if prefix+'source.json' not in raw or prefix+'columnConfigs.json' not in raw:raise ValueError('PowerTable source and columns are not configured')
     return prefix
 
-def add_features(envelope,*,sheet_guid,forms=None,automations=None):
-    """Scoped candidate adding Forms/Automations; every other part keeps its bytes."""
+def add_features(envelope,*,sheet_guid,forms=None,automations=None,approvals=None):
+    """Scoped candidate adding Forms, Automations or an approval workflow; every other part keeps its bytes."""
     from .validate import check_powertable_parts
     raw=unpack(envelope);original=parts(envelope);prefix=powertable_prefix(raw,sheet_guid)
-    changes,summary=feature_parts(prefix,raw,forms=forms,automations=automations)
+    changes,summary=feature_parts(prefix,raw,forms=forms,automations=automations,approvals=approvals)
     check_powertable_parts({**raw,**changes},prefix)
     existing={p:v for p,v in changes.items() if p in original};added={p:v for p,v in changes.items() if p not in original}
     candidate=patch(envelope,existing,{p:sha(original[p]) for p in existing}) if existing else copy.deepcopy(envelope)
@@ -255,7 +311,12 @@ def add_features(envelope,*,sheet_guid,forms=None,automations=None):
     if summary['forms'] and not (row_add and row_add.get('settings',{}).get('enabled') and row_add.get('filters')):
         warnings.append('Row access does not allow adding rows; form submissions need ROW_ADD access')
     warnings+=automation_identity_warnings({**raw,**changes})
+    if summary['approvals']:
+        warnings.append('approvals.json nests ruleType, persistFlag, levels and filters in one approvals record, the shape this '
+                        'package\'s import check reads; the Plan definition article lists them at the top level. Confirm the '
+                        'workflow in the product after publishing, and assign approver users there.')
     return candidate,{'sheetGuid':sheet_guid,'addedForms':summary['forms'],'addedAutomations':summary['automations'],
+        'addedApprovals':summary['approvals'],
         'changedParts':sorted(existing),'addedParts':sorted(added),'preservedPartCount':len(original)-len(existing),
         'warnings':warnings,'approvers':'not in definition; no supported public route',
         'deployment':'not run','runtimeValidation':'not run'}

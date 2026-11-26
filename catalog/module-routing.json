@@ -71,6 +71,42 @@
         "runtime.transport.plan_operation"
       ]
     },
+    "list": {
+      "phase": "public-read",
+      "description": "List every Plan in the destination workspace, following all pages.",
+      "inputs": "Destination config with the workspace ID.",
+      "command": "python plan.py api list --config destination.json --run run --label plans",
+      "symbols": [
+        "runtime.transport.plan_operation"
+      ]
+    },
+    "get": {
+      "phase": "public-read",
+      "description": "Read the selected Plan's metadata.",
+      "inputs": "Destination config with workspace and Plan IDs.",
+      "command": "python plan.py api get --config destination.json --run run --label plan",
+      "symbols": [
+        "runtime.transport.plan_operation"
+      ]
+    },
+    "rename": {
+      "phase": "public-write",
+      "description": "Change the selected Plan's display name or description.",
+      "inputs": "Authorized destination with the Plan ID and the new name or description.",
+      "command": "python plan.py api rename --config destination.json --run run --label rename",
+      "symbols": [
+        "runtime.transport.plan_operation"
+      ]
+    },
+    "delete": {
+      "phase": "public-write",
+      "description": "Delete the selected Plan after confirming its ID and current name, then check that it is gone.",
+      "inputs": "Authorized destination with the Plan ID, confirmDeletePlanId and the current display name.",
+      "command": "python plan.py api delete --config destination.json --run run --label delete",
+      "symbols": [
+        "runtime.transport.plan_operation"
+      ]
+    },
     "input": {
       "phase": "local",
       "description": "Construct a typed input.",
@@ -262,6 +298,66 @@
       "command": "python plan.py repair-powertable-row-access --baseline current-definition.json --out candidate",
       "symbols": [
         "runtime.powertable_config.backfill_row_access"
+      ]
+    },
+    "powertable-approvals": {
+      "phase": "local",
+      "description": "Add a PowerTable approval workflow (rule type, persist flag, ordered levels and routing filters) as a new public definition part; approver users are not assigned.",
+      "inputs": "Fresh export without approvals.json, PowerTable sheet GUID, and the rule type, persist flag, levels and filter orders stated in the request.",
+      "command": "python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate",
+      "symbols": [
+        "runtime.powertable_features.approval_record",
+        "runtime.powertable_features.add_features"
+      ]
+    },
+    "planning-writeback": {
+      "phase": "local",
+      "description": "Add a Planning writeback configuration: layout, a complete destination copied as given, and measure-to-column mapping. settingsHash is never computed and no writeback runs.",
+      "inputs": "Fresh export without writeback.json, Planning sheet GUID, writeback_type, a complete destination copied from an export, and optional mapping, exclusions, skipped dimensions and precision.",
+      "command": "python plan.py planning-features --baseline current-definition.json --input planning-features.request.json --out candidate",
+      "symbols": [
+        "runtime.planning_features.writeback_config",
+        "runtime.planning_features.add_planning_features"
+      ]
+    },
+    "planning-insert-rows": {
+      "phase": "local",
+      "description": "Append static or calculated inserted rows on a row dimension of a Planning visual; the rows are not positioned.",
+      "inputs": "Fresh export, Planning sheet GUID, row names, row dimension IDs, row types and a formula for each calculated row.",
+      "command": "python plan.py planning-features --baseline current-definition.json --input planning-features.request.json --out candidate",
+      "symbols": [
+        "runtime.planning_features.inserted_row",
+        "runtime.planning_features.add_planning_features"
+      ]
+    },
+    "planning-scenarios": {
+      "phase": "local",
+      "description": "Append scenario records (name, status, order and covered measures); simulations, dimension hashes and auto writeback are not generated.",
+      "inputs": "Fresh export, Planning sheet GUID, scenario names, measure GUIDs of the visual, and the status and first order stated in the request.",
+      "command": "python plan.py planning-features --baseline current-definition.json --input planning-features.request.json --out candidate",
+      "symbols": [
+        "runtime.planning_features.scenario_record",
+        "runtime.planning_features.add_planning_features"
+      ]
+    },
+    "planning-row-templates": {
+      "phase": "local",
+      "description": "Append dynamic row templates of flat static rows; every row states the flags the schema requires.",
+      "inputs": "Fresh export, Planning sheet GUID, template titles, ordered rows with their five flags, and the text written for a missing parent or previous row.",
+      "command": "python plan.py planning-features --baseline current-definition.json --input planning-features.request.json --out candidate",
+      "symbols": [
+        "runtime.planning_features.row_template",
+        "runtime.planning_features.add_planning_features"
+      ]
+    },
+    "cube-part": {
+      "phase": "local",
+      "description": "Append cube partitions, partition measures and their mappings to cube/cube.json, linked by recordGuid. No numeric service ID is written and nothing is provisioned.",
+      "inputs": "Fresh export, resolved partition dimensions and measures, partition measure types and configs, and the Planning input columns to map.",
+      "command": "python plan.py cube-part --baseline current-definition.json --input cube.request.json --out candidate",
+      "symbols": [
+        "runtime.cube_part.cube_records",
+        "runtime.cube_part.add_cube_part"
       ]
     },
     "format-matrix": {
@@ -731,6 +827,107 @@
       "coverage": "public-api"
     },
     {
+      "id": "API-ACCESS",
+      "name": "Check API access, error codes and operation recovery",
+      "guides": [
+        {
+          "file": "plan-rest-api.md"
+        }
+      ],
+      "operations": [
+        "export",
+        "create",
+        "update"
+      ],
+      "aliases": [
+        "delegated scopes",
+        "service principal",
+        "managed identity",
+        "CorruptedPayload",
+        "ItemDisplayNameAlreadyInUse",
+        "Retry-After",
+        "throttling",
+        "long-running operation",
+        "operation checkpoint",
+        "UNCERTAIN_SUBMISSION"
+      ],
+      "businessRequests": [
+        "Check API access, error codes and operation recovery"
+      ],
+      "prerequisites": "Resolve the identity, workspace role and delegated scopes before any API call.",
+      "limitations": "Applying .platform metadata is documented by Fabric but not run by this package.",
+      "coverage": "public-api"
+    },
+    {
+      "id": "PLAN-ITEMS",
+      "name": "List, inspect, rename or delete Plans",
+      "guides": [
+        {
+          "file": "plan-rest-api.md"
+        }
+      ],
+      "operations": [
+        "list",
+        "get",
+        "rename",
+        "delete"
+      ],
+      "aliases": [
+        "list plans",
+        "find a Plan by name",
+        "Plan metadata",
+        "rename a Plan",
+        "Plan description",
+        "delete a Plan"
+      ],
+      "businessRequests": [
+        "List, inspect, rename or delete Plans in a workspace"
+      ],
+      "prerequisites": "Resolve the workspace and, for one Plan, its ID; writes need an authorized destination.",
+      "limitations": "Delete requires confirmDeletePlanId and the Plan's current display name, and this package cannot undo it.",
+      "coverage": "public-api"
+    },
+    {
+      "id": "DEFINITION-CONTRACTS",
+      "name": "Check definition part layout and part contracts",
+      "guides": [
+        {
+          "file": "definition-part-layout.md"
+        },
+        {
+          "file": "definition-part-contracts.md"
+        }
+      ],
+      "operations": [
+        "decode",
+        "planning-writeback",
+        "planning-insert-rows",
+        "planning-scenarios",
+        "planning-row-templates",
+        "powertable-approvals",
+        "cube-part"
+      ],
+      "aliases": [
+        "part contracts",
+        "part layout",
+        "PlanV1",
+        ".platform",
+        "dataInputType",
+        "schema catalog",
+        "structure manifest",
+        "inserted rows",
+        "row templates",
+        "variable library"
+      ],
+      "businessRequests": [
+        "Check which definition parts a candidate needs and what each part must contain",
+        "Add writeback, inserted-row, scenario, row-template, approval-workflow or cube records to a fresh export"
+      ],
+      "prerequisites": "Start from a fresh complete export or a local candidate. For new records, state every product value (writeback layout, scenario status and first order, approval rule and persist flag, cube measure type, template-row flags) in the request.",
+      "limitations": "Structural contracts only; conformance does not prove service acceptance or rendering. The constructors append new records to a fresh export and never rebuild an existing writeback or approval part. They never compute settingsHash, dimension hashes, simulations or numeric service IDs, do not position inserted rows, and author flat row templates only.",
+      "coverage": "local"
+    },
+    {
       "id": "VERIFIED-AUTHORING-FLOW",
       "name": "Preserve requested inputs, formulas and rules on import",
       "guides": [
@@ -984,7 +1181,7 @@
         "Specify approval stages"
       ],
       "prerequisites": "Identify workflow stages, actors and required audit trail.",
-      "limitations": "Approval workflows are not implemented by this package.",
+      "limitations": "Guidance only. A PowerTable approval workflow (rule type, levels and routing filters) can be added as a definition part through the POWERTABLE or DEFINITION-CONTRACTS module; approver users and Planning approval stages are not implemented.",
       "coverage": "guide-only"
     },
     {
@@ -1255,6 +1452,7 @@
         "powertable-row-access",
         "powertable-forms",
         "powertable-automations",
+        "powertable-approvals",
         "maintenance-shell"
       ],
       "aliases": [
@@ -1277,12 +1475,12 @@
         "Create new SQL tables with sqldb-cli and add them to PowerTable",
         "Import a file or template into a new PowerTable through approved sqldb-cli DDL",
         "Analyze an existing PowerTable source through its saved definition",
-        "Create PowerTable forms and automations in the Plan definition",
+        "Create PowerTable forms, automations and approval workflows in the Plan definition",
         "Repair a PowerTable with no Row access selection",
         "Report PowerTable approver-user assignment as unavailable without a public route",
         "Distinguish supported public routes from private PowerTable CoreAPI modes"
       ],
-      "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-read the committed catalog (PHYSICAL_METADATA_SQL and UNIQUE_METADATA_SQL). Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 2 for an existing table, 1 for tables created by DDL (from scratch, file, template or snapshot). Author forms and automations on a fresh export.",
+      "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-read the committed catalog (PHYSICAL_METADATA_SQL and UNIQUE_METADATA_SQL). Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 2 for an existing table, 1 for tables created by DDL (from scratch, file, template or snapshot). Author forms, automations and approval workflows on a fresh export.",
       "limitations": "This skill does not execute SQL directly or call private CoreAPI routes. New tables need external sqldb-cli DDL followed by public Plan definition creation. Approver-user assignment, semantic-model live sync, and private creation modes have no supported public route. Scheduled, form-submitted and button automations are not authored.",
       "coverage": "local"
     },
@@ -1434,7 +1632,7 @@
         "Distinguish scenario inputs from lifecycle and access"
       ],
       "prerequisites": "Determine whether a transient filter or stored version is requested.",
-      "limitations": "No scenario lifecycle management is implemented.",
+      "limitations": "Scenario records (name, status, order and measures) can be appended through DEFINITION-CONTRACTS; simulations and other scenario lifecycle steps are not implemented.",
       "coverage": "local"
     },
     {
@@ -2156,7 +2354,7 @@
         "Calculate or enter a measure at an explicit cube breakdown."
       ],
       "prerequisites": "Resolved Cube source, breakdown and target coordinates.",
-      "limitations": "Current request and saved-record shapes can be source-validated, including dynamic Cube and lookup dimensions; no complete Cube provisioning, refresh or allocation/evaluation factory is shipped. Do not label a normal formula or aggregate as a native Cube.",
+      "limitations": "Current request and saved-record shapes can be source-validated, including dynamic Cube and lookup dimensions, and cube/cube.json records can be appended through DEFINITION-CONTRACTS; no complete Cube provisioning, refresh or allocation/evaluation factory is shipped. Do not label a normal formula or aggregate as a native Cube.",
       "coverage": "local"
     },
     {

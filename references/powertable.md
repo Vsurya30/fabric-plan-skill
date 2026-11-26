@@ -190,9 +190,14 @@ every automation after publishing.
 ## Approvals
 
 `approvals.json` holds the approval workflow (rule type, levels, filters) and
-travels with the definition: preserve it. Approver users are not definition
-content. Assigning approver users has no supported public route. Do not use a
-workload endpoint, MWC token exchange, browser session or private CoreAPI call.
+travels with the definition: preserve it. When a PowerTable has none,
+`powertable-features` can add one from an `approvals` request with the rule
+type (`DEFAULT`, `MANUAL` or `LOOKUP`), persist flag (`SAVE_AFTER_REVIEW` or
+`SAVE_BEFORE_REVIEW`), ordered levels (name and description) and routing filters
+(name, filter object and order). It refuses to replace an existing workflow.
+Approver users are not definition content. Assigning approver users has no
+supported public route. Do not use a workload endpoint, MWC token exchange,
+browser session or private CoreAPI call.
 Report the workflow as partially configured: the definition can carry approval
 structure, but user assignment remains a manual product operation until a
 supported public API exists.

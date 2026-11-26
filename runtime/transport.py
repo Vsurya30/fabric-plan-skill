@@ -149,7 +149,12 @@ class Client:
             self.wait(delay); r=self.request('GET',loc)
             status=(r.get('body') or {}).get('status')
             save(cp,{**state,'lastStatus':status,'phase':'poll','lastPollAt':now()})
-            if status in ('Failed','Canceled','Cancelled'): raise RuntimeError('Operation '+status)
+            if status in ('Failed','Canceled','Cancelled'):
+                # Keep the service error: polls are not journaled, so this is its only record.
+                error=(r.get('body') or {}).get('error')
+                save(cp,{**state,'lastStatus':status,'phase':'failed','lastPollAt':now(),**({'error':error} if error is not None else {})})
+                detail=': '.join(str(error[k]) for k in ('errorCode','message') if isinstance(error,dict) and error.get(k))
+                raise RuntimeError('Operation '+status+(': '+detail if detail else ''))
             if status=='Succeeded':
                 result_url=r['headers'].get('location')
                 if not result_url or result_url.rstrip('/')==loc.rstrip('/'): result_url=loc.rstrip('/')+'/result'
@@ -172,8 +177,34 @@ class Client:
             route=r.get('continuationUri')
             if not route and r.get('continuationToken'): raise ValueError('Continuation token requires endpoint-specific parameter adapter')
         return values
-def plan_operation(client,workspace,kind,plan_id=None,definition=None,name=None,label='plan',baseline_hash=None):
+def plan_operation(client,workspace,kind,plan_id=None,definition=None,name=None,label='plan',baseline_hash=None,description=None,confirm_plan_id=None):
     base='/workspaces/'+urllib.parse.quote(workspace,safe='')+'/plans'
+    if kind=='list': return {'status':200,'body':{'value':client.paged(base)}}
+    if kind in ('get','rename','delete'):
+        if not plan_id: raise ValueError('planId required')
+        route=base+'/'+urllib.parse.quote(plan_id,safe='')
+        if kind=='get': return client.request('GET',route)
+        if kind=='rename':
+            body={}
+            if name is not None:
+                if not isinstance(name,str) or not name.strip(): raise ValueError('New display name must be a nonempty string')
+                body['displayName']=name
+            if description is not None:
+                if not isinstance(description,str) or len(description)>256: raise ValueError('Description must be a string of at most 256 characters')
+                body['description']=description
+            if not body: raise ValueError('Rename needs a new display name or description')
+            return client.request('PATCH',route,body,label=label)
+        # Deletion cannot be undone here: require the ID twice and the live display name.
+        if confirm_plan_id!=plan_id: raise ValueError('Delete requires confirmDeletePlanId equal to planId')
+        if not isinstance(name,str) or not name: raise ValueError("Delete requires the Plan's current display name")
+        # A resumed label replays its journal; the Plan may already be gone.
+        if not (client.journal/(label+'.intent.json')).exists():
+            current=client.request('GET',route).get('body') or {}
+            if current.get('displayName')!=name: raise ValueError('Plan display name differs from the confirmed name; refusing to delete')
+        deleted=client.request('DELETE',route,label=label)
+        try: client.request('GET',route); absent=False
+        except (HttpError,RuntimeError) as error: absent=True if getattr(error,'status',None)==404 else None
+        return {**deleted,'verifiedAbsent':absent}
     if kind in ('create','create-blank'):
         if not name or (kind=='create' and not definition): raise ValueError('Name and full definition required')
         body={'displayName':name}; route=base

@@ -57,15 +57,19 @@ def main():
     pt.add_argument('--baseline',required=True);pt.add_argument('--input',required=True);pt.add_argument('--out',required=True)
     ptt=sp.add_parser('powertable-table',help='Configured PowerTable from verified SQL metadata with product column defaults; optional append to a fresh export')
     ptt.add_argument('--input',required=True);ptt.add_argument('--out',required=True);ptt.add_argument('--baseline')
-    ptf=sp.add_parser('powertable-features',help='Add PowerTable Forms/Automations as public definition parts to a fresh export; preserves other parts')
+    ptf=sp.add_parser('powertable-features',help='Add PowerTable Forms, Automations or an approval workflow as public definition parts to a fresh export; preserves other parts')
     ptf.add_argument('--baseline',required=True);ptf.add_argument('--input',required=True);ptf.add_argument('--out',required=True)
+    plf=sp.add_parser('planning-features',help='Add Planning writeback, inserted rows, scenarios or row templates to a fresh export; preserves other parts')
+    plf.add_argument('--baseline',required=True);plf.add_argument('--input',required=True);plf.add_argument('--out',required=True)
+    cbp=sp.add_parser('cube-part',help='Append cube partitions, partition measures and mappings to a fresh export; preserves other parts')
+    cbp.add_argument('--baseline',required=True);cbp.add_argument('--input',required=True);cbp.add_argument('--out',required=True)
     pra=sp.add_parser('repair-powertable-row-access',help='Give enabled row actions without a Row access selection the product default All users')
     pra.add_argument('--baseline',required=True);pra.add_argument('--out',required=True);pra.add_argument('--input')
     ib=sp.add_parser('construct-bridge');ib.add_argument('action',choices=['query','planning-source','append','merge','join','sql','editable-source']);ib.add_argument('--input',required=True);ib.add_argument('--out',required=True)
     for command in ('bridge-planning-catalog','check-bridge-mappings','resolve-bridge-output','bind-bridge-outputs'):
         bm=sp.add_parser(command,help='Local Planning-source lineage construction, graph check, or current query-output identity resolution')
         bm.add_argument('--input',required=True);bm.add_argument('--out',required=True)
-    api=sp.add_parser('api'); api.add_argument('action',choices=['export','create','create-blank','update']); api.add_argument('--config',required=True); api.add_argument('--payload'); api.add_argument('--run',required=True); api.add_argument('--label',required=True)
+    api=sp.add_parser('api'); api.add_argument('action',choices=['export','create','create-blank','update','list','get','rename','delete']); api.add_argument('--config',required=True); api.add_argument('--payload'); api.add_argument('--run',required=True); api.add_argument('--label',required=True)
     w=sp.add_parser('provision'); w.add_argument('--config',required=True); w.add_argument('--model',required=True); w.add_argument('--spec',required=True); w.add_argument('--run',required=True)
     ms=sp.add_parser('prepare-maintenance');ms.add_argument('--baseline',required=True);ms.add_argument('--requests',required=True);ms.add_argument('--out',required=True)
     ps=sp.add_parser('prepare-scope');ps.add_argument('--spec',required=True);ps.add_argument('--model');ps.add_argument('--out',required=True)
@@ -113,6 +117,13 @@ def main():
         request=load(args.input) if args.input else {}
         fn=add_features if args.cmd=='powertable-features' else backfill_row_access
         candidate,manifest=fn(load(args.baseline),**request)
+        out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
+        save(out/'definition.json',candidate);save(out/'changes.json',manifest);print(dumps(manifest))
+    elif args.cmd in ('planning-features','cube-part'):
+        from runtime.planning_features import add_planning_features
+        from runtime.cube_part import add_cube_part
+        fn=add_planning_features if args.cmd=='planning-features' else add_cube_part
+        candidate,manifest=fn(load(args.baseline),**load(args.input))
         out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
         save(out/'definition.json',candidate);save(out/'changes.json',manifest);print(dumps(manifest))
     elif args.cmd=='usecase':
@@ -286,14 +297,15 @@ def main():
     elif args.cmd=='api':
         from runtime.transport import Client,plan_operation
         c=load(args.config); payload=load(args.payload) if args.payload else None
-        if args.action!='export':
-            if args.action!='create-blank':
+        if args.action not in ('export','list','get'):
+            if args.action in ('create','update'):
                 if not payload: raise ValueError('Full reviewed payload required')
                 validate_plan(unpack(payload))
             if c.get('authorizedMutation') is not True: raise ValueError('Set authorizedMutation only from current user-authorized scope')
             if args.action=='update' and not c.get('baselineSha256'): raise ValueError('Update requires expected fresh baseline envelope hash')
         client=Client(c['apiBase'],c['tokenEnvironment'],c.get('allowedHosts'),Path(args.run)/'api')
-        result=plan_operation(client,c['workspaceId'],args.action,c.get('planId'),payload,c.get('name'),label=args.label,baseline_hash=c.get('baselineSha256'))
+        result=plan_operation(client,c['workspaceId'],args.action,c.get('planId'),payload,c.get('name'),label=args.label,baseline_hash=c.get('baselineSha256'),
+                            description=c.get('description'),confirm_plan_id=c.get('confirmDeletePlanId'))
         if args.action=='export':
             result['baselineSha256']=definition_hash(result['body'])
         save(Path(args.run)/'result.json',result); print('Saved API result; inspect status; runtime behavior is not verified.')

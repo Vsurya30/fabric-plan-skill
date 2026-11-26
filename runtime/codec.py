@@ -47,6 +47,7 @@ def parts(envelope):
     if not isinstance(values,list) or not values: raise ValueError('Definition parts empty/missing')
     seen=set(); decoded={}
     for p in values:
+        if not isinstance(p,dict) or not isinstance(p.get('path'),str): raise ValueError('Definition part must be an object with a string path')
         path=p['path']; safe_path(path)
         if path.casefold() in seen: raise ValueError('Duplicate/case-colliding part: '+path)
         seen.add(path.casefold())
@@ -69,6 +70,16 @@ def patch(envelope,changes,expected_hashes):
     for p in root['parts']:
         if p['path'] in changes: p['payload']=base64.b64encode(dumps(changes[p['path']]).encode()).decode()
     return out
+def scoped_candidate(envelope,changes):
+    """Replace or add only the named complete parts; every other part keeps its bytes."""
+    old=parts(envelope)
+    existing={k:v for k,v in changes.items() if k in old}; added={k:v for k,v in changes.items() if k not in old}
+    out=patch(envelope,existing,{k:sha(old[k]) for k in existing}) if existing else copy.deepcopy(envelope)
+    if added: out.get('definition',out)['parts'].extend(pack(added)['definition']['parts'])
+    after=parts(out)
+    for k,v in old.items():
+        if k not in changes and after[k]!=v: raise ValueError('Unrelated part changed: '+k)
+    return out,sorted(existing),sorted(added)
 def pointer_get(obj,pointer):
     if not pointer: return obj
     if not pointer.startswith('/'): raise ValueError('JSON pointer required')
