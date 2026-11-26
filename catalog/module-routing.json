@@ -592,6 +592,8 @@
         "runtime.intelligence.column_chart",
         "runtime.intelligence.chart",
         "runtime.ibcs_charts.recipe_chart",
+        "runtime.ibcs_charts.apply_chart_theme",
+        "runtime.ibcs_charts.ibcs_palette",
         "runtime.ibcs_report.matrix_table",
         "runtime.ibcs_report.message_title",
         "runtime.ibcs_report.set_plan_theme",
@@ -2734,6 +2736,10 @@
         "line chart",
         "actual vs plan vs forecast",
         "IBCS theme",
+        "IBCS colors",
+        "IBCS color codes",
+        "scenario notation",
+        "chart theme",
         "IBCS matrix",
         "Intelligence Matrix",
         "IBCS table",
@@ -2746,12 +2752,13 @@
         "Create an Intelligence sheet with stacked charts.",
         "Plot IBCS charts that compare actuals with prior year, plan and forecast by category.",
         "Apply a named IBCS recipe such as C01 Stacked Column or C05 Waterfall + Column to a dashboard chart.",
+        "Give IBCS charts the IBCS scenario colors: solid actual, lighter previous year, outlined plan and hatched forecast.",
         "Show IBCS table templates in an Intelligence Matrix instead of the embedded Planning grid.",
         "Give an IBCS dashboard a message title and footnotes.",
         "Use the IBCS theme for the whole Plan, including Matrix and Planning visuals."
       ],
       "prerequisites": "A resolved category dimension and the measures for each required bucket of a recipe; row dimensions and an AC value for a Matrix table; an explicit request before setting the Plan-wide theme.",
-      "limitations": "Writes chart templates and bindings, Matrix tables, message titles, footnotes and, on explicit request, the Plan theme type. IBCS chart styling (theme-owned settings, data labels, measure styles, ranking, deviation callouts) is not written. Planning grids follow the Plan theme only when the tenant enables it. Threaded comments are not authorable. Rendering is not tested.",
+      "limitations": "Writes chart templates and bindings, the IBCS chart theme with its measure and variance colors on recipe and template charts, Matrix tables, message titles, footnotes and, on explicit request, the Plan theme type. Other IBCS chart styling (data labels, title and number settings, ranking, deviation callouts) is not written. Planning grids follow the Plan theme only when the tenant enables it. Threaded comments are not authorable. Rendering is not tested.",
       "coverage": "local"
     }
   ]

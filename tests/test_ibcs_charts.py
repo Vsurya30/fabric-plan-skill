@@ -3,7 +3,9 @@ import unittest
 from pathlib import Path
 from runtime.chart_filters import audit_chart_filters
 from runtime.codec import load
-from runtime.ibcs_charts import RECIPES, TEMPLATES, describe, recipe_chart, recipes, required_buckets
+from runtime.codec import loads
+from runtime.ibcs_charts import (APPEARANCE, RECIPES, TEMPLATES, apply_chart_theme, chart_theme, describe,
+                                 ibcs_palette, measure_roles, recipe_chart, recipes, required_buckets, role_style)
 from runtime.identity import Registry
 from runtime.intelligence import chart, column_chart
 
@@ -26,6 +28,10 @@ def spec(code, *buckets, **extra):
 
 def buckets(p):
     return [(a['id'], a['bucketId']) for a in p['pivotAssignments']]
+
+
+def appearance(p):
+    return loads(p['visualState'][APPEARANCE])['charts']
 
 
 class RecipeCharts(unittest.TestCase):
@@ -127,8 +133,8 @@ class RecipeCharts(unittest.TestCase):
             self.build(s)
 
     def test_unconsumed_options_are_refused(self):
-        with self.assertRaisesRegex(ValueError, 'Unconsumed chart options: theme'):
-            self.build(spec('C03', 'AC', 'PY', 'FC', theme='ibcs'))
+        with self.assertRaisesRegex(ValueError, 'Unconsumed chart options: legend'):
+            self.build(spec('C03', 'AC', 'PY', 'FC', legend=True))
         s = spec('C03', 'AC', 'PY', 'FC')
         s['measures']['AC'] = {'field': VALUES['AC'], 'color': '#000000'}
         with self.assertRaisesRegex(ValueError, 'Unconsumed measure options in AC: color'):
@@ -144,6 +150,125 @@ class RecipeCharts(unittest.TestCase):
         self.assertEqual(catalog['C10']['requiredBuckets']['BUBBLE_PLOT'], ['axis', 'AC', 'PY', 'PL'])
 
 
+class ChartTheme(unittest.TestCase):
+    def build(self, s):
+        return recipe_chart(model(), s, Registry())
+
+    def test_recipe_chart_keeps_the_ibcs_theme_with_scenario_notation(self):
+        charts = appearance(self.build(spec('C01', 'AC', 'PL', 'FC', 'stack')))
+        self.assertEqual((charts['theme'], charts['isStandardTheme'], charts['isDefaultMeta']),
+                         ('ibcs', True, {'theme': False}))
+        styles = charts['measuresStyle']
+        self.assertEqual(sorted(styles), ['AC', 'FC', 'PL'])
+        self.assertEqual({r: (s['fillColor'], s['pattern']) for r, s in styles.items()},
+                         {'AC': ('#262626', 'solid'), 'PL': ('#4e4e4e', 'outlined'), 'FC': ('#262626', 'hatched')})
+        self.assertEqual(charts['variance']['colors'], {'positive': '#8eb900', 'negative': '#ff000a', 'neutral': '#DDDDDD'})
+
+    def test_previous_period_is_a_lighter_solid_than_actual(self):
+        styles = appearance(self.build(spec('C03', 'AC', 'PY', 'FC')))['measuresStyle']
+        self.assertEqual((styles['PY']['fillColor'], styles['PY']['pattern']), ('#bfbfbf', 'solid'))
+        self.assertNotEqual(styles['AC']['fillColor'], styles['PY']['fillColor'])
+
+    def test_every_recipe_saves_a_style_for_each_bound_role(self):
+        for code in RECIPES:
+            with self.subTest(code=code):
+                p = self.build(spec(code, *required_buckets(code)))
+                self.assertEqual(describe(p)['theme'], 'ibcs')
+                self.assertEqual(sorted(appearance(p)['measuresStyle']), sorted(measure_roles(p)))
+
+    def test_theme_plan_leaves_a_recipe_chart_on_the_plan_theme(self):
+        p = self.build(spec('C03', 'AC', 'PY', 'FC', theme='plan'))
+        self.assertNotIn(APPEARANCE, p['visualState'])
+        self.assertEqual(describe(p)['theme'], 'plan')
+
+    def test_native_template_without_a_recipe_keeps_the_ibcs_theme_too(self):
+        s = {'label': 'Stacked', 'chartType': 'STACKED_COLUMN_VERTICAL', 'category': 'Region[Region]',
+             'stack': 'Product[Product]', 'measures': {'AC': VALUES['AC']}}
+        p = self.build(s)
+        self.assertEqual(chart_theme(p), 'ibcs')
+        self.assertEqual(sorted(appearance(p)['measuresStyle']), ['AC'])
+        self.assertEqual(appearance(self.build({**s, 'theme': 'ibcs'})), appearance(p))
+        self.assertNotIn(APPEARANCE, self.build({**s, 'theme': 'plan'})['visualState'])
+
+    def test_overlapped_columns_from_a_template_show_actual_and_previous_period(self):
+        s = {'label': 'Overlap', 'chartType': 'COLUMN_VERTICAL', 'category': 'Region[Region]',
+             'measures': {'AC': VALUES['AC'], 'PY': VALUES['PY']}}
+        styles = appearance(self.build(s))['measuresStyle']
+        self.assertEqual({r: (v['fillColor'], v['pattern']) for r, v in styles.items()},
+                         {'AC': ('#262626', 'solid'), 'PY': ('#bfbfbf', 'solid')})
+
+    def test_unknown_chart_theme_is_refused(self):
+        with self.assertRaisesRegex(ValueError, "Chart theme is ibcs or plan, not 'dark'"):
+            self.build(spec('C03', 'AC', 'PY', 'FC', theme='dark'))
+
+    def test_further_actuals_take_the_additional_actual_roles(self):
+        s = spec('C08', 'AC', chartType='AREA')
+        s['measures']['AC'] = [VALUES['AC'], 'Metrics[Hours]', VALUES['PY']]
+        p = self.build(s)
+        self.assertEqual(measure_roles(p), ['AC', 'AC1', 'AC2'])
+        styles = appearance(p)['measuresStyle']
+        self.assertEqual([styles[r]['fillColor'] for r in ('AC', 'AC1', 'AC2')], ['#262626', '#666666', '#858585'])
+        self.assertEqual(styles['AC1']['lineArea']['marker'], {'enabled': False, 'useSeriesColor': False,
+                                                              'color': '#666666', 'size': 6, 'type': 'circleFilled'})
+
+    def test_role_styles_are_complete_and_carry_no_placeholder(self):
+        keys = set(role_style('AC'))
+        for role in ['AC', 'PY', 'PL', 'FC'] + ['AC' + str(i) for i in range(1, 30)]:
+            style = role_style(role)
+            self.assertEqual(set(style), keys, role)
+            self.assertNotIn('{', repr(sorted(self.leaves(style))), role)
+        with self.assertRaisesRegex(ValueError, "no measure style for role 'AC30'"):
+            role_style('AC30')
+
+    def leaves(self, value):
+        if isinstance(value, dict):
+            return [leaf for v in value.values() for leaf in self.leaves(v)]
+        return [str(value)]
+
+    def test_palette_matches_the_saved_measure_styles(self):
+        palette = ibcs_palette()
+        for role, entry in palette['measures'].items():
+            style = role_style(role)
+            self.assertEqual(entry, {k: style[k] for k in ('fillColor', 'borderColor', 'pattern')})
+        self.assertEqual(palette['variance'], appearance(self.build(spec('C04', 'AC', 'PL')))['variance']['colors'])
+        for color in palette['series']:
+            channels = [int(color[i:i + 2], 16) for i in (1, 3, 5)]
+            self.assertLessEqual(max(channels) - min(channels), 16, color + ' is not a neutral grey')
+
+    def test_theme_applies_to_an_exported_chart_and_keeps_its_other_settings(self):
+        p = self.build(spec('C03', 'AC', 'PY', 'FC', theme='plan'))
+        p['visualState'][APPEARANCE] = '{"charts":{"theme":"custom","isDefaultMeta":{"theme":true},"showFCLine":false,' \
+            '"measuresStyle":{"Units":{"lineArea":{"marker":{}}},"AC":{"lineArea":{"marker":{}}}},' \
+            '"groupStyle":{"g":{"fillColor":"#ff0000"}},"variance":{"varianceLineSize":6}},"tables":{"keep":1}}'
+        before = loads(p['visualState'][APPEARANCE])
+        self.assertEqual(chart_theme(p), 'plan')
+        out = apply_chart_theme(p)
+        self.assertEqual(loads(p['visualState'][APPEARANCE]), before)
+        state = loads(out['visualState'][APPEARANCE])
+        charts = state['charts']
+        self.assertEqual(state['tables'], {'keep': 1})
+        self.assertEqual((charts['theme'], charts['isDefaultMeta']['theme'], charts['showFCLine']), ('ibcs', False, False))
+        self.assertEqual(charts['variance']['varianceLineSize'], 6)
+        self.assertEqual(charts['variance']['colors']['positive'], '#8eb900')
+        self.assertEqual(charts['groupStyle'], {})
+        self.assertEqual(charts['measuresStyle']['Units'], {'lineArea': {'marker': {}}})
+        self.assertEqual(charts['measuresStyle']['AC'], role_style('AC'))
+        self.assertEqual(apply_chart_theme(out), out)
+
+    def test_theme_is_refused_for_other_visuals_and_unbound_charts(self):
+        p = self.build(spec('C03', 'AC', 'PY', 'FC', theme='plan'))
+        with self.assertRaisesRegex(ValueError, 'Supported chart theme: ibcs'):
+            apply_chart_theme(p, 'dark')
+        with self.assertRaisesRegex(ValueError, 'Bind the chart measures'):
+            apply_chart_theme({**p, 'pivotAssignments': [a for a in p['pivotAssignments'] if a['bucketId'] == 'axis']})
+        with self.assertRaisesRegex(ValueError, 'not a KPI card'):
+            apply_chart_theme({**p, 'chartType': 'CARD'})
+        with self.assertRaisesRegex(ValueError, 'not a visual of type 10'):
+            apply_chart_theme({**p, 'visualType': 10})
+        with self.assertRaisesRegex(ValueError, 'appearance is not an object'):
+            apply_chart_theme({**p, 'visualState': {**p['visualState'], APPEARANCE: '[]'}})
+
+
 class RecipeGuide(unittest.TestCase):
     def test_guide_table_matches_the_recipe_catalog(self):
         import re
@@ -151,6 +276,18 @@ class RecipeGuide(unittest.TestCase):
         rows = re.findall(r'^\| (C\d\d) \| ([^|]+) \| `([A-Z_]+)`', text, re.M)
         self.assertEqual({code: (name.strip(), chart_type) for code, name, chart_type in rows},
                          {code: (name, types[0]) for code, (name, types, _) in RECIPES.items()})
+
+    def test_guide_color_table_matches_the_chart_theme(self):
+        import re
+        text = (ROOT / 'references/ibcs-charts.md').read_text(encoding='utf-8')
+        palette = ibcs_palette()
+        rows = re.findall(r'^\| [^|]+ \| [^|]+ \| (AC|PY|PL|FC) \| (\w+) \| `(#[0-9A-Fa-f]{6})` \|$', text, re.M)
+        self.assertEqual({bucket: (fill, color) for bucket, fill, color in rows},
+                         {bucket: (entry['pattern'], entry['fillColor']) for bucket, entry in palette['measures'].items()})
+        variance = dict(re.findall(r'^\| (Desirable|Undesirable) variance \| [^|]+ \| \| solid \| `(#[0-9A-Fa-f]{6})` \|$', text, re.M))
+        self.assertEqual(variance, {'Desirable': palette['variance']['positive'], 'Undesirable': palette['variance']['negative']})
+        self.assertIn('greys from `' + palette['series'][0] + '`', text)
+        self.assertIn('(`' + palette['variance']['neutral'] + '`)', text)
 
     def test_ibcs_and_stacked_requests_route_to_the_guide(self):
         from runtime.discovery import discover
@@ -188,6 +325,7 @@ class DashboardCharts(unittest.TestCase):
         self.assertEqual(sorted(p['chartType'] for p in charts), ['COLUMN_HORIZONTAL', 'STACKED_COLUMN_VERTICAL'])
         for p in charts:
             self.assertEqual(p['visualState']['chartType'], p['chartType'])
+            self.assertEqual(chart_theme(p), 'ibcs')
             audit_chart_filters(p)
 
 

@@ -7,7 +7,7 @@ Use this guide when a dashboard needs IBCS content:
 - a message title and footnotes;
 - the IBCS Plan theme.
 
-The builder writes chart templates, field bindings, the Matrix, story text and, when asked, the Plan theme. The IBCS styling of each chart is a separate concern; see [The IBCS look](#the-ibcs-look).
+The builder writes chart templates, field bindings, the IBCS chart theme with its colors, the Matrix, story text and, when asked, the Plan theme. See [IBCS chart theme and colors](#ibcs-chart-theme-and-colors). The rest of each chart's IBCS styling is a separate concern; see [The IBCS look](#the-ibcs-look).
 
 ## Contents
 
@@ -15,6 +15,7 @@ The builder writes chart templates, field bindings, the Matrix, story text and, 
 - [Recipe catalog](#recipe-catalog)
 - [Template rules the builder enforces](#template-rules-the-builder-enforces)
 - [What the definition carries](#what-the-definition-carries)
+- [IBCS chart theme and colors](#ibcs-chart-theme-and-colors)
 - [IBCS dashboard page](#ibcs-dashboard-page)
 - [Plan theme](#plan-theme)
 - [The IBCS look](#the-ibcs-look)
@@ -44,7 +45,8 @@ Add the chart to a dashboard's `charts` list. A chart that names `recipe` or `ch
 - A measure value is a field ID, or an object with `field` plus optional `aggregation` and `label`. On LINE and AREA, AC also accepts a list of fields.
 - Fields come from the current model or a registered query output. Never derive them from labels or from example names.
 - `recipe` alone selects the recipe's default template. Give `chartType` as well only to pick one of the recipe's alternatives (C08 mixed uses AREA). `chartType` without `recipe` builds that template with its own rules.
-- Unknown options are refused, including styling keys such as `theme`.
+- `theme` selects the chart's theme: `ibcs` or `plan`. Every chart built here keeps the IBCS chart theme, whether it names a `recipe` or only a `chartType`. Give `"theme": "plan"` for a chart that should follow the Plan theme and its palette instead.
+- Unknown options are refused, including every styling key other than `theme`.
 
 ## Recipe catalog
 
@@ -87,10 +89,39 @@ Each chart is an `ANALYTICS_PLUS` visual (type 50). It carries:
 - one ordinary visual-level filter card for each assigned field. Two parts of these cards are not yet confirmed from an export:
   - The stack's card follows the same rule as the category's.
   - A comparison measure's card registers under bucket `AC`, with the real bucket kept on its nested assignment. This was observed for PY and is applied to PL and FC as well.
+- on the IBCS chart theme, one saved appearance setting (`hiddenProperties_!!!_appearance`) with the theme selection and its colors.
 
 Fabric saves the same template selectors and assignments when a chart is added. The chart then writes its own template state on first render. **Do not pre-write** template, measure configuration, column-field or comparison mappings. **Do not add title settings.** IBCS charts keep the title the chart produces, and an explicit title belongs to a separate, user-requested edit.
 
 Fabric loads a chart with no saved `chartType` as `COLUMN_VERTICAL`. The plain column chart now names that template explicitly, which changes nothing at runtime but keeps its buckets checked against a known template. Each template has its own bucket names, and a field in a bucket the template lacks binds nothing. Charts from earlier builds of this package keep their category in the generic `category` bucket, so they show values without categories. To restore the category, move it to `axis` together with its filter cards.
+
+## IBCS chart theme and colors
+
+A chart in a Plan starts on the **Customize** theme, which takes its colors from the Plan theme. That is not the IBCS theme, so a chart saved without a theme of its own does not show IBCS scenario notation. The builder therefore saves **IBCS Theme**, the choice under Standards in the chart's theme menu, as the chart's own theme on every recipe and template chart. The chart then keeps it under any Plan theme.
+
+IBCS Standards 2.0 set the notation, not the color codes: an organization picks the codes and keeps them consistent. The chart's IBCS theme supplies these.
+
+| Meaning | IBCS rule | Bucket | Fill | Color |
+|---|---|---|---|---|
+| Actual (measured data) | UN 3.2, solid dark | AC | solid | `#262626` |
+| Previous period in a comparison | UN 3.2, lighter solid | PY | solid | `#bfbfbf` |
+| Plan or budget | UN 3.2, outlined | PL | outlined | `#4e4e4e` |
+| Forecast | UN 3.2, hatched in the actual color | FC | hatched | `#262626` |
+| Desirable variance | UN 4.1, green | | solid | `#8eb900` |
+| Undesirable variance | UN 4.1, red | | solid | `#ff000a` |
+| Series of a stack | SI 2.2, no decorative colors | stack | solid | greys from `#4B4B4B` |
+
+What the builder saves on the chart:
+
+- the theme selection, and the flag that the chart keeps its own theme instead of following the Plan theme;
+- the measure style of each bound role. On LINE and AREA, further actuals take the roles `AC1`, `AC2` and so on, in grey additional colors;
+- the variance colors for bars, groups, the waterfall breakdown and trends.
+
+Series colors are not saved. The chart reads its grey series palette from the IBCS theme, so a stack shows greys in place of the Plan palette. On scatter and bubble charts the buckets are coordinates, so the scenario fills do not apply and groups take the series colors.
+
+- `runtime.ibcs_charts.ibcs_palette()` returns these values. `fixtures/ibcs-chart-theme.json` holds the saved state.
+- **Existing chart.** Call `runtime.ibcs_charts.apply_chart_theme(properties)` on the freshly exported chart properties. It keeps every other saved setting, replaces the styles of the bound roles and clears explicit group and category colors, as the chart does on a theme change.
+- The theme's neutral variance color is a light grey (`#DDDDDD`). The standard names blue for neutral or ambiguous variances and blue-green in place of green for readers with a color deficiency. Report that difference when the user asks for strict notation; do not recolor on your own.
 
 ## IBCS dashboard page
 
@@ -135,29 +166,31 @@ The theme applies to the whole Plan. Set it only when the user explicitly asks f
 
 - Matrix and Table visuals re-apply the Plan theme each time they load.
 - Planning grids follow the Plan theme only when the tenant has Plan themes enabled for Planning.
-- On load, a chart changes only the settings still at the previous theme's values. A sheet the Plan has not themed before has no previous value to compare against, and a chart whose theme was customized keeps its own. So a newly authored chart does not reliably become IBCS.
+- A chart that keeps its own theme ignores the Plan theme. Recipe and template charts keep the IBCS chart theme, so they look the same under every Plan theme.
+- A chart that follows the Plan theme changes, on load, only the settings still at the previous theme's values. A sheet the Plan has not themed before has no previous value to compare against. So the Plan theme alone does not reliably restyle a plain column chart, or a chart built with `"theme": "plan"`. When a plain column chart must show IBCS colors, build it from `"chartType": "COLUMN_VERTICAL"` with its value in `measures.AC`.
 
 A readback of the definition proves only that the value was saved. It does not prove what any visual renders.
 
 ## The IBCS look
 
-Each recipe pairs its template with styling: the IBCS theme, data labels, measure fill patterns, ranking, deviation callouts and number format. **The builder does not write that styling.**
+Each recipe pairs its template with styling: the IBCS theme, data labels, measure fill patterns, ranking, deviation callouts and number format. The builder writes the theme selection, the measure fills and patterns and the variance colors. **It does not write the rest.**
 
-- **Theme state.** When the chart's theme changes, the chart recomputes many saved settings at once. Writing the theme name alone would leave those settings at the previous theme's values, so the result is a mixed look rather than IBCS.
+- **Other theme-owned settings.** Picking a theme in the product also recomputes settings outside the chart's appearance: title mode, comparison notation, data label defaults, number scaling and more. The builder does not reproduce that cascade. A built chart has IBCS colors and scenario fills with default labels, title and scaling.
 - **AI chart state.** The in-product AI chart state is applied by the running chart in the session that sets it. Fabric does not read it back from a saved definition.
-- **Settings with no saved-definition route.** Measure styles, top-N ranking, deviation callouts, number format, forecast population, axis breaks, reference bands, bubble sizes, group colors, series labels, and line and sorting options have no saved-definition route in the current product.
+- **Settings with no saved-definition route.** Top-N ranking, deviation callouts, number format, forecast population, axis breaks, reference bands, bubble sizes, explicit group colors, series labels, and line and sorting options have no saved-definition route in the current product.
 
 Report these as **not applied**, and name them per chart. The user can apply them in the product. Or the user can export a Plan with a chart already styled in the product, so that its saved state can be reused as observed state for the same template.
 
 ## Check and report
 
 1. Before the build, confirm that every required binding resolves to a current model or query field.
-2. After building, `runtime.ibcs_charts.describe(properties)` lists the template, the matching recipes, the bucket bindings and whether the two template selectors agree. `runtime.chart_filters.audit_chart_filters(properties)` checks the filter cards.
+2. After building, `runtime.ibcs_charts.describe(properties)` lists the template, the matching recipes, the bucket bindings, whether the two template selectors agree, and the chart theme (`ibcs`, or `plan` when the chart follows the Plan theme). `runtime.chart_filters.audit_chart_filters(properties)` checks the filter cards.
 3. After an authorized update, export the Plan and compare it with what was built:
    - each chart's two `chartType` values;
    - the assignments of each chart and Matrix, by field ID and bucket;
+   - each IBCS chart's theme, and the fill color and pattern of its bound roles. The chart saves more appearance settings once it has rendered, so compare these members only;
    - the Plan theme `type`.
 4. Report outcomes separately:
-   - templates, bindings, the Matrix, story text and the theme value as saved;
-   - IBCS chart styling as not applied;
+   - templates, bindings, the IBCS chart theme and colors, the Matrix, story text and the Plan theme value as saved;
+   - the rest of the IBCS chart styling as not applied;
    - rendering as not tested.

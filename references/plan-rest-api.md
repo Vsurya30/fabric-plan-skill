@@ -125,8 +125,11 @@ response means the outcome is unknown: the run stops with
 service holds, never a second create.
 
 **Long-running operations.** On `202` the transport takes `Location`, or builds
-the operation address from `x-ms-operation-id`, refuses any other host, and
-writes a `<label>.operation.json` checkpoint before polling. It honors
+the operation address from `x-ms-operation-id`, and writes a
+`<label>.operation.json` checkpoint before polling. It never follows another
+host. Some tenants return a regional host in `Location`: when the response also
+carries the operation ID, the transport polls the public operation address for
+that ID instead, and without an operation ID it stops. It honors
 `Retry-After` between polls, in slices of at most 30 seconds. Polling stops after
 120 polls or 30 minutes with `PENDING: resume same operation checkpoint`; rerun
 the same command and label to continue polling the same operation. On

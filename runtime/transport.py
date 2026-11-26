@@ -133,12 +133,15 @@ class Client:
     def finish(self,initial,label,max_polls=120,max_seconds=1800):
         if initial['status']!=202: return initial
         cp=self.journal/(label+'.operation.json')
-        h=initial['headers']; loc=h.get('location')
-        if not loc:
-            op=h.get('x-ms-operation-id')
-            if not op: raise ValueError('202 missing Location and operation ID')
-            loc=self.base+'/operations/'+urllib.parse.quote(op,safe='')
-        loc=urllib.parse.urljoin(self.base+'/',loc); self.check_url(loc)
+        h=initial['headers']; loc=h.get('location'); op=h.get('x-ms-operation-id')
+        public=self.base+'/operations/'+urllib.parse.quote(op,safe='') if op else None
+        def on_host(url,fallback):
+            # Some tenants name a regional host. It is never followed: the public route answers for the same operation ID.
+            url=urllib.parse.urljoin(self.base+'/',url)
+            if public and urllib.parse.urlsplit(url).netloc!='api.fabric.microsoft.com': return fallback
+            return self.check_url(url)
+        if not loc and not public: raise ValueError('202 missing Location and operation ID')
+        loc=on_host(loc,public) if loc else public
         if cp.exists():
             state=load(cp)
             if state['location']!=loc: raise ValueError('Operation checkpoint mismatch')
@@ -158,7 +161,7 @@ class Client:
             if status=='Succeeded':
                 result_url=r['headers'].get('location')
                 if not result_url or result_url.rstrip('/')==loc.rstrip('/'): result_url=loc.rstrip('/')+'/result'
-                result_url=urllib.parse.urljoin(loc,result_url); self.check_url(result_url)
+                result_url=on_host(urllib.parse.urljoin(loc,result_url),loc.rstrip('/')+'/result')
                 result=self.request('GET',result_url)
                 save(cp,{**state,'phase':'complete','resultUrl':result_url})
                 return result
@@ -166,7 +169,7 @@ class Client:
             if r['status']==200 and status is None and isinstance(r.get('body'),dict) and ('definition' in r['body'] or 'id' in r['body']):
                 save(cp,{**state,'phase':'complete'}); return r
             if r['headers'].get('location'):
-                loc=urllib.parse.urljoin(loc,r['headers']['location']); self.check_url(loc)
+                loc=on_host(urllib.parse.urljoin(loc,r['headers']['location']),loc)
             delay=retry_seconds(r['headers'])
         raise TimeoutError('PENDING: resume same operation checkpoint')
     def paged(self,route):

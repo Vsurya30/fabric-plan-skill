@@ -3,16 +3,24 @@
 A recipe selects a native chart template (`chartType`) and binds a category, an
 optional stack dimension and measures into the template's buckets. Bucket limits
 follow the product's chart templates; each recipe adds the minimum bindings from
-the IBCS recipe catalog. A definition carries only what the product saves when a
+the IBCS recipe catalog. A definition carries what the product saves when a
 chart is added: both chartType selectors and the pivot assignments. The chart
 derives its template state on first render.
 
-The IBCS look (theme, data labels, measure styles, ranking, deviation callouts)
-is chart state that the product derives at runtime. It is not written here; see
+Every chart built here also saves the chart's own IBCS theme with that theme's
+measure and variance colors, so it keeps IBCS scenario notation under any Plan
+theme; "theme": "plan" opts a chart out. The rest of the IBCS look (data labels,
+ranking, deviation callouts, number format) is not written here; see
 references/ibcs-charts.md.
 """
 import copy
+from functools import lru_cache
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+APPEARANCE = 'hiddenProperties_!!!_appearance'
+# 'ibcs' saves the chart's own IBCS theme; 'plan' leaves the chart on the Plan theme.
+CHART_THEMES = ('ibcs', 'plan')
 MEASURE_BUCKETS = ('AC', 'PY', 'PL', 'FC')
 _REFERENCES = {'AC': (1, 1), 'PY': (0, 1), 'PL': (0, 1), 'FC': (0, 1)}
 
@@ -59,8 +67,109 @@ RECIPES = {
     'C13': ('Overlapped Column, date/forecast', ('COLUMN_VERTICAL',), ('axis', 'AC')),
 }
 
-SPEC_KEYS = {'label', 'recipe', 'chartType', 'category', 'stack', 'measures'}
+SPEC_KEYS = {'label', 'recipe', 'chartType', 'category', 'stack', 'measures', 'theme'}
 MEASURE_KEYS = {'field', 'aggregation', 'label'}
+
+
+@lru_cache(maxsize=1)
+def _ibcs_theme():
+    from .codec import load
+    return load(ROOT / 'fixtures/ibcs-chart-theme.json')
+
+
+def ibcs_palette():
+    """Colors and fill patterns of the chart's IBCS theme, for a design brief or readback report."""
+    return copy.deepcopy(_ibcs_theme()['palette'])
+
+
+def _swap(value, table):
+    if isinstance(value, dict):
+        return {k: _swap(v, table) for k, v in value.items()}
+    return table.get(value, value) if isinstance(value, str) else value
+
+
+def role_style(role):
+    """Measure style the IBCS theme gives a role: AC, PY, PL, FC or an additional actual (AC1 to AC29)."""
+    theme = _ibcs_theme()
+    if role in theme['measuresStyle']:
+        return copy.deepcopy(theme['measuresStyle'][role])
+    extra = theme['additionalActuals']
+    if role not in extra['colors']:
+        raise ValueError('The IBCS chart theme has no measure style for role ' + repr(role))
+    colors = extra['colors'][role]
+    # Additional actuals share one style and differ only in their color and highlight color.
+    return _swap(extra['style'], {'{color}': colors['color'], '{highlightColor}': colors['highlightColor']})
+
+
+def measure_roles(properties):
+    """Roles the chart gives its bound values: AC, AC1, AC2... for further actuals, then PY, PL, FC."""
+    counts = {}
+    for a in properties.get('pivotAssignments', []):
+        if a.get('bucketId') in MEASURE_BUCKETS:
+            counts[a['bucketId']] = counts.get(a['bucketId'], 0) + 1
+    roles = []
+    for bucket in MEASURE_BUCKETS:
+        if bucket in counts:
+            roles.append(bucket)
+            if bucket == 'AC':
+                roles += ['AC' + str(i) for i in range(1, counts[bucket])]
+    return roles
+
+
+def _appearance(properties):
+    from .codec import loads
+    value = properties.get('visualState', {}).get(APPEARANCE)
+    if value is None:
+        return {}
+    value = loads(value) if isinstance(value, str) else copy.deepcopy(value)
+    if not isinstance(value, dict):
+        raise ValueError('The saved chart appearance is not an object; inspect it before changing the chart theme')
+    return value
+
+
+def chart_theme(properties):
+    """Name the theme a chart keeps as its own, or 'plan' when the chart follows the Plan theme."""
+    charts = _appearance(properties).get('charts')
+    meta = charts.get('isDefaultMeta') if isinstance(charts, dict) else None
+    own = isinstance(meta, dict) and meta.get('theme') is False
+    return charts['theme'] if own and charts.get('theme') else 'plan'
+
+
+def apply_chart_theme(properties, theme='ibcs'):
+    """Return chart properties that keep the IBCS theme as the chart's own theme.
+
+    Saves what the chart saves when IBCS Theme is picked in its theme menu, limited
+    to the theme selection and its colors: the measure style of every bound role
+    (AC solid dark, PY solid light, PL outlined, FC hatched) and the variance colors.
+    Series colors come from the theme itself, so explicit group and category colors
+    are cleared, as the chart does on a theme change. Every other saved setting is
+    kept. Use it on a new chart or on a freshly exported one.
+    """
+    from .codec import dumps
+    from .construct import merge
+    from .intelligence import classify_visual
+    if theme != 'ibcs':
+        raise ValueError('Supported chart theme: ibcs')
+    observed = classify_visual(properties)
+    if properties.get('visualType') != 50 or observed:
+        raise ValueError('The IBCS chart theme applies to an ANALYTICS_PLUS chart (visualType 50), not a '
+                         + (observed['visual_type'] if observed else 'visual of type ' + str(properties.get('visualType'))))
+    roles = measure_roles(properties)
+    if not roles:
+        raise ValueError('Bind the chart measures before applying the IBCS chart theme')
+    state = merge(_appearance(properties), _ibcs_theme()['appearance'])
+    charts = state['charts']
+    styles = charts.get('measuresStyle')
+    styles = styles if isinstance(styles, dict) else {}
+    for role in roles:
+        styles[role] = role_style(role)
+    charts['measuresStyle'] = styles
+    for key in ('groupStyle', 'categoryStyle'):
+        if key in charts:
+            charts[key] = {}
+    out = copy.deepcopy(properties)
+    out.setdefault('visualState', {})[APPEARANCE] = dumps(state).strip()
+    return out
 
 
 def is_recipe_chart(spec):
@@ -152,8 +261,10 @@ def recipe_chart(model, spec, registry, *, query_fields=()):
 
     spec: {"label", "recipe" and/or "chartType", "category", optional "stack",
     "measures": {"AC": field or {"field", "aggregation", "label"} (a list for
-    LINE/AREA), "PY"/"PL"/"FC": ...}}. Field IDs come from the current model or a
-    registered query catalog; nothing is inferred from labels.
+    LINE/AREA), "PY"/"PL"/"FC": ...}, optional "theme"}. Field IDs come from the
+    current model or a registered query catalog; nothing is inferred from labels.
+    The chart keeps the IBCS chart theme, whether it names a recipe or only a
+    "chartType"; "theme": "plan" leaves it on the Plan theme.
     """
     from .chart_filters import ensure_chart_filters
     from .construct import field
@@ -166,6 +277,9 @@ def recipe_chart(model, spec, registry, *, query_fields=()):
         if not isinstance(spec.get(key), str) or not spec[key].strip():
             raise ValueError('Recipe chart needs a non-empty ' + key)
     code, chart_type = resolve_chart_type(spec)
+    theme = spec.get('theme', 'ibcs')
+    if theme not in CHART_THEMES:
+        raise ValueError('Chart theme is ' + ' or '.join(CHART_THEMES) + ', not ' + repr(theme))
     raw = spec.get('measures')
     if not isinstance(raw, dict) or not raw:
         raise ValueError('Recipe chart needs measures keyed by bucket (AC, PY, PL, FC)')
@@ -203,11 +317,12 @@ def recipe_chart(model, spec, registry, *, query_fields=()):
     p['chartType'] = chart_type
     p['visualState']['chartType'] = chart_type
     p['pivotAssignments'] = assignments
-    return ensure_chart_filters(p)
+    p = ensure_chart_filters(p)
+    return apply_chart_theme(p) if theme == 'ibcs' else p
 
 
 def describe(properties):
-    """Summarize a chart's template and bucket bindings for a design brief or readback."""
+    """Summarize a chart's template, bucket bindings and theme for a design brief or readback."""
     vs = properties.get('visualState', {})
     chart_type = properties.get('chartType', vs.get('chartType'))
     buckets = {}
@@ -215,4 +330,5 @@ def describe(properties):
         buckets.setdefault(a.get('bucketId'), []).append(a.get('customName') or a.get('name') or a.get('id'))
     codes = [code for code, (_, types, _) in RECIPES.items() if chart_type in types]
     return {'chartType': chart_type, 'recipes': codes, 'buckets': copy.deepcopy(buckets),
-            'selectorsAgree': properties.get('chartType') == vs.get('chartType')}
+            'selectorsAgree': properties.get('chartType') == vs.get('chartType'),
+            'theme': chart_theme(properties)}

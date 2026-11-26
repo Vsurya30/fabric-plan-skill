@@ -270,6 +270,20 @@ class TransportTests(unittest.TestCase):
     def test_untrusted_location(self):
         c=self.client([])
         with self.assertRaises(ValueError): c.finish({'status':202,'headers':{'location':'https://evil.invalid/steal'},'body':None},'a')
+    def test_regional_location_is_replaced_by_the_public_operation_route(self):
+        regional='https://region.example.invalid/v1/operations/op-1'; public='https://api.fabric.microsoft.com/v1/operations/op-1'
+        c=self.client([{'status':202,'headers':{'Location':regional,'x-ms-operation-id':'op-1','Retry-After':'0'},'body':None},
+          {'status':200,'headers':{'location':regional},'body':{'status':'Running'}},
+          {'status':200,'headers':{'location':regional+'/result'},'body':{'status':'Succeeded'}},
+          {'status':200,'headers':{},'body':{'definition':{'parts':[]}}}])
+        r=c.finish(c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='export'),'export'); self.assertIn('definition',r['body'])
+        self.assertEqual([url for _,url,_ in self.calls[1:]],[public,public,public+'/result'])
+        self.assertEqual(load(Path(self.tmp.name)/'export.operation.json')['location'],public)
+    def test_regional_location_without_an_operation_id_is_refused(self):
+        c=self.client([])
+        with self.assertRaisesRegex(ValueError,'Unapproved HTTPS endpoint'):
+            c.finish({'status':202,'headers':{'location':'https://region.example.invalid/v1/operations/op-1'},'body':None},'a')
+        self.assertEqual(self.calls,[])
     def test_config_cannot_expand_public_origin(self):
         allowed=['api.fabric.microsoft.com','extra.invalid']
         with self.assertRaises(ValueError):
