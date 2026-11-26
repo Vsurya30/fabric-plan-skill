@@ -2,3 +2,5 @@
 /graft/
 __pycache__/
 *.py[cod]
+# Local validation findings against private product code; never commit.
+/findings/
