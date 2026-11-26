@@ -8,6 +8,6 @@ audience: public
   - A page can carry a message title and footnotes.
   - The IBCS Plan theme is set when the request asks for it explicitly.
 
-### Fixed
+### Changed
 
-- Plain dashboard column charts now set the `COLUMN_VERTICAL` template. Without a template, their category and value bound to no chart role, so the chart rendered empty.
+- Plain dashboard column charts now save the `COLUMN_VERTICAL` template that Fabric already loads them with, so their buckets are checked against a known template.

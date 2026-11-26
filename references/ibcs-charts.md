@@ -90,7 +90,7 @@ Each chart is an `ANALYTICS_PLUS` visual (type 50). It carries:
 
 Fabric saves the same template selectors and assignments when a chart is added. The chart then writes its own template state on first render. **Do not pre-write** template, measure configuration, column-field or comparison mappings. **Do not add title settings.** IBCS charts keep the title the chart produces, and an explicit title belongs to a separate, user-requested edit.
 
-A chart without a template offers only generic roles, so `axis` and `AC` would bind nothing and the chart would render empty. For that reason every chart this package builds sets a template, including the plain column chart (`COLUMN_VERTICAL`).
+Fabric loads a chart with no saved `chartType` as `COLUMN_VERTICAL`. The plain column chart now names that template explicitly, which changes nothing at runtime but keeps its buckets checked against a known template. Each template has its own bucket names, and a field in a bucket the template lacks binds nothing. Charts from earlier builds of this package keep their category in the generic `category` bucket, so they show values without categories. To restore the category, move it to `axis` together with its filter cards.
 
 ## IBCS dashboard page
 

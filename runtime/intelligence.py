@@ -192,7 +192,7 @@ def column_chart(model,spec,registry,*,query_fields=()):
     from .chart_filters import ensure_chart_filters
     from .linked_values import value_assignment
     p=base(50,spec['label'])
-    # Without a template the chart offers only generic roles, so axis/AC match no bucket.
+    # Fabric loads a chart without chartType as COLUMN_VERTICAL; name it so the buckets match a known template.
     p['chartType']=p['visualState']['chartType']='COLUMN_VERTICAL'
     category=field(model,spec['category'],'rows',0);category['bucketId']='axis'
     measure=value_assignment(model,spec['field'],registry,query_fields=query_fields,bucket='AC',aggregation=spec.get('aggregation'))

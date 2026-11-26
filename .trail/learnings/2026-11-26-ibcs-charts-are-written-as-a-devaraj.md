@@ -18,12 +18,12 @@ touches:
 
 ## Decided
 - **Recipes are template plus bindings.** On 2026-11-26 the user asked for IBCS through public definitions only. A recipe (C01–C13) is written the way Fabric saves an added chart: the same template in `chartType` and `visualState.chartType`, plus pivot assignments in the template's buckets (axis, stack, AC/PY/PL/FC). Bucket limits come from the product's chart templates.
-- **Every chart sets a template**, including the plain column chart (`COLUMN_VERTICAL`). Without one, Fabric offers only generic roles, so `axis` and `AC` bind nothing and the chart is empty.
+- **Every chart names its template**, including the plain column chart (`COLUMN_VERTICAL`). Fabric's page loader already gives a chart with no saved chartType `COLUMN_VERTICAL`, so naming it changes nothing at runtime. The chart's own generic-role fallback never runs for a saved Plan. What broke charts from earlier builds was the generic `category` bucket. No template binds that bucket, so those charts showed values without categories.
 - **The user chose these options:**
   - Set the Plan theme (`theme.type` 5) only on an explicit IBCS-theme request; the theme is Plan-wide.
   - Show IBCS tables as a Matrix (`INFORIVER`) in place of the embedded Planning grid. When no other dashboard embeds the owner, its Planning page stays visible for input.
   - Add a message title (Fabric's IBCS title sizes: 18 bold, 13 and 11px) and footnotes at the page bottom.
-  - Skip the asterisk indicator, and do not repair old empty charts for now.
+  - Skip the asterisk indicator. Charts from earlier builds that keep their category in the generic `category` bucket are not repaired.
 
 ## Tried and ruled out
 - **Per-chart AI schema slice in the definition.** The page loader never reads it back, and it needs the Plan AI assistant switch, which is off by default.
