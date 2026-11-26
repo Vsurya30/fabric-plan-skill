@@ -6,7 +6,7 @@ or substituted requirement is recorded; unsafe dependencies are never zeroed.
 """
 import copy,re
 
-TOP={'name','sheets','requiredCapabilities','home','dashboards'}
+TOP={'name','sheets','requiredCapabilities','home','dashboards','theme'}
 SHEET={'name','sheetId','visualId','rows','columns','measures','pivots','activePivot','capabilities','pivot',
        'row_expand_state_config','filterContextSettings','superFilterAssignments','header','comments','hidden',
        'dimensionKeyGroups','dimensionKeyOverrides','dimensionIdMappings','dimensionSkipSupport','lookupContextAssignments','context','columnTimeLevels','conditionalFormatting'}
@@ -103,10 +103,10 @@ def prepare_scope(spec, supported, model=None):
         from .construct import build
         retained=[]
         for i,page in enumerate(out['dashboards']):
-            from .intelligence import slicer,card,column_chart
+            from .intelligence import slicer,card,chart
             from .identity import Registry
             page=copy.deepcopy(page)
-            for group,constructor in [('slicers',lambda x:slicer(model,x)),('cards',lambda x:card(model,x,Registry())),('charts',lambda x:column_chart(model,x,Registry()))]:
+            for group,constructor in [('slicers',lambda x:slicer(model,x)),('cards',lambda x:card(model,x,Registry())),('charts',lambda x:chart(model,x,Registry()))]:
                 if group=='charts' and group not in page: continue
                 good=[]
                 for j,component in enumerate(page.get(group,[])):
@@ -152,7 +152,8 @@ def prepare_scope(spec, supported, model=None):
         'intelligence.slicers':any(d.get('slicers') for d in out.get('dashboards',[])),
         'intelligence.cards':any(d.get('cards') for d in out.get('dashboards',[])),
         'intelligence.charts':any(d.get('charts') for d in out.get('dashboards',[])),
-        'intelligence.text':bool(out.get('dashboards')),'intelligence.embeds':bool(out.get('dashboards'))}
+        'intelligence.text':bool(out.get('dashboards')),'intelligence.embeds':any('table' not in d for d in out.get('dashboards',[])),
+        'intelligence.matrix':any('table' in d for d in out.get('dashboards',[])),'plan.theme':out.get('theme') is not None}
     for cap,present in configured.items():
         if cap in requests and not present:
             record('capability:'+cap,'omitted','Constructor available but no matching authored content remains; supply a resolved configuration before claiming this requirement complete')

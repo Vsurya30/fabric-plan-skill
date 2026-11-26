@@ -24,7 +24,7 @@ def source_aggregation(value=None):
 def semantic_value(model, key, registry, *, bucket='ameasure', order=0,
                    label=None, aggregation=None):
     from .construct import field
-    if bucket not in ('ameasure', 'AC', 'PY'):
+    if bucket not in ('ameasure', 'AC', 'PY', 'PL', 'FC'):
         raise ValueError('Use a Values bucket for a semantic value')
     a = field(model, key, 'ameasure', order)
     if a['dataType'] not in NUMERIC:

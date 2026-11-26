@@ -79,8 +79,10 @@ The observed reference workspace has four native slicers, three native KPI cards
 |---|---|---|
 | Slicer | `SUPER_FILTER` / `60` | `pivotAssignments` bucket `category` (lowercase), ordinary `superFilterAssignments`, `slicerFilterAssignments`, `facetSettings`, `displaySettings`, `toolbarSettings`, `measureFilterSettings` |
 | KPI | `ANALYTICS_PLUS` / `50` | measure bucket `AC`, `chartType: "CARD"`, serialized `hiddenProperties_!!!_chartsMode`, `..._chartCustomTitle`, `..._kpiControls`, `..._numberFormatting` |
+| Chart | `ANALYTICS_PLUS` / `50` | top-level `chartType` and `visualState.chartType` naming the same template (`COLUMN_VERTICAL` by default; an IBCS recipe selects its own). Buckets `axis`, `AC`/`PY`/`PL`/`FC` and, on stacked templates, `stack`. See the IBCS charts guide |
 | Banner/note | `BI_TEXT` / `202` | `visualState.text` as a serialized Lexical document |
 | Embedded plan | `PLANNING`, `isEmbedded: true` | Portable GUID reference to the direct owner plus post-import page-local runtime geometry |
+| Matrix table | `INFORIVER` / `10` | Replaces the embedded plan when the dashboard has `table`. Buckets `rows`, `columns`, `ameasure`, `pymeasure`, `plmeasure` and `fcmeasure`. See the IBCS charts guide |
 
 The table lists only the branches `runtime/intelligence.py` constructs. A dashboard can
 also hold a visual type outside it, such as a decomposition, organizational, row or

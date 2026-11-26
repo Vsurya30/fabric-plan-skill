@@ -316,7 +316,7 @@ def public_schema_view(path,obj):
     """Normalize reviewed native extensions only for historical public schemas."""
     value=copy.deepcopy(obj); extensions=[]
     if path=='definition.json':
-        reporting_types={'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS','BI_RUNTIME_INPUT'}
+        reporting_types={'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS','BI_RUNTIME_INPUT','INFORIVER'}
         normalized=False
         for sheet in value.get('sheets',[]):
             if sheet.get('sheetType')!='REPORTING':continue
@@ -327,6 +327,11 @@ def public_schema_view(path,obj):
     if path=='planProperties.json' and value.get('properties',{}).get('homeLayout')=={'show':True}:
         value['properties']['homeLayout']=''
         extensions.append('Native object homeLayout replaces the historical public string format')
+    theme=value.get('properties',{}).get('theme') if path=='planProperties.json' else None
+    if isinstance(theme,dict) and {'id','appliedThemes'}&set(theme):
+        # Exports carry the theme id and the per-sheet applied-theme map; import rewires its keys.
+        value['properties']['theme']={k:v for k,v in theme.items() if k not in ('id','appliedThemes')}
+        extensions.append('Native theme members id and appliedThemes extend the historical public theme object')
     if path.endswith('/dataInput.json'):
         normalized=False
         def normalize_input_policy(item):

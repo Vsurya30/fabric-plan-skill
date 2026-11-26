@@ -126,6 +126,9 @@ def application_defaults(model,spec):
             while name in names:name=base+' '+str(n);n+=1
             names.add(name);page={'name':name,'owner':sheet['name'],'title':sheet['name'],'description':sheet['header'],'slicers':[],'cards':[],'charts':[]}
             pages.append(page);matches=[page]
+        # A Matrix page shows a table instead of the embedded grid. When no page
+        # embeds this owner, its own Planning page stays visible for input.
+        sheet['hidden']=any('table' not in page for page in matches)
         for page in matches:
             page.setdefault('title',sheet['name']);page.setdefault('description',sheet['header']);page.setdefault('cards',[])
             if not page.get('slicers'):page['slicers']=[{'field':k} for k in fields[:4]]
@@ -153,7 +156,7 @@ def build_application(model,spec,registry=None):
     return result
 
 def check_application(raw):
-    root=raw['definition.json'];sheets=root['sheets'];covered=set()
+    root=raw['definition.json'];sheets=root['sheets'];covered=set();matrix_pages=0
     for sheet in sheets:
         if sheet['sheetType']!='REPORTING':continue
         vs=sheet['workloadItemEntityVisuals'];types={v['visualType'] for v in vs if not v.get('isEmbedded')}
@@ -164,8 +167,12 @@ def check_application(raw):
             if p.get('chartType',p.get('visualState',{}).get('chartType'))!='CARD' and any(a.get('dataRoleType')=='Grouping' for a in p.get('pivotAssignments',[])):
                 charts.append(v)
         if {'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS'}<=types and charts:
+            matrix_pages+='INFORIVER' in types
             for v in vs:
                 if v.get('isEmbedded') and v['visualType']=='PLANNING':covered.add(v['visualId'])
     owned={v['visualId'] for s in sheets if s['sheetType']=='PLANNING' for v in s['workloadItemEntityVisuals'] if not v.get('isEmbedded')}
-    if not owned<=covered:raise ValueError('Planning owners missing rich Intelligence dashboard: '+', '.join(sorted(owned-covered)))
-    return {'planningOwners':len(owned),'coveredByRichDashboard':len(owned),'runtime':'not-run'}
+    # An owner reviewed on a Matrix page keeps its own visible page for input.
+    visible={v['visualId'] for s in sheets if s['sheetType']=='PLANNING' and not s.get('isHidden') for v in s['workloadItemEntityVisuals'] if not v.get('isEmbedded')}
+    uncovered=owned-covered
+    if uncovered and (not matrix_pages or not uncovered<=visible):raise ValueError('Planning owners missing rich Intelligence dashboard: '+', '.join(sorted(uncovered)))
+    return {'planningOwners':len(owned),'coveredByRichDashboard':len(owned&covered),'inputOnVisiblePlanningPage':len(uncovered),'runtime':'not-run'}

@@ -582,14 +582,19 @@
     },
     "intelligence": {
       "phase": "local",
-      "description": "Build native Intelligence dashboards with semantic slicers, KPI cards, column charts, text and Planning embeds.",
-      "inputs": "Application dashboards spec; model IDs, source owner names, chart fields and coherent canvas dimensions. See context-intelligence.md and fixtures/context-dashboard-spec.json.",
+      "description": "Build native Intelligence dashboards with semantic slicers, KPI cards, column or IBCS recipe charts, Matrix tables, IBCS story text and Planning embeds.",
+      "inputs": "Application dashboards spec; model IDs, source owner names, chart fields and coherent canvas dimensions. See context-intelligence.md, ibcs-charts.md and fixtures/context-dashboard-spec.json.",
       "command": "python plan.py build --model current-model.json --spec dashboard.json --out draft",
       "symbols": [
         "runtime.intelligence.dashboard",
         "runtime.intelligence.slicer",
         "runtime.intelligence.card",
-        "runtime.intelligence.column_chart"
+        "runtime.intelligence.column_chart",
+        "runtime.intelligence.chart",
+        "runtime.ibcs_charts.recipe_chart",
+        "runtime.ibcs_report.matrix_table",
+        "runtime.ibcs_report.message_title",
+        "runtime.ibcs_report.set_plan_theme"
       ]
     },
     "navigator": {
@@ -2677,6 +2682,68 @@
       ],
       "prerequisites": "A current export or locally built properties for each dashboard visual being classified.",
       "limitations": "Recognition and preservation only. No tree visual definition part is constructed here; see catalog/api-contract-gaps.json.",
+      "coverage": "local"
+    },
+    {
+      "id": "IBCS-CHARTS",
+      "name": "Plot IBCS and stacked charts and build IBCS dashboard pages",
+      "guides": [
+        {
+          "file": "ibcs-charts.md"
+        }
+      ],
+      "operations": [
+        "intelligence",
+        "chart-filter-audit"
+      ],
+      "aliases": [
+        "IBCS",
+        "IBCS chart",
+        "IBCS recipe",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C10",
+        "C12",
+        "C13",
+        "stacked chart",
+        "stacked column",
+        "stacked bar",
+        "100% stacked",
+        "overlapped column",
+        "overlapped bar",
+        "waterfall chart",
+        "side-by-side waterfall",
+        "stacked area",
+        "scatter chart",
+        "bubble chart",
+        "line chart",
+        "actual vs plan vs forecast",
+        "IBCS theme",
+        "IBCS matrix",
+        "Intelligence Matrix",
+        "IBCS table",
+        "message title",
+        "IBCS footnotes",
+        "story",
+        "IBCS Plan theme"
+      ],
+      "businessRequests": [
+        "Create an Intelligence sheet with stacked charts.",
+        "Plot IBCS charts that compare actuals with prior year, plan and forecast by category.",
+        "Apply a named IBCS recipe such as C01 Stacked Column or C05 Waterfall + Column to a dashboard chart.",
+        "Show IBCS table templates in an Intelligence Matrix instead of the embedded Planning grid.",
+        "Give an IBCS dashboard a message title and footnotes.",
+        "Use the IBCS theme for the whole Plan, including Matrix and Planning visuals."
+      ],
+      "prerequisites": "A resolved category dimension and the measures for each required bucket of a recipe; row dimensions and an AC value for a Matrix table; an explicit request before setting the Plan-wide theme.",
+      "limitations": "Writes chart templates and bindings, Matrix tables, message titles, footnotes and, on explicit request, the Plan theme type. IBCS chart styling (theme-owned settings, data labels, measure styles, ranking, deviation callouts) is not written. Planning grids follow the Plan theme only when the tenant enables it. Threaded comments are not authorable. Rendering is not tested.",
       "coverage": "local"
     }
   ]

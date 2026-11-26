@@ -12,14 +12,14 @@ from .home_fit import readable_home_layout
 
 SUPPORTED={'planning.anchor-measure','planning.conditional-formatting','planning.numeric','planning.formula','planning.native-measure','planning.forecast',
            'planning.pivots','planning.conditional-edit-policy','planning.dimension-id-mapping','planning.filter-context',
-           'intelligence.slicers','intelligence.cards','intelligence.charts','intelligence.text','intelligence.embeds','home.text','home.cards','home.visibility'}
+           'intelligence.slicers','intelligence.cards','intelligence.charts','intelligence.text','intelligence.embeds','intelligence.matrix','plan.theme','home.text','home.cards','home.visibility'}
 
 def preflight(spec):
     requested=spec.get('requiredCapabilities')
     if not isinstance(requested,list) or not requested: raise ValueError('Agent must enumerate requiredCapabilities from the complete business request')
     unknown=set(requested)-SUPPORTED
     if unknown: raise ValueError('API_CONSTRUCTION_GAP: '+', '.join(sorted(unknown)))
-    allowed={'name','sheets','requiredCapabilities','home','dashboards'}
+    allowed={'name','sheets','requiredCapabilities','home','dashboards','theme'}
     if set(spec)-allowed: raise ValueError('Unconsumed spec modules: '+', '.join(sorted(set(spec)-allowed)))
     for s in spec['sheets']:
         known={'name','sheetId','visualId','rows','columns','measures','pivots','activePivot','capabilities','pivot',

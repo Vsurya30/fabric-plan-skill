@@ -119,18 +119,22 @@ def slicer(model,spec,*,placement='top'):
             'numericSliderBold':True,'numericSliderFontSize':10,'showSlider':True,'enableMeasureFilter':False})
     return p
 
-def rich_text(paragraphs, *, name, banner=False):
-    """paragraphs: lists of {text, size?, color?, bold?}, serialized as Lexical."""
+def rich_text(paragraphs, *, name, banner=False, background=None):
+    """paragraphs: lists of {text, size?, color?, bold?}, serialized as Lexical.
+
+    color None leaves the run's color to the theme; background overrides the panel fill.
+    """
     children=[]
     for runs in paragraphs:
         nodes=[]
         for r in runs:
             if not isinstance(r['text'],str): raise ValueError('Text content must be string')
+            color=r.get('color','#36546A')
             nodes.append({'detail':0,'format':1 if r.get('bold') else 0,'mode':'normal',
-                'style':f"font-family: Arial;font-size: {int(r.get('size',13))}px;color: {r.get('color','#36546A')};",
+                'style':f"font-family: Arial;font-size: {int(r.get('size',13))}px;"+(f"color: {color};" if color else ''),
                 'text':r['text'],'type':'text','version':1})
         children.append({'children':nodes,'direction':'ltr','format':'','indent':0,'type':'paragraph','version':1,'textFormat':0,'textStyle':''})
-    p=base(202,name);p['visualStyles']=styles('#193446' if banner else '#EEF4F6')
+    p=base(202,name);p['visualStyles']=styles(background or ('#193446' if banner else '#EEF4F6'))
     p['visualState']['text']=dumps({'root':{'children':children,'direction':'ltr','format':'','indent':0,'type':'root','version':1}}).strip()
     return p
 
@@ -177,11 +181,19 @@ def card(model,spec,registry, *, query_fields=()):
     from .chart_filters import ensure_chart_filters
     return ensure_chart_filters(complete_card_state(p))
 
+def chart(model,spec,registry,*,query_fields=()):
+    """Dashboard chart: an IBCS recipe or named native template, else a column chart."""
+    from .ibcs_charts import is_recipe_chart,recipe_chart
+    if is_recipe_chart(spec):return recipe_chart(model,spec,registry,query_fields=query_fields)
+    return column_chart(model,spec,registry,query_fields=query_fields)
+
 def column_chart(model,spec,registry,*,query_fields=()):
     """Native column chart; comparisonField selects integrated variance by default."""
     from .chart_filters import ensure_chart_filters
     from .linked_values import value_assignment
     p=base(50,spec['label'])
+    # Without a template the chart offers only generic roles, so axis/AC match no bucket.
+    p['chartType']=p['visualState']['chartType']='COLUMN_VERTICAL'
     category=field(model,spec['category'],'rows',0);category['bucketId']='axis'
     measure=value_assignment(model,spec['field'],registry,query_fields=query_fields,bucket='AC',aggregation=spec.get('aggregation'))
     measure['customName']=spec.get('valueLabel',measure['columnName'])
@@ -195,7 +207,11 @@ def column_chart(model,spec,registry,*,query_fields=()):
         return comparison_chart(p,measure,baseline)
     return ensure_chart_filters(p)
 
-def stacked_rectangles(slicers,cards, *, width=1600,grid_height=600,charts=0):
+def note_height(footnote_lines):
+    """Height of the note slot: 44 units, or enough for the IBCS footnote lines."""
+    return max(44,20+16*footnote_lines)
+
+def stacked_rectangles(slicers,cards, *, width=1600,grid_height=600,charts=0,footnote_lines=0):
     if not 1000<=width<=2400 or grid_height<450: raise ValueError('Readable desktop canvas/grid minimum not met')
     if not 0<=slicers<=12 or not 0<=cards<=9: raise ValueError('Dashboard visual count outside supported layout')
     margin=24;gap=16;inner=width-2*margin;y=margin
@@ -205,9 +221,14 @@ def stacked_rectangles(slicers,cards, *, width=1600,grid_height=600,charts=0):
         cols=min(n,maxcols);w=(inner-(cols-1)*gap)/cols
         for i in range(n): r[f'{prefix}:{i}']={'x':margin+(i%cols)*(w+gap),'y':y+(i//cols)*(h+gap),'width':w,'height':h}
         y+=math.ceil(n/cols)*(h+gap)
-    r['note']={'x':margin,'y':y,'width':inner,'height':44};y+=60
+    if not footnote_lines:
+        r['note']={'x':margin,'y':y,'width':inner,'height':44};y+=60
     r['navigator']={'x':margin,'y':y,'width':inner,'height':48};y+=64
     r['grid']={'x':margin,'y':y,'width':inner,'height':grid_height};height=y+grid_height+margin
+    if footnote_lines:
+        # Footnotes close the page, below the grid.
+        r['note']={'x':margin,'y':y+grid_height+gap,'width':inner,'height':note_height(footnote_lines)}
+        height+=gap+note_height(footnote_lines)
     if height>8000: raise ValueError('Canvas exceeds native limits')
     for key,a in r.items():
         rect({'position':a,'dimension':a})
@@ -215,14 +236,15 @@ def stacked_rectangles(slicers,cards, *, width=1600,grid_height=600,charts=0):
             if key<k and overlap(a,b,gap-1e-7): raise ValueError('Layout collision')
     return {'width':width,'height':height,'unit':'pixel','rectangles':r}
 
-def rectangles(slicers, cards, *, width=1920, grid_height=560, charts=0, pages=1, layout=None, viewport=None):
+def rectangles(slicers, cards, *, width=1920, grid_height=560, charts=0, pages=1, layout=None, viewport=None, footnote_lines=0):
     from .stack_layout import fit_stack, reading_height, fill_columns
     if layout == 'stacked':
-        stacked=stacked_rectangles(slicers,cards,width=width,grid_height=grid_height,charts=charts)
+        stacked=stacked_rectangles(slicers,cards,width=width,grid_height=grid_height,charts=charts,footnote_lines=footnote_lines)
         if viewport is not None:
             height=max(stacked['height'],reading_height(width,viewport))
             if height>8000: raise ValueError('Canvas exceeds native limits')
             stacked['rectangles']['grid']['height']+=height-stacked['height']
+            if footnote_lines:stacked['rectangles']['note']['y']+=height-stacked['height']
             stacked['height']=height
         return stacked
     if not (1000 <= width <= 2400 and 0 <= slicers <= 12 and 0 <= cards <= 9 and charts >= 0 and grid_height >= 450):
@@ -261,20 +283,26 @@ def rectangles(slicers, cards, *, width=1920, grid_height=560, charts=0, pages=1
                 y+=h+gap
             return y
         note_y=rows('card',cards,3,132,note_y)
-        place('note',main,note_y,right-main,44)
-        grid_y=note_y+44+gap
+        # IBCS footnotes close the page; otherwise the note captions the grid.
+        tail=note_height(footnote_lines)+gap if footnote_lines else 0
+        if footnote_lines:
+            grid_y=note_y
+        else:
+            place('note',main,note_y,right-main,44)
+            grid_y=note_y+44+gap
         chart_h=max(220,round(width*0.15))
         chart_rows=math.ceil(charts/2)
         target=round(width*59/100) if viewport is None else reading_height(width,viewport)
-        baseline=max(target-margin,grid_y+grid_height+chart_rows*(chart_h+gap))
+        baseline=max(target-margin,grid_y+grid_height+chart_rows*(chart_h+gap)+tail)
         if slicers:
             first=top+nav_h+gap
             baseline=max(baseline,first+slicers*128+(slicers-1)*gap)
             for i,(y,h) in enumerate(fit_stack(first,baseline,gap,[1]*slicers)):
                 place(f'slicer:{i}',margin,y,rail,h)
-        grid_end=baseline-chart_rows*(chart_h+gap)
+        grid_end=baseline-chart_rows*(chart_h+gap)-tail
         place('grid',main,grid_y,right-main,grid_end-grid_y)
         rows('chart',charts,2,chart_h,grid_end+gap)
+        if footnote_lines:place('note',main,baseline-note_height(footnote_lines),right-main,note_height(footnote_lines))
         height=baseline+margin
     else:
         raise ValueError('Use left-rail, stacked, or an explicit rectangle map')
@@ -288,10 +316,14 @@ def rectangles(slicers, cards, *, width=1920, grid_height=560, charts=0, pages=1
     return dict(width=width,height=height,unit='pixel',rectangles=r)
 
 def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
-    allowed={'name','owner','title','description','note','slicers','cards','charts','width','gridHeight','layout','viewport'}
+    allowed={'name','owner','title','description','note','slicers','cards','charts','width','gridHeight','layout','viewport','table','ibcs'}
     if set(spec)-allowed: raise ValueError('Unconsumed dashboard options')
     if spec['owner'] not in owners: raise ValueError('Dashboard source Planning owner unavailable')
-    owner=owners[spec['owner']];sid=guid();layout=rectangles(len(spec['slicers']),len(spec['cards']),width=spec.get('width',1920),grid_height=spec.get('gridHeight',560),charts=len(spec.get('charts',[])),pages=page_count,layout=spec.get('layout'),viewport=spec.get('viewport'))
+    from .ibcs_report import check_story,footnote_text,matrix_table,message_title
+    if 'table' in spec and not isinstance(spec['table'],dict): raise ValueError('The dashboard table must be an object')
+    story=check_story(spec['ibcs']) if 'ibcs' in spec else None
+    if story and story['footnotes'] and 'note' in spec: raise ValueError('Footnotes use the note slot; give either note or IBCS footnotes')
+    owner=owners[spec['owner']];sid=guid();layout=rectangles(len(spec['slicers']),len(spec['cards']),width=spec.get('width',1920),grid_height=spec.get('gridHeight',560),charts=len(spec.get('charts',[])),pages=page_count,layout=spec.get('layout'),viewport=spec.get('viewport'),footnote_lines=len(story['footnotes']) if story else 0)
     sheet=sheet_properties(layout['width'],layout['height']);sp=sheet['properties']
     sp.update(excludedFilterContextAssignments={},filterContextUserConfig={})
     sp['canvasStyle']['background'].update(isEnabled=True,opacity=1)
@@ -303,10 +335,19 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
         p['layerProperties']['order']=len(visuals);placements[vid]=r
         raw[f'sheets/{sid}/visuals/{vid}/properties.json']={'$schema':schema('Planning/Properties'),'properties':p}
         visuals.append({'visualId':vid,'visualType':kind,'isEmbedded':False})
-    banner=rich_text([[{'text':spec.get('title',spec['name']),'size':25,'color':'#FFFFFF','bold':True}],
-        [{'text':spec.get('description',''),'color':'#D7E3ED'}],
-        [{'text':'INPUT / FORECAST   ','color':'#FFD889','bold':True},{'text':'POWER BI   ','color':'#8BC5FF','bold':True},
-         {'text':'FORMULA   ','color':'#DCC3FF','bold':True},{'text':'FROM SHEETS','color':'#9FE0D7','bold':True}]],name='Workspace header',banner=True)
+    legend=[{'text':'INPUT / FORECAST   ','color':'#FFD889','bold':True},{'text':'POWER BI   ','color':'#8BC5FF','bold':True},
+            {'text':'FORMULA   ','color':'#DCC3FF','bold':True},{'text':'FROM SHEETS','color':'#9FE0D7','bold':True}]
+    if story and 'table' in spec:
+        # An IBCS Matrix page leads with its message instead of the workspace banner.
+        banner=message_title(spec['ibcs'])
+    elif story:
+        # An embedded grid keeps its role-color key under the message.
+        lines=[[{'text':story['message'],'size':18,'color':'#FFFFFF','bold':True}]]
+        lines+=[[{'text':story[k],'size':size,'color':'#D7E3ED'}] for k,size in (('subtitle',13),('detail',11)) if story[k]]
+        banner=rich_text(lines+[legend],name='Message title',banner=True)
+    else:
+        banner=rich_text([[{'text':spec.get('title',spec['name']),'size':25,'color':'#FFFFFF','bold':True}],
+            [{'text':spec.get('description',''),'color':'#D7E3ED'}],legend],name='Workspace header',banner=True)
     add('BI_TEXT','header',banner)
     all_filters=[]
     for i,s in enumerate(spec['slicers']):
@@ -322,19 +363,31 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
         p['visualState']['embeddedSuperFilter']={'superFilterAssignments':hidden}
         forward_filters(p,all_filters);add('ANALYTICS_PLUS',f'card:{i}',p)
     for i,c in enumerate(spec.get('charts',[])):
-        p=column_chart(model,c,registry,query_fields=query_fields);forward_filters(p,all_filters)
+        p=chart(model,c,registry,query_fields=query_fields);forward_filters(p,all_filters)
         add('ANALYTICS_PLUS',f'chart:{i}',p)
-    add('BI_TEXT','note',rich_text([[{'text':spec.get('note','Plan inputs in the grid below.'),'size':12}]],name='Plan workbench'))
+    notes=footnote_text(spec['ibcs']) if story else None
+    if notes:
+        add('BI_TEXT','note',notes)
+    else:
+        # A Matrix page has no input grid; its caption names the table instead.
+        default='Plan inputs in the grid below.' if 'table' not in spec else spec['table'].get('label','')
+        add('BI_TEXT','note',rich_text([[{'text':spec.get('note',default),'size':12}]],name='Plan workbench' if 'table' not in spec else 'Table caption'))
     nav_rect=layout['rectangles']['navigator']
     direction='vertical' if nav_rect['width'] < layout['width']/2 else 'horizontal'
     add('BI_RUNTIME_INPUT','navigator',page_navigator(direction))
-    visuals.append({'visualId':owner['visualId'],'visualType':'PLANNING','isEmbedded':True})
-    from .public_alignment import embedded_placement
     placement = owner.get('placementIds')
-    origin = placement['originEntityId'] if placement else owner['sheetId']
-    visual = placement['visualId'] if placement else owner['visualId']
-    sp['reactiveVisualProperties'] = [embedded_placement(origin, visual, layout['rectangles']['grid'])]
-    placements[owner['visualId']]=layout['rectangles']['grid']
+    if 'table' in spec:
+        # The Matrix takes the grid slot; input stays with the Planning owner's own page.
+        add('INFORIVER','grid',matrix_table(model,spec['table'],registry,query_fields=query_fields))
+        grid='matrix'
+    else:
+        visuals.append({'visualId':owner['visualId'],'visualType':'PLANNING','isEmbedded':True})
+        from .public_alignment import embedded_placement
+        origin = placement['originEntityId'] if placement else owner['sheetId']
+        visual = placement['visualId'] if placement else owner['visualId']
+        sp['reactiveVisualProperties'] = [embedded_placement(origin, visual, layout['rectangles']['grid'])]
+        placements[owner['visualId']]=layout['rectangles']['grid']
+        grid='embedded-planning'
     declaration={'recordGuid':sid,'displayName':spec['name'],'sheetType':'REPORTING','isHidden':False,'workloadItemEntityVisuals':visuals}
     return declaration,raw,{'sheetGuid':sid,'name':spec['name'],'ownerGuid':owner['visualId'], 'placementIds':placement,
-        'placements':placements,'layout':layout,'construction':'generated-selected-branches','runtime':'not-tested'}
+        'placements':placements,'layout':layout,'grid':grid,'construction':'generated-selected-branches','runtime':'not-tested'}

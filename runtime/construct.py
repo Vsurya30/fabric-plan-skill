@@ -269,6 +269,10 @@ def build(model,spec,registry=None):
     if any(k not in ref for k in needed): raise ValueError('Incomplete resolved semantic model reference')
     if not ref['url'].startswith('https://'): raise ValueError('Model URL missing or invalid')
     raw={'definition.json':{'$schema':schema('Definition'),'workloadItemName':spec['name'],'semanticModelReference':ref,'sheets':[]},'planProperties.json':plan_properties()}
+    if spec.get('theme') is not None:
+        # Plan-wide: only an explicit request names a theme.
+        from .ibcs_report import set_plan_theme
+        raw['planProperties.json']=set_plan_theme(raw['planProperties.json'],spec['theme'])
     identities=[];owners={};dashboard_identities=[]
     for s in spec['sheets']:
         if s['name'] in owners: raise ValueError('Duplicate sheet name')
