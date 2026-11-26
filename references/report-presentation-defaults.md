@@ -8,6 +8,12 @@ Search terms: header fit, clipped title, truncated description, whitespace,
 content-based height, dynamic header, buffer, row icon, column icon, gmate.
 Use the discovery step in the skill instructions with `--module REPORT-PRESENTATION`.
 
+## Contents
+
+- [Content determines the saved header height](#content-determines-the-saved-header-height)
+- [gmate is the universal row and column icon default](#gmate-is-the-universal-row-and-column-icon-default)
+- [Evidence boundary](#evidence-boundary)
+
 ## Content determines the saved header height
 
 For a rich-text report introduction, size the title, complete business description

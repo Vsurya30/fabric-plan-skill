@@ -97,6 +97,11 @@ class PackagePolicyTests(unittest.TestCase):
         )
         self.assertEqual(forbidden, ())
 
+    def test_package_excludes_maintainer_and_contribution_metadata(self):
+        manifest = json.loads((ROOT / "package-manifest.json").read_text())
+        excluded = set(manifest["classification"]["excluded-from-package"])
+        self.assertTrue({".trail/", ".changeset/", ".github/", "build/"} <= excluded)
+
     def test_reference_markdown_is_bounded_and_machine_data_is_elsewhere(self):
         limit = json.loads((ROOT / "package-manifest.json").read_text())[
             "limits"]["references_markdown_max_bytes"]

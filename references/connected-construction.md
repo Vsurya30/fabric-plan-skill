@@ -11,6 +11,17 @@ Related routes:
 - Forecast review: `runtime/forecast_review.py` constructs From Sheets SUM, quarterly commentary and variance, negative formatting and comparison charts as a library only. With no registered command, report that phase as unavailable and use `forecast-repair` for a scoped ALM update from a working reference sheet. Forecast defaults inherit a working reference, otherwise UTC and distribute-to-children=true.
 - An unbindable PowerTable becomes a visible PowerTable sheet with a deferred connection, as the deferred PowerTable connections guide describes; never omit the sheet solely for a connection gap. Keep chart visual-level field registrations (chart visual filters guide).
 
+## Contents
+
+- [Continue independent work](#continue-independent-work)
+- [Dimension ID Mapping: construct descriptors as well as the map](#dimension-id-mapping-construct-descriptors-as-well-as-the-map)
+- [P&L: normalize every contribution before append](#pl-normalize-every-contribution-before-append)
+- [Bind linked values using the destination catalog](#bind-linked-values-using-the-destination-catalog)
+- [Embedded planning: one owner, page-local placement](#embedded-planning-one-owner-page-local-placement)
+- [PowerTable lookup and column construction](#powertable-lookup-and-column-construction)
+- [Intelligence state hygiene and reference auditing](#intelligence-state-hygiene-and-reference-auditing)
+- [Verification and delivery](#verification-and-delivery)
+
 ## Continue independent work
 
 The default is the complete requested flow using verified bundled contracts.

@@ -4,6 +4,17 @@ For each chart/KPI assignment, also construct its visible ordinary visual-level 
 
 Every dashboard also keeps the mandatory baseline in the application defaults guide, including a visible Page Navigator, measure cards at All, integrated variance for baseline comparisons and source Sum for numeric Columns. For the five end-to-end business examples, read the five usecase recipes guide.
 
+## Contents
+
+- [Business meaning first](#business-meaning-first)
+- [Observed persistence contract](#observed-persistence-contract)
+- [Build an Intelligence workspace, not only an embedded table](#build-an-intelligence-workspace-not-only-an-embedded-table)
+- [Composition and geometry](#composition-and-geometry)
+- [Acceptance and graceful degradation](#acceptance-and-graceful-degradation)
+- [Filters, KPI stores and query identity](#filters-kpi-stores-and-query-identity)
+- [Presentation, source binding and Home](#presentation-source-binding-and-home)
+- [Fit a layout to a Reading viewport](#fit-a-layout-to-a-reading-viewport)
+
 ## Business meaning first
 
 A planner chooses a version outside the grid, then works on employee, product or account rows within that version. The Context selection is passed into the embedded Planning visual. Scenario/version does not become a visible row or column unless the business explicitly asks for a comparison layout. Context also identifies the input coordinate; an ordinary dashboard filter alone does not configure that storage binding.

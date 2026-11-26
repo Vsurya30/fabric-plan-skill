@@ -8,6 +8,12 @@ Do not switch storage modes or request a SQL reader/token to resolve these links
 Connected owners must match the storage Context, and query outputs must retain it;
 the storage context guide holds the bundled guards.
 
+## Contents
+
+- [Two storage profiles, two valid link routes](#two-storage-profiles-two-valid-link-routes)
+- [Normal new-application construction](#normal-new-application-construction)
+- [Package-only verification and evidence limits](#package-only-verification-and-evidence-limits)
+
 ## Two storage profiles, two valid link routes
 
 | Route | Fabric SQL metadata | OneLake metadata |

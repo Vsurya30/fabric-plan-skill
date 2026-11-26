@@ -38,6 +38,12 @@ phase failed. Native Home is not an ordinary sheet named Home and is not the sam
 thing as an Intelligence dashboard. Home content, role priority/audience and the
 Plan's Home visibility switch are separate requirements.
 
+## Contents
+
+- [Defaults owned by other guides](#defaults-owned-by-other-guides)
+- [Construct and deploy](#construct-and-deploy)
+- [Validate according to the user's current instruction](#validate-according-to-the-users-current-instruction)
+
 ## Defaults owned by other guides
 
 These also apply to every new application. Preserve intentional existing

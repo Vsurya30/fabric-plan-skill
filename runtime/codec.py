@@ -87,15 +87,3 @@ def pointer_get(obj,pointer):
         key=raw.replace('~1','/').replace('~0','~')
         obj=obj[int(key)] if isinstance(obj,list) else obj[key]
     return obj
-def pointer_set(obj,pointer,value):
-    parent,_,raw=pointer.rpartition('/'); target=pointer_get(obj,parent)
-    key=raw.replace('~1','/').replace('~0','~')
-    if isinstance(target,list): target[int(key)]=value
-    else: target[key]=value
-def decode_strings(obj,pointers):
-    out=copy.deepcopy(obj)
-    for p in pointers:
-        v=pointer_get(out,p)
-        if not isinstance(v,str): raise ValueError('Boundary already object: '+p)
-        pointer_set(out,p,loads(v))
-    return out

@@ -50,21 +50,3 @@ def check_placements(raw, dashboard):
     return {'sheetGuid': sid, 'geometrySource': 'public-create', 'visualCount': len(dashboard['placements']),
             'visibility': {'source': 'public-create'}, 'embeddedPlacement': 'report-local-ids' if placement else 'portable-reference-only',
             'rendering': 'not-tested'}
-
-
-
-def size_hidden_sources(raw, dashboards):
-    """Set source geometry when expressly required. It does not establish dashboard placement."""
-    by_visual = {}
-    for dashboard in dashboards:
-        vid = dashboard['ownerGuid']
-        by_visual.setdefault(vid, []).append(dashboard['placements'][vid])
-    for sheet in raw['definition.json']['sheets']:
-        if sheet['sheetType'] != 'PLANNING' or not sheet.get('isHidden'):
-            continue
-        for member in sheet['workloadItemEntityVisuals']:
-            vid = member['visualId']
-            sizes = by_visual.get(vid, [])
-            if sizes and all(r == sizes[0] for r in sizes) and not member.get('isEmbedded'):
-                key = f"sheets/{sheet['recordGuid']}/visuals/{vid}/properties.json"
-                raw[key]['properties'].update(geometry(sizes[0]))

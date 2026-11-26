@@ -51,14 +51,6 @@ def public_home_layout(layout,planning_map):
     return out
 
 
-def home_layout_for_sheets(client,layout,raw,owners):
-    """Exclude source sheets from Home preview cards using dashboard placement identities."""
-    if not any(item.get('type')=='preview-cards' for item in layout.get('items',[])):
-        return copy.deepcopy(layout)
-    sheets=raw['definition.json']['sheets']
-    hidden={s['recordGuid'] for s in sheets if s['sheetType']=='PLANNING' and s.get('isHidden')}
-    by_sheet={o['sheetGuid']:o for o in owners if o.get('sheetGuid') in hidden}
-    return public_home_layout(layout,by_sheet)
 
 def require_dashboard_navigators(raw):
     """Require a visible native Page Navigator on each declared Intelligence page.

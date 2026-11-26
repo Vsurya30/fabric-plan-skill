@@ -13,6 +13,30 @@ Use the Python CLI from this skill's directory. Use a separate task directory fo
 
 The bundled Python client adds the telemetry header to every request it sends, including operation polls and retries, and preserves it through the optional Node adapter. The value identifies this skill only and must not include tenant, workspace, report, user or credential data.
 
+## Must/Prefer/Avoid
+
+### MUST DO
+- Use only documented public Fabric APIs and send the required telemetry header on every request, poll and retry.
+- Build and validate a local candidate before any workspace write; require explicit write authorization for the named destination.
+- Patch extensions and repairs from a fresh, complete export, preserve unrelated bytes and identities, and stop on baseline drift.
+- Report locally built, locally validated, persisted and interactively verified outcomes separately.
+
+### PREFER
+- Resolve current model and destination metadata instead of inferring fields, grain or native identities.
+- Use saved sheet, visual, source and measure identities rather than list order.
+- Keep inputs, generated definitions and readbacks in a separate task directory.
+
+### AVOID
+- Do not deploy synthetic fixtures, invent unresolved inputs, or substitute private workload routes, token exchanges or UI automation.
+- Do not package maintainer logs, credentials, task output or the whole working folder.
+- Do not treat a saved definition as proof of navigation, input, stored values or rendered layout.
+
+## Examples
+
+- **New Plan:** `python plan.py build --model fixtures/model.json --spec fixtures/finance-spec.json --out /path/to/trial` constructs and validates an offline candidate; workspace creation remains a separate authorized step.
+- **Extension or repair:** export the named Plan, patch only the requested parts and dependencies, validate locally, then update only after the reviewed baseline still matches.
+- **Unsupported capability:** state that the requested operation has no public Fabric Plan API and identify the missing supported route without proposing a private workaround.
+
 ## Choose the scope before building
 
 - **New Plan:** build from the current model and business spec. Enable public Home visibility; role-specific cards, layout and priority can be prepared locally but not published. For a complete application, check each requested sheet against the spec, each Planning grid's dashboard coverage, Arial on authored text, and a Page Navigator with resolved destinations on every dashboard.

@@ -1,0 +1,9 @@
+schemaVersion: 3
+teams:
+  planning:
+    displayName: Microsoft Fabric Planning
+    scope: Fabric Plan item authoring (create/rename/delete), definition inspection and read-only narratives
+skills:
+  fabric-plan-skill:
+    owningTeam: planning
+    area: item

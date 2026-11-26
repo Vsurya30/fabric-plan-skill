@@ -9,6 +9,14 @@ formulas through the existing native formula contract using the target measures.
 The concise cases below are self-contained and use synthetic business examples.
 For executable scope, use the anchor measures guide.
 
+## Contents
+
+- [Ten worked cases](#ten-worked-cases)
+- [Shared rules for the ten cases](#shared-rules-for-the-ten-cases)
+- [Combined workforce and visibility story — slides 18–20 and 24](#combined-workforce-and-visibility-story--slides-1820-and-24)
+- [Reporting measures without unnecessary repetition — slide 21](#reporting-measures-without-unnecessary-repetition--slide-21)
+- [Transfer to different business prompts](#transfer-to-different-business-prompts)
+
 ## Ten worked cases
 
 ### 1. Corporate annual salary increase — slide 8

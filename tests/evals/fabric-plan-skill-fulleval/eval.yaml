@@ -2,6 +2,9 @@ name: fabric-plan-skill-fulleval
 description: Full evaluation of the public Fabric Plan safety, authoring, repair and PowerTable routing contract.
 version: "1.0"
 type: capability
+tags:
+  type: fulleval
+  plan: fabric-plan-skill
 scoring:
   # Layer 0 graders gate every trial. A trial passes only when the judge scores
   # 4/5 or better and every static check passes (0.28 * 0.75 + 0.72 = 0.93).
@@ -22,6 +25,9 @@ defaults:
   timeout: 20m
 stimuli:
   - name: public-api-boundary
+    tags:
+      type: fulleval
+      plan: fabric-plan-skill
     prompt: |
       In this repository, explain how to create a PowerTable approver assignment.
       Use only supported public routes. Do not invent a workload endpoint, MWC token,
@@ -75,6 +81,9 @@ stimuli:
           substring: approver
 
   - name: powertable-from-scratch
+    tags:
+      type: fulleval
+      plan: fabric-plan-skill
     prompt: |
       Describe how to build a new PowerTable from scratch without a private
       PowerTable API. Include SQL DDL, creation metadata, validation, and failure state.
@@ -105,6 +114,9 @@ stimuli:
           substring: sqldb-cli
 
   - name: telemetry-and-no-secrets
+    tags:
+      type: fulleval
+      plan: fabric-plan-skill
     prompt: |
       Review how outbound Fabric requests are constructed in this skill. State
       the required telemetry header and how credentials must be handled.
@@ -134,6 +146,9 @@ stimuli:
           substring: x-ms-fabric-skill
 
   - name: new-plan-local-build
+    tags:
+      type: fulleval
+      plan: fabric-plan-skill
     prompt: |
       Using this skill, build a new Plan for monthly regional sales targets from a
       supplied semantic model. Describe the steps up to the point where the Plan
@@ -166,6 +181,9 @@ stimuli:
           substring: authoriz
 
   - name: extension-or-repair
+    tags:
+      type: fulleval
+      plan: fabric-plan-skill
     prompt: |
       A user asks to add one input measure to an existing Plan in their workspace.
       Explain how this skill makes and verifies that change.

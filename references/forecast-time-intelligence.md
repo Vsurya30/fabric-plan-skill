@@ -1,5 +1,11 @@
 # Forecast hierarchies, one-time columns and dynamic as-of controls
 
+## Contents
+
+- [1. Preserve a valid calendar hierarchy](#1-preserve-a-valid-calendar-hierarchy)
+- [2. Choose the correct one-time column](#2-choose-the-correct-one-time-column)
+- [Cutoff and period calculation](#cutoff-and-period-calculation)
+
 ## 1. Preserve a valid calendar hierarchy
 
 Resolve actual model fields, calendar relationships, sort order, date formats and

@@ -1,5 +1,10 @@
 # Fabric Plan roll-forward worked cases and authoring notes
 
+## Contents
+
+- [3. Five worked use cases](#3-five-worked-use-cases)
+- [4. Instructions to add to the authoring skill](#4-instructions-to-add-to-the-authoring-skill)
+
 ## 3. Five worked use cases
 
 All examples start with the first open period unless noted. Values are illustrative. Use one Plan formula measure per named formula.

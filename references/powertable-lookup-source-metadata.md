@@ -7,6 +7,14 @@ source metadata lacks workspace/database/connection display names. Discover
 properties, not Planning Advanced Lookup, semantic relationships or InfoBridge
 field mappings.
 
+## Contents
+
+- [Choose the stored key and visible label](#choose-the-stored-key-and-visible-label)
+- [Native properties and bundled constructor](#native-properties-and-bundled-constructor)
+- [Source metadata belongs to the destination](#source-metadata-belongs-to-the-destination)
+- [Scoped repair of an existing report](#scoped-repair-of-an-existing-report)
+- [Portable example and evidence boundary](#portable-example-and-evidence-boundary)
+
 ## Choose the stored key and visible label
 
 Use the current physical SQL catalog and the business relationship to map each

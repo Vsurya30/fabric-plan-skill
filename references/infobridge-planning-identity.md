@@ -6,6 +6,14 @@ fields. Search terms: missing Queries, From Sheets, measureGuid, columnType,
 source selector, native sqlPk, integer range, incomplete mappings, field lineage.
 Route it with the discovery step in the skill instructions using `--module INFOBRIDGE-MAPPING`, or by F18.
 
+## Contents
+
+- [Why this belongs in construction](#why-this-belongs-in-construction)
+- [Source contract: resolve identity before copying descriptors](#source-contract-resolve-identity-before-copying-descriptors)
+- [Self-contained construction example](#self-contained-construction-example)
+- [Resolve destination outputs after import](#resolve-destination-outputs-after-import)
+- [Completion boundaries](#completion-boundaries)
+
 ## Why this belongs in construction
 
 A generated graph can omit explicit source-measure lineage in its catalogs

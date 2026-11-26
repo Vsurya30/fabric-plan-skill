@@ -82,19 +82,6 @@ def reconcile_meta(kind,meta,query_map,*,measure_maps=None):
     if isinstance(out.get('sql'),str):out['sql']=TOKEN.sub(lambda m:'{{query_id:'+str(mapped(m[1]))+'}}',out['sql'])
     return out
 
-def reconcile_graph_execution(graph,query_map,*,measure_maps=None):
-    """Return a native-execution metadata view; NOT a portable ALM package.
-
-    Structural source/query/edge GUIDs are preserved. Only source/query meta refs
-    and SQL token slots are changed, so this view must not be globally serialized
-    over the portable graph. Use the selected writer contract per native endpoint.
-    """
-    out=copy.deepcopy(graph)
-    for s in out['sources']:
-        if s['type'] not in DERIVED:continue
-        s['meta']=reconcile_meta(s['type'],s['meta'],query_map,measure_maps=measure_maps)
-        for q in s['queries']:q['meta']=reconcile_meta(q['type'],q['meta'],query_map,measure_maps=measure_maps)
-    return out
 
 def _derived(kind,title,inputs,catalog,config,*,source_id=None,query_id=None):
     if not inputs or len({q['queryId'] for q in inputs})!=len(inputs):raise ValueError('Unique upstream queries required')

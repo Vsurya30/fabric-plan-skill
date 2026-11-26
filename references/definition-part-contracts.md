@@ -10,6 +10,17 @@ behavior from the published structure manifest.
 These parts configure behavior. Saving them does not run a writeback, approve a
 row, submit a form, run an automation or execute a query.
 
+## Contents
+
+- [What this package builds and what it only preserves](#what-this-package-builds-and-what-it-only-preserves)
+- [Planning parts](#planning-parts)
+- [PowerTable parts](#powertable-parts)
+- [Intelligence properties](#intelligence-properties)
+- [InfoBridge](#infobridge)
+- [Cube](#cube)
+- [Published schemas and the structure manifest](#published-schemas-and-the-structure-manifest)
+- [Primary sources](#primary-sources)
+
 ## What this package builds and what it only preserves
 
 The bundled runtime constructs Planning inputs and properties, PowerTable

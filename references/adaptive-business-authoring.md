@@ -5,6 +5,14 @@ bundled cases are worked patterns, not an exhaustive menu. Different wording wit
 the same outcomes should lead to the same design decisions. Changed grain, source,
 unit, horizon, calculation or control requirements must change those decisions.
 
+## Contents
+
+- [Interpret, decide, then execute](#interpret-decide-then-execute)
+- [Defaults versus business parameters](#defaults-versus-business-parameters)
+- [Business decision table](#business-decision-table)
+- [Generalize the learning](#generalize-the-learning)
+- [Executable decision ledger](#executable-decision-ledger)
+
 ## Interpret, decide, then execute
 
 1. Retain the complete request and break it into business outcomes. Start with row

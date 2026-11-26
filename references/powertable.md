@@ -24,6 +24,15 @@ depend on upload tasks, sync records and templates owned by the workload service
 Do not call private CoreAPI table-creation or other private workload routes to
 imitate them, and do not present them as Fabric REST APIs.
 
+## Contents
+
+- [Column defaults](#column-defaults)
+- [Build the table definition](#build-the-table-definition)
+- [Row access](#row-access)
+- [Forms and Automations](#forms-and-automations)
+- [Approvals](#approvals)
+- [Existing tables: keys, lookups and analysis](#existing-tables-keys-lookups-and-analysis)
+
 ## Column defaults
 
 `powertable-table` and `table_column_configs` give every physical column the

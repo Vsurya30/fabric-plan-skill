@@ -5,6 +5,13 @@ navigators, shared Planning embeds, parameters or an existing SQL PowerTable.
 Discover **SAVED-VIEW-REFERENCE**. A reference is evidence for a contract; it is
 not a template to clone or a source of IDs for another application.
 
+## Contents
+
+- [Read the complete current configuration](#read-the-complete-current-configuration)
+- [What a reference proves](#what-a-reference-proves)
+- [Number parameter construction](#number-parameter-construction)
+- [PowerTable identity and source boundaries](#powertable-identity-and-source-boundaries)
+
 ## Read the complete current configuration
 
 1. Export the current Plan using the bundled `api export` and finish its operation.

@@ -1,5 +1,14 @@
 # Reproduce the five business applications in a fresh session
 
+## Contents
+
+- [Reproducibility contract](#reproducibility-contract)
+- [Business request -> complete recipe](#business-request---complete-recipe)
+- [Fresh-session commands](#fresh-session-commands)
+- [Phases that must not be omitted](#phases-that-must-not-be-omitted)
+- [Feature-to-guide-to-command map](#feature-to-guide-to-command-map)
+- [Evidence and completion](#evidence-and-completion)
+
 ## Reproducibility contract
 
 Use this guide when a request matches sales targets, workforce merit, expense

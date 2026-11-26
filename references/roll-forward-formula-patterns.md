@@ -4,6 +4,11 @@ Use this reference when a business request asks for a balance that changes from 
 
 The formulas below use readable measure labels and the Fabric Plan formula conventions supplied for this task. Resolve the references against the target sheet during artifact generation. Validate formulas in that sheet’s editor or parser and then test their results in the grid. The worked values are acceptance fixtures based on illustrative inputs.
 
+## Contents
+
+- [1. Model the balance before writing formulas](#1-model-the-balance-before-writing-formulas)
+- [2. Formula patterns for the skill](#2-formula-patterns-for-the-skill)
+
 ## 1. Model the balance before writing formulas
 
 | Role | What to create or bind | Examples |

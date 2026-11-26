@@ -7,6 +7,12 @@ or when a measure is needed by detailed formulas but should not repeat at every
 hierarchy level. The user need not say **anchor**. First identify who maintains
 independently different values and when those values can change.
 
+## Contents
+
+- [Find the right pattern](#find-the-right-pattern)
+- [Visibility without losing formula availability](#visibility-without-losing-formula-availability)
+- [Entry, totals and independent controls](#entry-totals-and-independent-controls)
+
 ## Find the right pattern
 
 | Business request | Anchor decision | Detailed model keeps |

@@ -8,6 +8,15 @@ destination file with `authorizedMutation`.
 The only supported base is `https://api.fabric.microsoft.com/v1`. Every request,
 operation poll and result read carries `x-ms-fabric-skill: fabric-plan-skill`.
 
+## Contents
+
+- [Operations and access](#operations-and-access)
+- [Listing, reading, renaming and deleting](#listing-reading-renaming-and-deleting)
+- [Preconditions and request content](#preconditions-and-request-content)
+- [Responses and errors](#responses-and-errors)
+- [How the bundled transport behaves](#how-the-bundled-transport-behaves)
+- [Primary sources](#primary-sources)
+
 ## Operations and access
 
 | Operation | Run by this package | Caller permission | Delegated scope | Long-running |

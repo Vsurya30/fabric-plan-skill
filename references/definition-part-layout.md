@@ -6,6 +6,18 @@ public Plan definition article and the published part schemas. Where those
 sources disagree with each other or with service exports, the difference is
 named, so a candidate is not "fixed" toward the wrong source.
 
+## Contents
+
+- [Envelope](#envelope)
+- [Part inventory](#part-inventory)
+- [Identity rules](#identity-rules)
+- [Root contract](#root-contract)
+- [Plan, sheet and comment settings](#plan-sheet-and-comment-settings)
+- [Data-input columns](#data-input-columns)
+- [Where the sources disagree](#where-the-sources-disagree)
+- [How Fabric's import treats parts](#how-fabrics-import-treats-parts)
+- [Primary sources](#primary-sources)
+
 ## Envelope
 
 A definition is an object with a `parts` array and an optional `format`.
