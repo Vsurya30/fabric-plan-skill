@@ -70,17 +70,18 @@ class ContextConstruction(unittest.TestCase):
         m,s=example();p=slicer(m,s['dashboards'][0]['slicers'][0]);d=p['visualState']['slicerFilterAssignments']
         self.assertEqual(len(d),1);self.assertEqual(d[0]['filterType'],'RANGE');self.assertNotIn('valuesFilter',d[0])
         self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'dropdown')
-        self.assertFalse(p['visualState']['facetSettings']['enableFacetMode'])
+        self.assertTrue(p['visualState']['facetSettings']['enableFacetMode'])
         for kwargs in [{'values':['2030']},{'between':[2031,2030]},{'between':[True,2030]},{'values':[2030],'between':[2030,2031]}]:
             with self.assertRaises(ValueError):selection(m,'Time[Year]',**kwargs)
     def test_super_filter_mode_follows_top_or_left_placement(self):
         m,s=example()
         top=slicer(m,s['dashboards'][0]['slicers'][0],placement='top')
         left=slicer(m,s['dashboards'][0]['slicers'][0],placement='left')
+        # Facet mode on renders the dropdown; facet mode off renders the hierarchy tree.
         self.assertEqual(top['visualState']['facetSettings']['facetViewType'],'dropdown')
-        self.assertFalse(top['visualState']['facetSettings']['enableFacetMode'])
-        self.assertEqual(left['visualState']['facetSettings']['facetViewType'],'hierarchy')
-        self.assertTrue(left['visualState']['facetSettings']['enableFacetMode'])
+        self.assertTrue(top['visualState']['facetSettings']['enableFacetMode'])
+        self.assertEqual(left['visualState']['facetSettings']['facetViewType'],'checkbox')
+        self.assertFalse(left['visualState']['facetSettings']['enableFacetMode'])
         stacked=rectangles(2,0,layout='stacked')['rectangles']
         rail=rectangles(2,0,layout='left-rail')['rectangles']
         self.assertEqual(slicer_placement(stacked,'slicer:0'),'top')
@@ -111,8 +112,8 @@ class DashboardConstruction(unittest.TestCase):
                 self.assertIn('[$Value]',json.loads(p['visualState']['hiddenProperties_!!!_kpiControls'])['gridLayout'][0]['staticText'])
                 self.assertEqual(len(p['visualState']['embeddedSuperFilter']['superFilterAssignments']),3)
             if x['visualType']=='SUPER_FILTER':
-                self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'hierarchy')
-                self.assertTrue(p['visualState']['facetSettings']['enableFacetMode'])
+                self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'checkbox')
+                self.assertFalse(p['visualState']['facetSettings']['enableFacetMode'])
             if x['visualType']=='BI_TEXT':self.assertEqual(json.loads(p['visualState']['text'])['root']['type'],'root')
     def test_stacked_dashboard_uses_dropdown_super_filters(self):
         m,s=example();s['dashboards'][0]['layout']='stacked';b=build(m,s)
@@ -121,7 +122,7 @@ class DashboardConstruction(unittest.TestCase):
             if v['visualType']!='SUPER_FILTER':continue
             p=b['raw'][f'sheets/{page["recordGuid"]}/visuals/{v["visualId"]}/properties.json']['properties']
             self.assertEqual(p['visualState']['facetSettings']['facetViewType'],'dropdown')
-            self.assertFalse(p['visualState']['facetSettings']['enableFacetMode'])
+            self.assertTrue(p['visualState']['facetSettings']['enableFacetMode'])
     def test_layout_grid_is_last_full_width_and_all_rows_aligned(self):
         for width,n,k in [(1000,4,3),(1600,7,5),(2400,12,9)]:
             l=rectangles(n,k,width=width,layout='stacked');r=l['rectangles'];g=r['grid']

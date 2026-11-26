@@ -64,7 +64,8 @@ def dimension_mapping(model, assignments, mappings, *, descriptor_only_assignmen
         if any(a.get(k) for k in ('fieldParameterDataType','groupDataType','relationships')):
             raise ValueError('Grouped/parameter lookup descriptor needs its own contract')
         agg=a.get('aggregationType') or 'None'
-        agg={'sum':'Sum','avg':'Average','min':'Min','max':'Max','count':'Count','none':'None'}.get(agg,agg)
+        agg={'sum':'Sum','avg':'Average','average':'Average','min':'Min','minimum':'Min','max':'Max','maximum':'Max',
+             'count':'Count','none':'None'}.get(agg,agg)
         if agg not in ('Sum','Average','Min','Max','Count','None'): raise ValueError('Unsupported native lookup aggregation')
         d={'aggregation_type':agg,'bucket_type':BUCKETS[a['bucketId']],
            'column_name':f['columnName'],'column_type':f['columnType'],

@@ -91,7 +91,7 @@
         },
         {
           "field": "Facts[Amount]",
-          "aggregation": "max",
+          "aggregation": "maximum",
           "label": "Highest amount"
         }
       ]

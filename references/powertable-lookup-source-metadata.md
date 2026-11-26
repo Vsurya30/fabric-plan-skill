@@ -61,8 +61,9 @@ be disabled. These choices are separate from lookup configuration.
 
 This is an excerpt: keep the complete column's physical `dbMeta`, `columnGuid`,
 `recordGuid`, mandatory/visibility settings and other unrelated metadata.
-`id` names the local FK (the preceding lookup table's FK for later hops);
-`linkingColumn` names the remote unique key. They need not have the same name.
+`id` names the unique key in the lookup table. `linkingColumn` names the column
+in the preceding table that holds it: this column for the first hop, the previous
+lookup table's column for later hops. They need not have the same name.
 The helper checks compatible key types, uniqueness, key/label existence and the
 availability of each chained FK. Use only a catalog resolved for this source's
 database. It does not inspect row data or prove business validity.

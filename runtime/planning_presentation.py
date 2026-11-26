@@ -47,7 +47,9 @@ def header_properties(properties,title,description,roles,palette=PALETTE):
     element=copy.deepcopy(existing or {});eid=element.get('id') or 'planning-description'
     element.update(type='TEXT',id=eid,position={'top':0,'left':0},dimension={'width':str(int(width)),'height':str(height)},
         layout={'x':0,'y':0,'w':64,'h':height//10,'i':eid,'static':False},
-        content='<div style="font-family:Arial;color:#24364B"><p style="font-family:Arial;font-size:22px;margin:0 0 8px 0"><strong style="font-family:Arial">'+html.escape(title)+'</strong></p><p style="font-family:Arial;font-size:14px;margin:0 0 8px 0">'+html.escape(description)+'</p><p style="font-family:Arial;font-size:13px;margin:0">'+legend_html(roles,palette)+'<span style="font-family:Arial;color:#526070"> &nbsp; Editability follows period and lock rules.</span></p></div>',
+        # The product's title CSS forces paragraph margins to 0 and can override a paragraph's
+        # font-size, so sizes go on spans as in the product's own header presets.
+        content='<div style="font-family:Arial;color:#24364B"><p style="font-family:Arial"><span style="font-family:Arial;font-size:22px"><strong style="font-family:Arial">'+html.escape(title)+'</strong></span></p><p style="font-family:Arial"><span style="font-family:Arial;font-size:14px">'+html.escape(description)+'</span></p><p style="font-family:Arial"><span style="font-family:Arial;font-size:13px">'+legend_html(roles,palette)+'<span style="font-family:Arial;color:#526070"> &nbsp; Editability follows period and lock rules.</span></span></p></div>',
         align='left',verticalAlign='TOP')
     # This writer replaces the description canvas explicitly. Existing siblings
     # in chartCustomTitle survive; callers must not invoke it for a styling-only edit.

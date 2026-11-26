@@ -55,8 +55,14 @@ class PlanningIntegrityTests(unittest.TestCase):
     def test_read_edit_modes_independent_and_border_null_zero_preserved(self):
         s={'globalStyles':{'columnStyle':{'custom':{'read':{'background':'#123456','borderSides':None,'borderWidth':0}}}}}
         out=complete_styles(s)['globalStyles']['columnStyle']['custom']
-        self.assertEqual(out['read']['background'],'#123456');self.assertNotEqual(out['edit']['background'],'#123456')
+        self.assertEqual(out['read']['background'],'#123456');self.assertNotIn('edit',out)
         self.assertIsNone(out['read']['borderSides']);self.assertEqual(out['read']['borderWidth'],0)
+
+    def test_null_or_missing_column_style_mode_means_no_style(self):
+        s={'globalStyles':{'columnStyle':{'custom':{'read':None},'locked':{}}}}
+        out=complete_styles(s)['globalStyles']['columnStyle']
+        self.assertEqual((out['custom'],out['locked']),({'read':None},{}))
+        check_styles(complete_styles(s))
 
     def test_current_model_required_identity_cannot_be_guessed(self):
         with self.assertRaises(ValueError):repair_properties(example(),{'fields':[]})

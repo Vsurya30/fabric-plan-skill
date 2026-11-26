@@ -3,8 +3,10 @@
 Source aggregation is independent of Planning row/column total aggregation.
 Use this for new bindings; never rehash existing persisted measure identities.
 """
+from .identity import product_aggregation
+
 NUMERIC = {'Int64', 'Double', 'Decimal'}
-AGGREGATIONS = {'sum', 'average', 'min', 'max', 'count'}
+AGGREGATIONS = {'sum', 'average', 'minimum', 'maximum', 'count'}
 
 
 def source_aggregation(value=None):
@@ -13,7 +15,7 @@ def source_aggregation(value=None):
     if not isinstance(value, str):
         raise ValueError('Source aggregation must be a supported string')
     value = value.casefold()
-    value = {'avg': 'average', 'minimum': 'min', 'maximum': 'max'}.get(value, value)
+    value = product_aggregation(value)
     if value not in AGGREGATIONS:
         raise ValueError('Unsupported semantic source aggregation: ' + value)
     return value

@@ -92,10 +92,11 @@ class BuilderContracts(unittest.TestCase):
         self.assertEqual([m['id'] for m in p['metaData']],['Name','Amount','ExternalKey'])
         with self.assertRaises(ValueError):pt.row_save(meta,'insert',rows,visual_meta={'rowIds':[],'optionsMeta':{}},node=self.node())
         # Synthetic capture above tests persistence only, not a product capture factory.
-    def test_navigator_new_shape_is_not_legacy_corner_profile(self):
+    def test_navigator_corner_radius_uses_the_stored_keys(self):
+        # Fabric stores radiusTopLeft...; topLeft... is only a render-time property.
         s=navigator_api.state('NAVIGATOR_BUTTON',page_target='201',palette={'fill':'#FFFFFF','activeFill':'#087F8C'})
         keys=s['style']['DEFAULT']['shapeState']['cornerRadius'].keys()
-        self.assertEqual(set(keys),{'topLeft','topRight','bottomRight','bottomLeft','isCustomCornerRadius','isEnabled'})
+        self.assertEqual(set(keys),{'radiusTopLeft','radiusTopRight','radiusBottomRight','radiusBottomLeft','isCustomCornerRadius','isEnabled'})
         self.assertEqual(s['navigatorButtonState']['pageDestinationId'],'201')
         with self.assertRaises(ValueError):navigator_api.validate_targets(s,['202'],[])
         with self.assertRaises(ValueError):navigator_api.state(web_url='https://example.invalid')

@@ -40,6 +40,8 @@
     "basedOn": "0",
     "basedOnMeasureName": "",
     "bold": false,
+    "borderPosition": "left",
+    "borderWidth": 4,
     "bubbleBasedOn": "absolute_variance",
     "bubbleColor": "#0881c7",
     "bubbleOverlay": true,

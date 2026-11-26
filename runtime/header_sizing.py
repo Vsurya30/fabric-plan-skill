@@ -12,23 +12,45 @@ def styles(raw):
     return dict((k.strip().lower(),v.strip()) for k,v in
                 (p.split(':',1) for p in raw.split(';') if ':' in p))
 
+# Fabric's inherited text size when no element in the header sets one.
+DEFAULT_SIZE=13.0
+# Arial's normal line height (ascent + descent + line gap is about 1.15 em). The
+# product's title CSS sets paragraph line-height to its initial (normal) value.
+LINE_HEIGHT=1.15
+VOID={'br','img','hr','input','wbr'}
+
 class Paragraphs(HTMLParser):
+    """Paragraph runs with the font size and weight in effect at each run.
+
+    The product sets header sizes on spans and forces paragraph margins to 0, so
+    every element's inline font-size counts, the innermost one wins, and
+    paragraph margins are ignored.
+    """
     def __init__(self):
-        super().__init__(convert_charrefs=True);self.paragraphs=[];self.current=None;self.bold=0
+        super().__init__(convert_charrefs=True);self.paragraphs=[];self.current=None;self.stack=[]
+    def size(self):
+        return next((e[1] for e in reversed(self.stack) if e[1] is not None),DEFAULT_SIZE)
+    def bold(self):
+        return any(e[2] for e in self.stack)
     def handle_starttag(self,tag,attrs):
-        if tag in ('strong','b'):self.bold+=1
-        if tag=='p':
-            s=styles(dict(attrs).get('style',''))
-            self.current={'size':float(s.get('font-size','14px').replace('px','')),
-                          'margin':s.get('margin','0'),'runs':[]}
-        if tag=='br' and self.current is not None:self.current['runs'].append(('\n',False))
-        if tag=='span' and styles(dict(attrs).get('style','')).get('font-weight')=='bold':self.bold+=1
+        s=styles(dict(attrs).get('style',''))
+        if tag=='br':
+            if self.current is not None:self.current['runs'].append(('\n',self.bold(),self.size()))
+            return
+        if tag in VOID:return
+        size=float(s['font-size'].replace('px','')) if 'font-size' in s else None
+        self.stack.append((tag,size,tag in ('strong','b') or s.get('font-weight') in ('bold','700')))
+        if tag=='p':self.current={'runs':[]}
     def handle_data(self,data):
-        if self.current is not None:self.current['runs'].append((data,self.bold>0))
+        if self.current is not None:self.current['runs'].append((data,self.bold(),self.size()))
     def handle_endtag(self,tag):
-        if tag in ('strong','b','span'):self.bold=max(0,self.bold-1)
+        closing_size=self.size()
+        for i in range(len(self.stack)-1,-1,-1):
+            if self.stack[i][0]==tag:del self.stack[i:];break
         if tag=='p' and self.current is not None:
-            self.paragraphs.append(self.current);self.current=None;self.bold=0
+            sizes=[size for text,_,size in self.current['runs'] if text.strip()]
+            self.current['size']=max(sizes) if sizes else closing_size
+            self.paragraphs.append(self.current);self.current=None
 
 class WindowsFontWidths:
     """Windows Arial glyph widths at 4x precision, no report/UI execution."""
@@ -62,26 +84,20 @@ class WindowsFontWidths:
 
 def line_count(p,width,fonts):
     count=1;used=0;space=0
-    for text,bold in p['runs']:
+    for text,bold,size in p['runs']:
         for word in re.findall(r'\n|[^\S\n]+|\S+',text):
             if word=='\n':count+=1;used=0;space=0;continue
-            if word.isspace():space=fonts.width(' ',p['size'],bold);continue
-            w=fonts.width(word,p['size'],bold)
+            if word.isspace():space=fonts.width(' ',size,bold);continue
+            w=fonts.width(word,size,bold)
             if used and used+space+w>width:count+=1;used=0;space=0
             if w>width:
                 for char in word:
-                    char_width=fonts.width(char,p['size'],bold)
+                    char_width=fonts.width(char,size,bold)
                     if used and used+char_width>width:count+=1;used=0
                     used+=char_width
                 space=0
             else:used+=space+w;space=0
     return count
-
-def vertical_margins(p):
-    values=[float(v.replace('px','')) for v in p['margin'].split()]
-    if len(values)==1:return 2*values[0]
-    if len(values)==2:return 2*values[0]
-    return values[0]+values[2]
 
 
 class PortableFontWidths:
@@ -102,7 +118,10 @@ class PortableFontWidths:
     def close(self):pass
 
 def calculate_header_height(content, width):
-    """Current HTML/font sizes + wrapped lines + margins + max(8px,8%)."""
+    """Span font sizes + wrapped lines at Arial's normal line height + max(8px,8%).
+
+    Paragraph margins add nothing: the product's title CSS forces them to 0.
+    """
     if isinstance(width,bool) or not isinstance(width,(int,float)) or not math.isfinite(width) or width<=32:
         raise ValueError('Resolve a positive usable header width larger than the 32px allowance')
     parser=Paragraphs();parser.feed(content)
@@ -114,7 +133,7 @@ def calculate_header_height(content, width):
     engine=type(fonts).__name__
     try:lines=[line_count(p,usable,fonts) for p in parser.paragraphs]
     finally:fonts.close()
-    content_height=sum(n*p['size']*1.2+vertical_margins(p) for p,n in zip(parser.paragraphs,lines))
+    content_height=sum(n*p['size']*LINE_HEIGHT for p,n in zip(parser.paragraphs,lines))
     buffer=max(8,math.ceil(content_height*.08))
     height=math.ceil((content_height+buffer)/10)*10
     return {'height':height,'contentHeight':round(content_height,2),'bufferPx':buffer,

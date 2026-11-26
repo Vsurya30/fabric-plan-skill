@@ -105,7 +105,20 @@ class SemanticValueTests(unittest.TestCase):
         self.assertNotIn('aggregationType',a['Metrics[Baseline]'])
         self.assertEqual(a['Metrics[Baseline]']['columnType'],'Measure')
         p=column_chart(m,{'category':'Area[Name]','field':'Facts[Amount]','comparisonField':'Facts[Rate]','comparisonAggregation':'max','label':'Selected comparison'},Registry())
-        self.assertEqual(next(a for a in p['pivotAssignments'] if a['id']=='Facts[Rate]')['aggregationType'],'max')
+        self.assertEqual(next(a for a in p['pivotAssignments'] if a['id']=='Facts[Rate]')['aggregationType'],'maximum')
+
+    def test_column_chart_category_uses_the_axis_bucket(self):
+        m,_=model_spec()
+        p=column_chart(m,{'category':'Area[Name]','field':'Facts[Amount]','label':'Amount by area'},Registry())
+        self.assertEqual(next(a for a in p['pivotAssignments'] if a['id']=='Area[Name]')['bucketId'],'axis')
+
+    def test_non_sum_aggregations_use_product_names_and_prefixes(self):
+        m,_=model_spec()
+        for alias,name in (('avg','average'),('min','minimum'),('max','maximum'),('minimum','minimum'),('sum','sum')):
+            with self.subTest(alias=alias):
+                registry=Registry();a=semantic_value(m,'Facts[Amount]',registry,aggregation=alias)
+                self.assertEqual(a['aggregationType'],name)
+                self.assertEqual(a['measureGuid'],str(xxh3(name.upper()+'__Facts[Amount]')))
 
     def test_grouping_and_dax_are_not_reaggregated(self):
         m,_=model_spec();a=field(m,'Area[Code]','rows',0)

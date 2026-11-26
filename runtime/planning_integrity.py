@@ -47,9 +47,11 @@ def check_styles(state):
     if not isinstance(styles,dict):raise ValueError('columnStyle must be an object')
     for category,modes in styles.items():
         if category not in CATEGORIES:continue  # Preserve target extensions.
-        if not isinstance(modes,dict) or not {'read','edit'}<=modes.keys():raise ValueError('Incomplete Column Style modes: '+category)
+        if not isinstance(modes,dict):raise ValueError('Column Style category must be an object: '+category)
         for mode in ('read','edit'):
-            entry=modes[mode]
+            # A missing or null mode renders with no Column Style; the product's Reset saves null.
+            entry=modes.get(mode)
+            if entry is None:continue
             if not isinstance(entry,dict) or set(STYLE_DEFAULT)-set(entry):raise ValueError('Incomplete Column Style: '+category+'/'+mode)
             if not _positive(entry['fontSize']):raise ValueError('Column Style fontSize must be a positive number')
             for k in ('background','textColor','fillColor','borderColor','fillType','presetType','borderStyle'):
@@ -83,8 +85,10 @@ def complete_styles(state):
         if category not in CATEGORIES:continue
         if not isinstance(modes,dict):raise ValueError('Column Style category must be an object')
         for mode in ('read','edit'):
-            entry=modes.setdefault(mode,{})
-            if not isinstance(entry,dict):raise ValueError('Column Style mode must be an object')
+            # Complete only a present mode; never fabricate a missing one or replace a null.
+            entry=modes.get(mode)
+            if entry is None:continue
+            if not isinstance(entry,dict):raise ValueError('Column Style mode must be an object or null')
             for k,v in STYLE_DEFAULT.items():entry.setdefault(k,copy.deepcopy(v))
     check_styles(out)
     return out

@@ -5,7 +5,7 @@
     "previousLayout": 1,
     "preset": 0,
     "appliedFetchedPresetId": null,
-    "kpiFitMode": "Content",
+    "kpiFitMode": "Best fit",
     "validPresetMeta": {
       "preset": null,
       "width": null,
@@ -145,7 +145,7 @@
     }
   },
   "numberFormatting": {
-    "enabled": false,
+    "enabled": true,
     "ibcsformat": false,
     "thousandSeparator": ",",
     "decimalSeparator": ".",
@@ -153,7 +153,7 @@
     "noOfDecimalPercent": 2,
     "prefix": "",
     "suffix": "",
-    "scalingFactor": "autoFixed",
+    "scalingFactor": "auto",
     "showScalingUnit": true,
     "semanticFormatting": true,
     "showValueColor": false,

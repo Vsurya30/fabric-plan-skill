@@ -60,7 +60,7 @@ class Writeback(PlanningFeatureTestCase):
             'wbTableColumnMapping':{hours:{'visualName':'Available Hours','wbColumnName':'available_hours'}},
             'excludedMeasureGuids':[can_edit],'skippedDimensionIds':[self.dims['Version']],'numberPrecision':{'decimal':2}})
         self.assertEqual((manifest['addedParts'],manifest['changedParts']),([path],[]))
-        self.assertEqual(manifest['writeback'],{'writebackType':'PIVOT_WIDE','destinationForms':['published-schema']})
+        self.assertEqual(manifest['writeback'],{'writebackType':'PIVOT_WIDE','connections':['connectionId']})
         self.assertEqual(manifest['publicSchema'][path],'passed-public-schema')
         self.assertEqual(status(candidate,path),'passed-public-schema')
         self.assertEqual(validate_plan(unpack(candidate))['sheets'],1)
@@ -73,18 +73,28 @@ class Writeback(PlanningFeatureTestCase):
         with self.assertRaisesRegex(ValueError,'PIVOT_LONG, PIVOT_WIDE, DELTA_ONLY or DELTA_WIDE'):
             self.add(writeback=self.writeback(writeback_type=3))
 
-    def test_article_form_destination_is_kept_and_reported(self):
-        candidate,manifest=self.add(writeback=self.writeback(destinations=[copy.deepcopy(ARTICLE_FORM)]))
+    def test_article_form_and_portable_connection_are_refused(self):
+        # SQL-backed Plans reject a destination without settings; the import never reads `connection`.
+        portable={k:v for k,v in SCHEMA_FORM.items() if k!='connectionId'}
+        portable['connection']={'connectionId':'00000000-0000-4000-8000-000000000001'}
+        for destination in (ARTICLE_FORM,portable):
+            with self.subTest(destination=destination),self.assertRaisesRegex(ValueError,'as Fabric exports it'):
+                self.add(writeback=self.writeback(destinations=[copy.deepcopy(destination)]))
+
+    def test_exported_destination_without_hash_or_with_a_variable_is_kept(self):
+        no_hash={k:v for k,v in SCHEMA_FORM.items() if k!='settingsHash'}
+        variable={k:v for k,v in SCHEMA_FORM.items() if k!='connectionId'};variable['connectionIdVariable']='WritebackConnection'
+        candidate,manifest=self.add(writeback=self.writeback(destinations=[copy.deepcopy(no_hash),copy.deepcopy(variable)]))
         path=self.prefix+'writeback.json'
-        self.assertEqual(unpack(candidate)[path]['destinations'],[ARTICLE_FORM])
-        self.assertEqual(manifest['writeback']['destinationForms'],['article'])
+        self.assertEqual(unpack(candidate)[path]['destinations'],[no_hash,variable])
+        self.assertEqual(manifest['writeback']['connections'],['connectionId','connectionIdVariable'])
         self.assertEqual((manifest['publicSchema'][path],status(candidate,path)),('schema-conflict','schema-conflict'))
-        self.assertTrue(any('settingsHash' in w and 'pinned' in w for w in manifest['warnings']))
+        self.assertTrue(any('settingsHash' in w and 'exports' in w for w in manifest['warnings']))
+        self.assertTrue(any('settings.database' in w for w in manifest['warnings']))
 
     def test_destination_is_copied_never_completed(self):
-        partial=copy.deepcopy(SCHEMA_FORM);partial.pop('settingsHash')
-        for destinations in ([],[partial],[{'tableName':'wb_capacity'}],['wb_capacity']):
-            with self.subTest(destinations=destinations),self.assertRaisesRegex(ValueError,'complete writeback destination'):
+        for destinations in ([],[{'tableName':'wb_capacity'}],['wb_capacity'],[{**SCHEMA_FORM,'settings':None}]):
+            with self.subTest(destinations=destinations),self.assertRaisesRegex(ValueError,'complete writeback destination|as Fabric exports it'):
                 self.add(writeback=self.writeback(destinations=destinations))
         bad=copy.deepcopy(SCHEMA_FORM);bad['connectionId']='not-a-uuid'
         with self.assertRaisesRegex(ValueError,'published Writeback schema'):
@@ -203,6 +213,7 @@ class Scenarios(PlanningFeatureTestCase):
         self.assertEqual(manifest['scenarios'],['Base','Stretch'])
         self.assertEqual(manifest['publicSchema'][path],'schema-gap')
         self.assertTrue(any(path in w and 'pinned' in w for w in manifest['warnings']))
+        self.assertTrue(any('neither reads nor exports scenarios.json' in w for w in manifest['warnings']))
 
     def test_status_and_first_order_have_no_default(self):
         hours=self.measures['Available Hours']

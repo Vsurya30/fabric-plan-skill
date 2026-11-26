@@ -41,6 +41,12 @@ class OneLakeSheetBindings(unittest.TestCase):
         a=from_sheet_assignment(c,'1','Planning 1')
         self.assertEqual(a['id'],'17');self.assertEqual(a['measureGuid'],str(xxh3('SUM__17')))
         c['id']=None;self.assertEqual(sheet_column_id(c),c['measureGuid'])
+    def test_migrated_onelake_record_keeps_its_sql_key(self):
+        # A record migrated from Fabric SQL lists the old key as sqlPk; catalogs use it before measureGuid.
+        c={k:v for k,v in self.record.items() if k!='id'}
+        self.assertEqual(sheet_column_id({**c,'sqlPk':'17'}),'17')
+        self.assertEqual(sheet_column_id({**c,'sqlPk':None}),c['measureGuid'])
+        self.assertEqual(sheet_column_id({**c,'id':5,'sqlPk':'17'}),'5')
     def test_malformed_or_conflicting_id_is_never_silently_replaced(self):
         for value in ('',False,1.25,'label','01',str(2**64)):
             with self.subTest(value=value),self.assertRaises(ValueError):sheet_column_id({**self.record,'id':value})

@@ -4,7 +4,7 @@ Fabric SQL sqlPk or OneLake's current query id qualifies output field ids.
 Output ids are lossless strings (u64 or generated ids).
 """
 import copy
-from .identity import xxh3
+from .identity import xxh3,product_aggregation
 
 def binding_query_id(query):
     """Use the actual registry domain; never invent a numeric OneLake key."""
@@ -63,9 +63,10 @@ def resolve_assignment(assignment,query,*,expected_output_id):
     # The proven native UI assignment has no source-record override. The query
     # registry supplies source ownership; do not force a source into queryId.
     a.pop('infoBridgeSourceId',None);a.pop('infoBridgeSourceGuid',None)
-    aggregation=a.get('aggregationType')
-    if a.get('columnType')!='Measure' and aggregation not in ('sum','min','max','count','avg'):
+    aggregation=product_aggregation(a.get('aggregationType'))
+    if a.get('columnType')!='Measure' and aggregation not in ('sum','minimum','maximum','count','average'):
         raise ValueError('Explicit aggregation required')
+    if a.get('columnType')!='Measure':a['aggregationType']=aggregation
     key=f['id'] if a['columnType']=='Measure' else aggregation.upper()+'__'+f['id']
     a['measureGuid']=str(xxh3(key))
     return a

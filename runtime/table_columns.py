@@ -3,11 +3,17 @@
 Portable columnConfigs records, not row-save metadata or SQL DDL. No default
 database, connection, table, lookup, access grant or existing record GUID.
 
-Default column types follow the product's SQL-type map: text types are Text,
-integer types are Number, decimal types are Decimal, ``date`` is Date, the
-datetime family is Date time and ``bit`` is Checkbox. Single select (distinct
-values) and database lookups are explicit opt-ins, never defaults. Every column,
-including a primary key, is displayed unless the caller asks to hide it.
+Default column types follow the product's server-side SQL-type map: integer
+types are Number; decimal, numeric, money, smallmoney, float and real are
+Decimal; ``date`` is Date; datetime, datetime2, smalldatetime and datetimeoffset
+are Date time; ``bit`` is Checkbox; every other type, including the text types,
+uniqueidentifier, xml, varbinary and time, is Text. SQL Server ``timestamp`` and
+``rowversion`` have no default. New columns take the product's create-table
+defaults: a NOT NULL or primary-key column is mandatory, a float column shows 1
+decimal and other decimal types 2, and Date time uses the locale date-time format
+with no time zone. Single select (distinct values) and database lookups are
+explicit opt-ins, never defaults. Every column, including a primary key, is
+displayed unless the caller asks to hide it.
 """
 import copy,re
 from .construct import guid
@@ -17,8 +23,9 @@ COLUMN_TYPE={'text':1,'text-options':2,'database-lookup':2,'date':4,'integer':6,
 TEXT_TYPES=('varchar','nvarchar','char','nchar','text','ntext')
 INTEGER_TYPES=('int','bigint','smallint','tinyint')
 DECIMAL_TYPES=('decimal','numeric','money','smallmoney','float','real')
-DATETIME_TYPES=('datetime','datetime2','smalldatetime')
-COMPATIBLE={'text':set(TEXT_TYPES),'integer':{*INTEGER_TYPES,'bit'},'decimal':set(DECIMAL_TYPES),
+DATETIME_TYPES=('datetime','datetime2','smalldatetime','datetimeoffset')
+NO_DEFAULT=('timestamp','rowversion')
+COMPATIBLE={'integer':{*INTEGER_TYPES,'bit'},'decimal':set(DECIMAL_TYPES),
             'date':{'date',*DATETIME_TYPES},'datetime':set(DATETIME_TYPES),'checkbox':{'bit'},
             'database-lookup':{*INTEGER_TYPES,'varchar','nvarchar','char','nchar'},
             'text-options':{'varchar','nvarchar','char','nchar'}}
@@ -26,6 +33,10 @@ DEFAULT_KIND={**{t:'text' for t in TEXT_TYPES},**{t:'integer' for t in INTEGER_T
               **{t:'decimal' for t in DECIMAL_TYPES},'date':'date',
               **{t:'datetime' for t in DATETIME_TYPES},'bit':'checkbox'}
 TIME_ZONES=('timezone-independent','user-local')
+
+def text_compatible(sqltype):
+    """Text accepts every type the product maps to Text by default."""
+    return sqltype in TEXT_TYPES or (sqltype not in DEFAULT_KIND and sqltype not in NO_DEFAULT)
 
 def sql_base_type(value):
     """Lower-case SQL type without its size, e.g. ``NVARCHAR(MAX)`` -> ``nvarchar``."""
@@ -35,11 +46,11 @@ def sql_base_type(value):
 def default_kind(sql_type):
     """Column kind the product assigns to a physical SQL type when a table is added."""
     base=sql_base_type(sql_type)
-    if base not in DEFAULT_KIND:
+    if base in NO_DEFAULT:
         raise ValueError('No PowerTable default for SQL type '+base+'; choose a compatible kind explicitly')
-    return DEFAULT_KIND[base]
+    return DEFAULT_KIND.get(base,'text')
 
-def column_config(column, kind=None, *, lookup=None, lookup_catalog=None, decimals=2, allow_negative=True,
+def column_config(column, kind=None, *, lookup=None, lookup_catalog=None, decimals=None, allow_negative=True,
                   allow_edit=None, hide=False, time_zone=None, generated=False):
     """One columnConfigs record. ``kind=None`` uses the product default for the SQL type."""
     name=column['name'];db=copy.deepcopy(column['dbMeta'])
@@ -54,7 +65,8 @@ def column_config(column, kind=None, *, lookup=None, lookup_catalog=None, decima
     if allow_edit is not None and not isinstance(allow_edit,bool):raise ValueError('allow_edit must be Boolean')
     if identity and allow_edit is True:raise ValueError('Database identity columns must remain read-only')
     if generated and allow_edit is True:raise ValueError('Computed columns must remain read-only')
-    if sqltype not in COMPATIBLE[kind]: raise ValueError('SQL type incompatible with selected presentation kind')
+    if not (text_compatible(sqltype) if kind=='text' else sqltype in COMPATIBLE[kind]):
+        raise ValueError('SQL type incompatible with selected presentation kind')
     if kind!='database-lookup' and (lookup is not None or lookup_catalog is not None): raise ValueError('Lookup supplied to nonlookup column')
     if kind!='datetime' and time_zone is not None:raise ValueError('time_zone applies only to Date time columns')
     readonly=identity or generated
@@ -63,20 +75,20 @@ def column_config(column, kind=None, *, lookup=None, lookup_catalog=None, decima
     result={'allowEdit':0 if readonly or allow_edit is False else 1,'columnGuid':name,'columnName':name,
             'columnType':COLUMN_TYPE[kind],
             'visualColumnType':3 if kind in ('database-lookup','text-options') else 1,'description':'','displayName':name,
-            'hideColumn':1 if hide else 0,'mandatory':0 if readonly or db['isNullable'] else 1,
+            'hideColumn':1 if hide else 0,'mandatory':1 if pk or not db['isNullable'] else 0,
             'recordGuid':guid(),'columnMeta':meta}
     if kind=='text':meta.update(maximumAllowedLength='',textFieldColumnType='Any Value')
     elif kind in ('integer','decimal'):
         if not isinstance(allow_negative,bool): raise ValueError('allow_negative must be Boolean')
         meta.update(allowNegative=allow_negative,largeNumberAbbrevation='',max='',min='',negativeValueFormat='-0',prefix='',suffix='',thousandSeparator='')
         if kind=='decimal':
+            if decimals is None:decimals=1 if sqltype=='float' else 2
             if isinstance(decimals,bool) or not isinstance(decimals,int) or not 0<=decimals<=15: raise ValueError('Invalid decimals')
             meta['noOfDecimals']=decimals
     elif kind=='date':meta.update(format='DEFAULT_LOCALE',min='',max='')
     elif kind=='datetime':
-        zone='timezone-independent' if time_zone is None else time_zone
-        if zone not in TIME_ZONES:raise ValueError('time_zone must be timezone-independent or user-local')
-        meta.update(format='DEFAULT_LOCALE',min='',max='',timeZone=zone)
+        if time_zone is not None and time_zone not in TIME_ZONES:raise ValueError('time_zone must be timezone-independent or user-local')
+        meta.update(format='DEFAULT_LOCALE_TIME',min='',max='',timeZone='' if time_zone is None else time_zone)
     elif kind=='checkbox':meta.update(checkedValue='1',unCheckedValue='0',checkboxFormatType='Checkbox')
     elif kind=='text-options':
         meta.update(allowAddingNewOptions=True,fcVisualIdColumnName=None,fcVisualLabelColumnName=None,
@@ -105,7 +117,8 @@ def column_config(column, kind=None, *, lookup=None, lookup_catalog=None, decima
             key=by_name[hop['key']]
             if sql_base_type(key['type'])!=local_type or not (key.get('isPrimaryKey') is True or key.get('isUnique') is True):
                 raise ValueError('Lookup requires compatible unique remote key')
-            records.append({'id':local_name,'label':hop['label'],'linkingColumn':hop['key'],
+            # id is the key in the lookup table; linkingColumn is the preceding table's column that holds it.
+            records.append({'id':hop['key'],'label':hop['label'],'linkingColumn':local_name,
                             'order':order,'schema':hop['schema'],'table':hop['table']})
             previous=by_name
         result['displayName']=lookup['label']

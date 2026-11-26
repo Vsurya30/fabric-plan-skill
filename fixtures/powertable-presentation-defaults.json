@@ -129,6 +129,7 @@
     "enableCategoryLabelColor": false,
     "fabricAccentColor": "#117865",
     "gridBackground": "#FFFFFF",
+    "hatchStrokeColor": "#dddddd",
     "headerBackground": "#F5F5F5",
     "headerGridColor": "#A6A6A6",
     "headerGridLines": true,
@@ -209,13 +210,13 @@
   "locale": "en-US",
   "mdmLayout": {
     "activeLayout": "table",
-    "configuration": {},
+    "configuration": null,
     "ganttViewColVisibility": {},
     "tableModeColVisibility": {}
   },
   "pagination": {
     "autoRowCount": "layout",
-    "currentPageNumber": 1,
+    "currentPageNumber": 0,
     "enable": true,
     "pageNo": 0,
     "pageRowCount": 10,

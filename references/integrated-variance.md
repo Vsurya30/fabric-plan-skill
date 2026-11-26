@@ -22,4 +22,4 @@ The input is the inner native properties object. `apply_integrated_variance`
 requires type 50, one numeric AC and one numeric PY, and category grouping. It
 preserves assignments, source IDs, measure GUIDs, filter cards, titles and geometry.
 
-Keep the top-level type, template, visible AC configuration and chart mode consistent. The integrated view still needs the PY assignment even though its renderer configuration has only one visible AC entry. Do not substitute an unverified horizontal enum. The candidate is not a rendered chart or evidence of calculated variance.
+Keep the top-level type, template, visible AC configuration and chart mode consistent. The integrated view still needs the PY assignment even though its renderer configuration has only one visible AC entry. The product also defines a horizontal integrated-variance column type, `COLUMN_INTEGRATED_HORIZONTAL`, but has no chart template for it, so do not author it. The candidate is not a rendered chart or evidence of calculated variance.

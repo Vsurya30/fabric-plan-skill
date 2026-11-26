@@ -34,7 +34,9 @@ class NavigatorDefaultsTests(unittest.TestCase):
         fixture = load(Path(__file__).resolve().parents[1] / 'fixtures/navigator-builder-20261112.json')
         self.assert_renderable(fixture)
 
-    def test_documented_legacy_recipes_preserve_corner_profile(self):
+    def test_recipes_and_builder_use_the_stored_corner_keys(self):
+        fixture = load(Path(__file__).resolve().parents[1] / 'fixtures/navigator-builder-20261112.json')
+        self.assertIn('radiusTopLeft', fixture['style']['DEFAULT']['shapeState']['cornerRadius'])
         for recipe in range(1, 6):
             with self.subTest(recipe=recipe):
                 value = navigator(recipe)

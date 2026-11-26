@@ -74,7 +74,8 @@ class IndependentReferenceTests(unittest.TestCase):
         result=column_config(col,'database-lookup',lookup=lookup,lookup_catalog=remote)
         self.assertEqual((col,lookup,remote),before)
         self.assertEqual(result['columnGuid'],'CategoryKey');self.assertEqual(result['displayName'],'Caption')
-        self.assertEqual(result['columnMeta']['optionLinking']['lookupConfig'][0]['linkingColumn'],'ID')
+        link=result['columnMeta']['optionLinking']['lookupConfig'][0]
+        self.assertEqual((link['id'],link['linkingColumn']),('ID','CategoryKey'))
         self.assertNotEqual(result['recordGuid'],column_config(col,'database-lookup',lookup=lookup,lookup_catalog=remote)['recordGuid'])
 
     def test_lookup_rejects_nonunique_remote_key(self):
@@ -84,7 +85,7 @@ class IndependentReferenceTests(unittest.TestCase):
 
     def test_generated_sql_identity_is_not_editable(self):
         c=column_config({'name':'ID','dbMeta':dbmeta(isIdentity=True,isPrimaryKey=True)},'integer')
-        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,0,0))
+        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,0,1))
 
     def test_contribution_casts_and_aggregates_to_common_grain(self):
         q=normalize();steps=q['transformationSteps']

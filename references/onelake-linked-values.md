@@ -12,7 +12,7 @@ the storage context guide holds the bundled guards.
 
 | Route | Fabric SQL metadata | OneLake metadata |
 | --- | --- | --- |
-| From Sheets local Input, Forecast or Formula | Source column record `id` supplies `id/sourceId` | When source record `id` is absent/null, its registered `measureGuid` supplies `id/sourceId` |
+| From Sheets local Input, Forecast or Formula | Source column record `id` supplies `id/sourceId` | When `id` is absent/null, a record migrated from Fabric SQL supplies its `sqlPk`; otherwise its registered `measureGuid` supplies `id/sourceId` |
 | From Queries selected output | Query registry `sqlPk` supplies the qualifier | When `sqlPk` is absent/null, the exact opaque registry `id` supplies the qualifier |
 
 An explicitly malformed ID is an error; do not silently replace it. Keep IDs as

@@ -32,18 +32,19 @@ def _given(value,key):
     return isinstance(value.get(key),str) and bool(value[key].strip())
 
 def destination_form(value):
-    """Name the documented form of one complete destination; nothing is filled in."""
-    if isinstance(value,dict):
-        settings=value.get('settings')
-        if (_given(value,'tableName') and _given(value,'settingsHash') and isinstance(settings,dict) and _given(settings,'dbSchema')
-                and ((_given(settings,'dbName') and _given(settings,'dbHost')) or settings.get('database') is not None)
-                and (_given(value,'connectionId') or value.get('connection') is not None)):
-            return 'published-schema'
-        if all(_given(value,key) for key in ('tableName','connectionId','databaseId')) and ('schema' not in value or _given(value,'schema')):
-            return 'article'
-    raise ValueError('Supply each complete writeback destination as exported: tableName, settings with dbSchema, settingsHash '
-                     'and connectionId (published schema), or tableName, connectionId and databaseId (article). '
-                     'settingsHash is never computed here.')
+    """The connection member of one destination in the form Fabric exports; nothing is filled in.
+
+    An exported destination has tableName, a settings object and connectionId or
+    connectionIdVariable. A destination without settings (the article's
+    connectionId/databaseId form) fails import on Fabric SQL-backed Plans, and the
+    import never reads the schema's portable ``connection``.
+    """
+    if isinstance(value,dict) and _given(value,'tableName') and isinstance(value.get('settings'),dict):
+        for key in ('connectionId','connectionIdVariable'):
+            if _given(value,key):return key
+    raise ValueError('Supply each writeback destination as Fabric exports it: tableName, a settings object, and '
+                     'connectionId or connectionIdVariable. A destination without settings fails import on Fabric '
+                     'SQL-backed Plans, and the import ignores a portable connection. Nothing is computed here.')
 
 def _distinct(values,label):
     if not isinstance(values,list) or not values or any(not isinstance(v,str) for v in values) or len(set(values))!=len(values):
@@ -63,7 +64,7 @@ def writeback_config(writeback_type=None,destinations=None,*,columns,dimensions,
     if not isinstance(writeback_type,str) or writeback_type not in WRITEBACK_TYPES:
         raise ValueError('writeback_type must be PIVOT_LONG, PIVOT_WIDE, DELTA_ONLY or DELTA_WIDE')
     if not isinstance(destinations,list) or not destinations:raise ValueError('At least one complete writeback destination is required')
-    forms=[destination_form(d) for d in destinations]
+    for d in destinations:destination_form(d)
     by_id={c.get('measureGuid'):c for c in columns if isinstance(c,dict)}
     def measure(mid):
         if not isinstance(mid,str) or mid not in by_id:raise ValueError('Writeback reference is not a measure of this visual: '+str(mid))
@@ -87,10 +88,14 @@ def writeback_config(writeback_type=None,destinations=None,*,columns,dimensions,
         part['numberPrecision']={'decimal':number_precision}
     checker=Schemas();url=part['$schema']
     checker.check({k:v for k,v in part.items() if k!='destinations'},url)
-    for destination,form in zip(destinations,forms):
-        try:checker.check({'$schema':url,'writebackType':part['writebackType'],'destinations':[destination]},url)
-        except Invalid as e:
-            if form=='published-schema':raise ValueError('Writeback destination does not match the published Writeback schema: '+str(e))
+    for destination in destinations:
+        # Exports can omit settingsHash and carry connectionIdVariable instead of connectionId, and
+        # the import accepts both; only those two schema-required members are relaxed here.
+        view=copy.deepcopy(destination)
+        if not _given(view,'settingsHash'):view['settingsHash']='not-exported'
+        if not _given(view,'connectionId'):view['connectionId']='00000000-0000-4000-8000-000000000000'
+        try:checker.check({'$schema':url,'writebackType':part['writebackType'],'destinations':[view]},url)
+        except Invalid as e:raise ValueError('Writeback destination does not match the published Writeback schema: '+str(e))
     return part
 
 def inserted_row(name=None,dimension_id=None,row_type=None,*,visual_id,row_dimensions,taken,formula=None,description=None,
@@ -264,12 +269,14 @@ def add_planning_features(envelope,*,sheet_guid,visual_id=None,writeback=None,in
     dimensions=_dimensions(raw,prefix);changes={};summary={}
     if writeback is not None:
         path=prefix+'writeback.json'
-        if path in raw:raise ValueError('writeback.json already exists; change the exported part instead of rebuilding it')
+        if path in raw:raise ValueError('writeback.json already exists; change the exported part instead of rebuilding it. '
+                                        'Fabric exports writeback.json for every Planning visual, so this constructor applies '
+                                        'only to a definition without one, such as a newly built Planning sheet.')
         if not isinstance(writeback,dict) or set(writeback)-WRITEBACK_REQUEST:
             raise ValueError('Unsupported writeback field: '+(', '.join(sorted(set(writeback)-WRITEBACK_REQUEST)) if isinstance(writeback,dict) else 'object required'))
         changes[path]=writeback_config(columns=columns,dimensions=dimensions,**writeback)
         summary['writeback']={'writebackType':{v:k for k,v in WRITEBACK_TYPES.items()}[changes[path]['writebackType']],
-                              'destinationForms':[destination_form(d) for d in changes[path]['destinations']]}
+                              'connections':[destination_form(d) for d in changes[path]['destinations']]}
     if insert_rows is not None:
         path=prefix+'insertRows.json'
         changes[path],summary['insertedRows']=_insert_rows(raw,path,insert_rows,vid,_dimensions(raw,prefix,('rowDimensions',)))
@@ -285,9 +292,14 @@ def add_planning_features(envelope,*,sheet_guid,visual_id=None,writeback=None,in
     report={item['path']:item['status'] for item in schema_report(changes)}
     warnings=[]
     if report.get(prefix+'writeback.json')=='schema-conflict':
-        warnings.append('writeback.json keeps an article-form destination (connectionId, databaseId, tableName). The pinned published '
-                        'Writeback schema requires settings and a service-computed settingsHash, which this package never computes; '
-                        'confirm import acceptance after publishing.')
+        warnings.append('writeback.json keeps destinations as Fabric exports them. The pinned Writeback schema also requires '
+                        'settingsHash and connectionId, which exports can omit; Fabric\'s import accepts the exported form.')
+    if writeback is not None and any('database' not in d['settings'] for d in changes[prefix+'writeback.json']['destinations']):
+        warnings.append('On Fabric SQL-backed Plans the import keeps a destination tableName only when settings.database is set; '
+                        'otherwise it keeps the existing table name or creates one.')
+    if scenarios is not None:
+        warnings.append('The current Fabric Plan import neither reads nor exports scenarios.json, so these scenarios have no '
+                        'effect after publishing; create scenarios in the product.')
     warnings+=[path+' declares a $schema with no pinned copy in this package, so the schema report cannot check the whole part'
                for path,state in sorted(report.items()) if state=='schema-gap']
     return candidate,{'sheetGuid':sheet_guid,'visualId':vid,**summary,'changedParts':changed,'addedParts':added,

@@ -64,7 +64,8 @@ overrides, locks, filters and source bindings.
   integrated variance guide for selectors and source-preserving commands.
 - **Navigator padding:** new dashboard Navigators carry complete DEFAULT icon,
   text and shape padding even when icons are disabled. Partial state overrides
-  and current versus legacy corner profiles remain distinct.
+  remain distinct. Corner radius always uses the stored keys radiusTopLeft,
+  radiusTopRight, radiusBottomLeft and radiusBottomRight.
 
 ## Construct and deploy
 

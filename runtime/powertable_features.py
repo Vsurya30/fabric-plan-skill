@@ -10,8 +10,9 @@ import maps it to the runtime ID.
 multi-level flag, levels and routing filters). Approver users are not definition
 content and have no supported public route.
 
-An update that omits an existing ``automations.json`` or ``approvals.json``
-deletes those records on import, so always start from a fresh export.
+An update that omits an existing ``forms.json``, ``automations.json`` or
+``approvals.json`` deletes those records on import, so always start from a fresh
+export.
 """
 import copy,json,re,uuid
 from .construct import guid,schema
@@ -30,7 +31,7 @@ EMAIL=re.compile(r'[^@\s]+@[^@\s]+\.[^@\s]+')
 FORM_CONFIG={'showTitle':bool,'showLogo':bool,'submissionMessage':str,'fieldLabel':str}
 APPROVAL_RULES={'DEFAULT':10,'MANUAL':20,'LOOKUP':30}
 PERSIST_FLAGS={'SAVE_AFTER_REVIEW':10,'SAVE_BEFORE_REVIEW':20}
-APPROVAL_REQUEST={'rule_type','persist_flag','multi_level_enabled','levels','filters'}
+APPROVAL_REQUEST={'rule_type','persist_flag','multi_level_enabled','levels','filters','lookup_config'}
 
 def _text(value,label,limit=255,*,allow_empty=False):
     if not isinstance(value,str) or len(value)>limit or (not allow_empty and not value.strip()):
@@ -52,7 +53,7 @@ def _json_default(value):
     if isinstance(value,float) and value!=value:return ''
     return json.dumps(value,ensure_ascii=False,separators=(',',':'))
 
-def form_record(title,fields,columns,*,description='',restrict_multiple_entry=1,config=None,source_guid=None):
+def form_record(title,fields,columns,*,description='',restrict_multiple_entry=0,config=None,source_guid=None):
     """One forms.json entry for a configured PowerTable.
 
     ``fields`` is an ordered list of ``{"column": <columnName>, "mandatory": 0|1,
@@ -83,7 +84,8 @@ def form_record(title,fields,columns,*,description='',restrict_multiple_entry=1,
                         'required':required,'defaultValue':_json_default(field.get('defaultValue')),'formId':form_guid})
     missing=[n for n,c in by_name.items() if c.get('mandatory')==1 and c.get('allowEdit')==1 and n not in seen]
     if missing:raise ValueError('Form must include every mandatory column: '+', '.join(missing))
-    settings={'showTitle':True,'showLogo':False,'submissionMessage':'','fieldLabel':'stacked'}
+    # The product's new-form defaults: logo shown, multiple entries allowed.
+    settings={'showTitle':True,'showLogo':True,'submissionMessage':'','fieldLabel':'stacked'}
     if config is not None:
         if not isinstance(config,dict) or set(config)-set(FORM_CONFIG):raise ValueError('Form config supports only '+', '.join(FORM_CONFIG))
         for key,value in config.items():
@@ -201,14 +203,29 @@ def automation_record(name,trigger,actions,columns,*,watch_columns=None,conditio
     if source_guid is not None:record['sourceId']=source_guid
     return record
 
-def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,multi_level_enabled=None,filters=None):
+def _lookup_config(value):
+    """A LOOKUP rule's approver table, copied as given: tableName, approverColumn and conditionalColumn pairs."""
+    if not isinstance(value,dict) or set(value)!={'tableName','approverColumn','conditionalColumn'}:
+        raise ValueError('lookup_config needs tableName, approverColumn and conditionalColumn')
+    for key in ('tableName','approverColumn'):_text(value[key],'lookup_config '+key)
+    pairs=value['conditionalColumn']
+    if (not isinstance(pairs,list) or not pairs or any(not isinstance(p,dict) or set(p)!={'columnName','lookupColumnName'} for p in pairs)):
+        raise ValueError('lookup_config conditionalColumn must list columnName and lookupColumnName pairs')
+    for pair in pairs:
+        for key in ('columnName','lookupColumnName'):_text(pair[key],'lookup_config '+key)
+    return copy.deepcopy(value)
+
+def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,multi_level_enabled=None,filters=None,lookup_config=None):
     """The one approvals.json record of a PowerTable: rule type, persist flag, multi-level flag, levels and routing filters.
 
     ``levels`` is an ordered list of ``{"name", "description"}``, numbered from 1.
     ``filters`` is a list of ``{"name", "filter": object|null, "order"}``. The
     import reads both lists from this record, so both are always written.
     ``multi_level_enabled`` is optional: written as stated, left out when the
-    request omits it, and never inferred from the levels.
+    request omits it, and never inferred from the levels. ``approvalLevel`` is the
+    number of levels, as the product's own workflow API stores it; multi-level
+    approval finishes only at that level. A LOOKUP rule needs ``lookup_config``,
+    which is stored as ``settings.lookupConfig``.
     """
     from .validate import Schemas
     if rule_type is None:raise ValueError('rule_type required; it has no default')
@@ -217,6 +234,11 @@ def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,m
     if not isinstance(persist_flag,str) or persist_flag not in PERSIST_FLAGS:
         raise ValueError('persist_flag must be SAVE_AFTER_REVIEW or SAVE_BEFORE_REVIEW')
     if multi_level_enabled is not None and not isinstance(multi_level_enabled,bool):raise ValueError('multi_level_enabled must be Boolean')
+    if rule_type=='LOOKUP':
+        if lookup_config is None:raise ValueError('A LOOKUP rule needs lookup_config: tableName, approverColumn and conditionalColumn')
+        settings={'lookupConfig':_lookup_config(lookup_config)}
+    elif lookup_config is not None:raise ValueError('lookup_config applies only to a LOOKUP rule')
+    else:settings=None
     if not isinstance(levels,list) or not levels:raise ValueError('Name at least one approval level')
     approval_levels=[];names=set()
     for number,level in enumerate(levels,1):
@@ -240,6 +262,7 @@ def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,m
         names.add(name.casefold());orders.add(order)
         routing.append({'name':name,'filter':copy.deepcopy(item['filter']),'order':order})
     record={'recordGuid':guid(),'sourceId':source_guid,'ruleType':APPROVAL_RULES[rule_type],'persistFlag':PERSIST_FLAGS[persist_flag],
+            'approvalLevel':len(approval_levels),**({'settings':settings} if settings else {}),
             **({} if multi_level_enabled is None else {'multiLevelEnabled':1 if multi_level_enabled else 0}),
             'approvalLevels':approval_levels,'approvalFilter':routing}
     # The published schema types these members at the top level; check the record's values against those definitions.

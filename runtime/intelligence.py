@@ -8,6 +8,7 @@ from pathlib import Path
 from .construct import field, guid, schema, sheet_properties
 from .codec import dumps,load
 from .semantic_values import semantic_value
+from .identity import product_aggregation
 
 TREE_VISUAL_TYPES = {'DECOMPOSITION_TREE': 'Decomposition tree',
                      'ORGANIZATION_TREE': 'Organizational tree',
@@ -101,10 +102,11 @@ def slicer(model,spec,*,placement='top'):
     p=base(60,label);p['pivotAssignments']=copy.deepcopy(reg['pivotAssignments']);p['superFilterAssignments']=[reg]
     hierarchy=placement=='left'
     vs=p['visualState'];vs.update(slicerFilterAssignments=copy.deepcopy(reg['filter']),
-        facetSettings={'facetViewType':'hierarchy' if hierarchy else 'dropdown',
+        # Facet mode renders facetViewType; with facet mode off the slicer renders as a hierarchy tree.
+        facetSettings={'facetViewType':'checkbox' if hierarchy else 'dropdown',
             'facetLayout':'vertical','singleSelect':single,'cascadeFilter':True,
             'enableCategorySearch':True,'showSearchBarIcon':True,'showSelectionState':True,'showFacetHeader':False,
-            'displayMode':'label','enableFacetMode':hierarchy,'influencedAutoSelect':'none'},
+            'displayMode':'label','enableFacetMode':not hierarchy,'influencedAutoSelect':'none'},
         displaySettings={'fontFamily':'Arial','forcedSelection':required,'displaySelectAll':not required,'hideBlank':True,
             'defaultVisualBackground':'#FFFFFF','selectAllLabel':'Select All','blankLabel':'(Blank)','emptyLabel':'(Empty)'},
         toolbarSettings={'customTitleText':label,'titleLabel':label,'showTitle':True,'titleFontBold':True,
@@ -144,10 +146,10 @@ def card(model,spec,registry, *, query_fields=()):
         required={'id','sourceId','queryId','tableName','columnName','columnType','dataType','sourceType','measureGuid'}
         if not required<=a.keys() or a['sourceType']!='InfoBridge' or a['dataType'] not in ('Int64','Double','Decimal') or a['sourceId']!=key:
             raise ValueError('Incomplete registered InfoBridge KPI field')
-        if spec.get('aggregation') not in ('sum','min','max','count','avg'): raise ValueError('Query KPI requires explicit aggregation')
+        if product_aggregation(spec.get('aggregation')) not in ('sum','minimum','maximum','count','average'): raise ValueError('Query KPI requires explicit aggregation')
         a.update(customSource=True,dataRoleType='Measure',order=0,isFlatHierarchy=False)
     a['bucketId']='AC';a['customName']=spec['label']
-    if not source and spec.get('aggregation'): a['aggregationType']=spec['aggregation']
+    if not source and spec.get('aggregation'): a['aggregationType']=product_aggregation(spec['aggregation'])
     p=base(50,spec['label']);p['pivotAssignments']=[a];vs=p['visualState'];vs.update(chartType='CARD',columnFieldsMapping={})
     vs['hiddenProperties_!!!_chartsMode']=dumps({'visualMode':'CARD','prevVisualMode':'CARD','isFromKpiSettings':False}).strip()
     vs['hiddenProperties_!!!_chartCustomTitle']=dumps({'showTitle':True,'editTitle':False,'customTitle':spec['label'],
@@ -180,7 +182,7 @@ def column_chart(model,spec,registry,*,query_fields=()):
     from .chart_filters import ensure_chart_filters
     from .linked_values import value_assignment
     p=base(50,spec['label'])
-    category=field(model,spec['category'],'rows',0);category['bucketId']='category'
+    category=field(model,spec['category'],'rows',0);category['bucketId']='axis'
     measure=value_assignment(model,spec['field'],registry,query_fields=query_fields,bucket='AC',aggregation=spec.get('aggregation'))
     measure['customName']=spec.get('valueLabel',measure['columnName'])
     p['pivotAssignments']=[category,measure]

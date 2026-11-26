@@ -21,3 +21,7 @@ post-transform output by its current ID/type. Renaming a label or selecting
 an input ordinal does not establish which output a consumer reads. Preserve
 consumer identity when correcting a binding. A constructed graph does not
 prove refresh, materialization, row counts or financial correctness.
+
+Fabric's import needs every InfoBridge source to carry `sourceGuid` and
+`queries`, which the constructors write. An update replaces InfoBridge sources:
+any source the part doesn't list is deleted, so start from a fresh export.

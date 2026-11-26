@@ -48,7 +48,7 @@ class PowerTableConfigTests(unittest.TestCase):
         result=apply_lookup(c,lookup,catalog)
         chain=result['columnMeta']['optionLinking']['lookupConfig']
         self.assertEqual([(h['id'],h['linkingColumn'],h['order']) for h in chain],
-                         [('RegionID','RegionID',0),('CurrencyID','CurrencyKey',1)])
+                         [('RegionID','RegionID',0),('CurrencyKey','CurrencyID',1)])
     def test_rejects_nonunique_remote_key(self):
         self.request['lookup_catalog'][0]['columns'][0]['isPrimaryKey']=False
         with self.assertRaisesRegex(ValueError,'unique remote key'):self.repaired()

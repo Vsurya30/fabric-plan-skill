@@ -15,16 +15,19 @@ and color legend together. Do not truncate or shorten the business meaning to fi
 a preset box. Do not use a universal 150/180/220/244-pixel minimum. The five approved
 roll-forward examples needed 100 or 120 pixels; those results are not defaults.
 
-1. Read the current HTML paragraphs and their font sizes. Preserve title emphasis,
-   description, legend, colors, text element identity and existing non-height state.
+1. Read the current HTML paragraphs and the font size in effect for each run: the
+   innermost element's inline font-size, else 13px. Put sizes on spans, as the
+   product's presets do; its title CSS can override a paragraph's own font-size and
+   always forces paragraph margins to 0. Preserve title emphasis, description,
+   legend, colors, text element identity and existing non-height state.
 2. Resolve the current header width from the visual, text element and canvas. Use
    their minimum, subtracting 32 pixels for horizontal allowance. An explicitly
    known narrower available width can be supplied as an authoring input.
 3. Measure the text in Arial, including bold runs, and wrap by words to the usable
    width. Account for explicit line breaks and long unbroken tokens.
-4. Sum each paragraph's wrapped lines × font size × 1.2, then add its explicit
-   vertical paragraph margins. This matches the normal line-height assumption of
-   the generated paragraph-based header; custom typography needs its own sizing.
+4. Sum each paragraph's wrapped lines × its largest font size × 1.15, Arial's
+   normal line height. Paragraph margins add nothing, because the product removes
+   them; custom typography needs its own sizing.
 5. Add `max(8px, ceil(contentHeight × 0.08))` as a small buffer.
 6. Round up to the native 10-pixel canvas grid and synchronize all four heights.
 

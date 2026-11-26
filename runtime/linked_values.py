@@ -1,6 +1,7 @@
 """Numeric semantic or registered InfoBridge Values; axes remain semantic."""
 import copy
 from .semantic_values import semantic_value
+from .identity import product_aggregation
 
 def value_assignment(model,key,registry,*,query_fields=(),bucket='ameasure',order=0,label=None,aggregation=None):
     if any(f['id']==key for f in model['fields']):
@@ -14,8 +15,8 @@ def value_assignment(model,key,registry,*,query_fields=(),bucket='ameasure',orde
         raise ValueError('Numeric query output Column required')
     if not key.startswith(f['queryId']+'[') or not key.endswith(']'):
         raise ValueError('Query and qualified output identity disagree')
-    method=aggregation or 'sum'
-    if method not in ('sum','min','max','count','avg'):raise ValueError('Explicit supported query aggregation required')
+    method=product_aggregation(aggregation or 'sum')
+    if method not in ('sum','minimum','maximum','count','average'):raise ValueError('Explicit supported query aggregation required')
     mid=registry.semantic(key,'Column',method)
     f={k:f[k] for k in required}
     f.update(aggregationType=method,measureGuid=mid,bucketId=bucket,order=order,

@@ -12,6 +12,10 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/'
 
 
+LOOKUP={'tableName':'Approvers','approverColumn':'ApproverEmail',
+        'conditionalColumn':[{'columnName':'Region','lookupColumnName':'Region'}]}
+
+
 def workflow(**extra):
     return {'rule_type':'MANUAL','persist_flag':'SAVE_BEFORE_REVIEW','multi_level_enabled':True,
             'levels':[{'name':'Manager','description':'Line manager'},{'name':'Finance','description':''}],
@@ -37,7 +41,7 @@ class ApprovalWorkflow(unittest.TestCase):
         part=unpack(candidate)[self.path];record=part['approvals']
         uuid.UUID(record.pop('recordGuid'))
         self.assertEqual(part,{'$schema':BASE+'PowerTable/Approvals/1.0.0/schema.json','approvals':{
-            'sourceId':self.ids['sourceGuid'],'ruleType':20,'persistFlag':20,'multiLevelEnabled':1,
+            'sourceId':self.ids['sourceGuid'],'ruleType':20,'persistFlag':20,'approvalLevel':2,'multiLevelEnabled':1,
             'approvalLevels':[{'name':'Manager','description':'Line manager','level':1},{'name':'Finance','description':'','level':2}],
             'approvalFilter':[{'name':'All rows','filter':None,'order':0}]}})
         merged=unpack(candidate)
@@ -54,9 +58,19 @@ class ApprovalWorkflow(unittest.TestCase):
         self.assertEqual((APPROVAL_RULES,PERSIST_FLAGS),({'DEFAULT':10,'MANUAL':20,'LOOKUP':30},
                                                          {'SAVE_AFTER_REVIEW':10,'SAVE_BEFORE_REVIEW':20}))
         candidate,_=self.add(approvals=workflow(rule_type='LOOKUP',persist_flag='SAVE_AFTER_REVIEW',multi_level_enabled=False,
-                                                filters=[],levels=[{'name':'Owner','description':'Data owner'}]))
+                                                filters=[],levels=[{'name':'Owner','description':'Data owner'}],lookup_config=LOOKUP))
         record=unpack(candidate)[self.path]['approvals']
         self.assertEqual((record['ruleType'],record['persistFlag'],record['multiLevelEnabled'],record['approvalFilter']),(30,10,0,[]))
+        self.assertEqual((record['approvalLevel'],record['settings']),(1,{'lookupConfig':LOOKUP}))
+
+    def test_lookup_rule_needs_its_approver_table(self):
+        cases=[({'rule_type':'LOOKUP'},'needs lookup_config'),
+               ({'rule_type':'MANUAL','lookup_config':LOOKUP},'only to a LOOKUP rule'),
+               ({'rule_type':'LOOKUP','lookup_config':{**LOOKUP,'conditionalColumn':[]}},'conditionalColumn'),
+               ({'rule_type':'LOOKUP','lookup_config':{'tableName':'Approvers'}},'needs tableName')]
+        for change,message in cases:
+            with self.subTest(change=change),self.assertRaisesRegex(ValueError,message):
+                self.add(approvals=workflow(**change))
 
     def test_multi_level_flag_is_written_only_as_stated(self):
         one=[{'name':'Owner','description':''}];two=workflow()['levels']
@@ -106,6 +120,12 @@ class ApprovalWorkflow(unittest.TestCase):
         again,manifest=self.add(candidate,forms=[{'title':'Second','fields':fields}])
         self.assertIsNone(manifest['addedApprovals'])
         self.assertEqual(parts(again)[self.path],parts(candidate)[self.path])
+
+    def test_new_forms_use_product_defaults(self):
+        fields=[{'column':c} for c in ('Code','FullName','JoinDate','Active')]
+        candidate,_=self.add(forms=[{'title':'Intake','fields':fields}])
+        form=unpack(candidate)[self.prefix+'forms.json']['forms'][0]
+        self.assertEqual((form['restrictMultipleEntry'],form['config']['showLogo']),(0,True))
 
     def test_powertable_features_command_adds_the_workflow(self):
         tmp=Path(self.enterContext(tempfile.TemporaryDirectory()))

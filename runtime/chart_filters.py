@@ -5,6 +5,7 @@ Call after assigning or resolving chart fields; preserve selections and Context.
 """
 import copy
 from .construct import guid
+from .identity import product_aggregation
 
 NUMERIC={'Int64','Double','Decimal'}
 
@@ -43,7 +44,7 @@ def chart_field_filter(assignment, groupings=()):
          'selectAll':True,'measureSearch':True,'sort':[sort],
          'topN':{'rankMode':'TOP','rankValue':5,'rankType':'value','rankMeasure':'',
                  'displayOthers':True,'otherLabel':'Others','rankMeasureLabel':''},
-         'sheetDataItemAggregationType':a.get('aggregationType') or 'sum',
+         'sheetDataItemAggregationType':product_aggregation(a.get('aggregationType')) or 'sum',
          'toolBarTrigger':False,'paneWidth':200}
     if a.get('dataType') in NUMERIC:
         cfg.update(filterMode='advanced',visualType='NUMERIC',scale='none',

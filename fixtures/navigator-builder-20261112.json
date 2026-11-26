@@ -73,10 +73,10 @@
         "cornerRadius": {
           "isEnabled": true,
           "isCustomCornerRadius": false,
-          "topLeft": 0,
-          "topRight": 0,
-          "bottomRight": 0,
-          "bottomLeft": 0
+          "radiusTopLeft": 0,
+          "radiusTopRight": 0,
+          "radiusBottomRight": 0,
+          "radiusBottomLeft": 0
         },
         "padding": {
           "isEnabled": true,

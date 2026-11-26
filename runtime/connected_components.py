@@ -1,7 +1,7 @@
 """Parametric connected-planning components, independent of any saved report."""
 import copy
 from .bridge import Query
-from .identity import native_id
+from .identity import native_id,product_aggregation
 
 def contribution(name, source_id, catalog, dimensions, periods, metrics, semantics, *, visual_id=None, query_id=None, dimension_formulas=(),owner_columns=None,identity_mode='portable'):
     """Normalize one additive P&L input before append, preserving explicit context.
@@ -50,7 +50,8 @@ def bridge_consumer(field, visual_id, measure_id, label, *, order=0, aggregation
     if any(not isinstance(field[k],str) or not field[k].strip() for k in required): raise ValueError('Nonempty catalog identity and type fields required')
     if field['columnType']!='Column' or field['dataType'] not in ('Double','Int64','Decimal'): raise ValueError('Numeric InfoBridge output required')
     if not isinstance(visual_id,str) or not visual_id.strip() or not isinstance(label,str) or not label.strip() or isinstance(order,bool) or not isinstance(order,int) or order<0: raise ValueError('Destination visual/label/order required')
-    if aggregation not in ('sum','min','max','avg'): raise ValueError('Unverified consumer aggregation')
+    aggregation=product_aggregation(aggregation)
+    if aggregation not in ('sum','minimum','maximum','average'): raise ValueError('Unverified consumer aggregation')
     assignment={k:copy.deepcopy(field[k]) for k in required}
     assignment.update(aggregationType=aggregation,bucketId='ameasure',customName=label,customSource=True,
         dataRoleType='Measure',distinctValueCount=None,formatString=field.get('formatString',''),isFlatHierarchy=False,
@@ -60,7 +61,7 @@ def bridge_consumer(field, visual_id, measure_id, label, *, order=0, aggregation
     record={'boundToFilterContext':10,'columnMeta':{'data_type':'Number','description':None,'id':measure_id,
           'label':label,'name':label,'measure_type':{'Native':{'measure_role':'ACMeasure'}}},
           'dataInputType':6,'description':None,'measureGuid':measure_id,'name':label,'visualId':visual_id}
-    native_aggregation={'sum':'Sum','min':'Min','max':'Max','avg':'Average'}[aggregation]
+    native_aggregation={'sum':'Sum','minimum':'Min','maximum':'Max','average':'Average'}[aggregation]
     return {'assignment':assignment,'dataInputColumn':record,
         'manageMeasure':{'id':measure_id,'label':label,'order':order,'visible':True},
         'measureAggregation':{measure_id:{'row':native_aggregation,'column':native_aggregation}},

@@ -162,6 +162,43 @@ periods, edit settings and write-access flags when they are present.
 A schema-conforming definition is not proof of service acceptance, rendering or
 runtime behavior.
 
+## How Fabric's import treats parts
+
+These behaviors come from Fabric's current import and export, not from the
+article or the schemas. A Plan stored in Fabric SQL and a Plan whose entities
+moved to OneLake take different import paths, and the definition doesn't say
+which one applies, so plan for both.
+
+- `$schema` is never checked. The import drops it, so its casing doesn't matter.
+- IDs stay strings: inserted-row, scenario and template IDs above 2^63 are safe.
+- An update replaces by omission. A missing `forms.json`, `automations.json` or
+  `approvals.json` deletes every record of that kind. A sheet missing from
+  `definition.json` is deleted. An empty list behaves differently on each path:
+  - On Fabric SQL, empty `columnConfigs`, `forms` and `automations` lists are
+    skipped, and an empty inserted-row list deletes every inserted row.
+  - On OneLake, the same empty lists delete everything, and an empty inserted-row
+    list is skipped.
+  - Approval levels and filters are replaced by what the part lists. On OneLake,
+    an approval record without both lists fails the import, so always write both,
+    as the constructor does.
+  - InfoBridge import deletes unlisted sources.
+- Each InfoBridge source needs `sourceGuid` and `queries`.
+- The semantic model binding is read from `semanticModelId` or
+  `semanticModelVariable` with `sourceType`; a portable
+  `semanticModelReference` isn't read.
+- Where Fabric's event-trigger import is switched on, Planning
+  `properties.json` can carry `eventTriggers`. When present, even as an empty
+  list, they replace every existing trigger, so keep the exported list.
+- On OneLake, data-input columns are matched by `columnMeta.id`; a column without
+  one is skipped. OneLake export also rewrites `sqlPk` measure references to
+  `measureGuid`.
+- Cube mapping records resolve `cubePartition_RefId` and
+  `cubePartitionMeasure_RefId` within `cube/cube.json`. `visual_RefId` resolves
+  against the visuals in the same definition, and unresolved records are skipped.
+- `scenarios.json` is neither imported nor exported today.
+
+Start every update from a fresh export, and confirm the result in the product.
+
 ## Primary sources
 
 - Plan definition article:

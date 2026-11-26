@@ -36,7 +36,9 @@ when using `provision`.
 
 Favorable direction is a business decision: higher revenue can be favorable,
 while higher cost can be unfavorable. Blank values are excluded; equality uses
-`==`. Choose `parent`, `child`, or `both` independently for rows and columns.
+`==`. The constructor accepts `>`, `<`, `>=`, `<=`, `==` and `!=`. The product
+also offers `<>`, which means between (a range) rather than not-equal, and
+`isBlank` and `isNotBlank`; copy rules that use those from the product. Choose `parent`, `child`, or `both` independently for rows and columns.
 Do not put a background in `appearance` when existing input/forecast fills must
 remain. An icon-only flag uses `icon` and `iconColor` without `textColor`.
 

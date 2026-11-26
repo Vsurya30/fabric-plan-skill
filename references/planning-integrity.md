@@ -39,10 +39,12 @@ user formatting. Body fontSize is a positive numeric string; headerFontSize is a
 positive pixel string; Column Style fontSize is a number. Both boolean and numeric
 types are checked. Do not substitute CSS properties or write row heights here.
 
-For each present supported Column Style category, complete `read` and `edit`
-independently from the bundled preset. Preserve each mode's explicit values,
-including borderSides null and borderWidth zero. Missing modes do not inherit the
-other mode's colors. Conditional rules, ordered formatting, Forecast open/closed
+For each present supported Column Style category, complete each present `read`
+or `edit` mode independently from the bundled preset. Preserve each mode's
+explicit values, including borderSides null and borderWidth zero. A missing mode
+stays missing and a null mode stays null: the product renders either with no
+Column Style, and its Reset saves null. Never copy one mode's colors into the
+other. The product's Column Style editor offers border sides 1-3 and 7-12. Conditional rules, ordered formatting, Forecast open/closed
 styles and all earlier type/scope checks remain in effect.
 
 ## One physical grouping identity across every reference

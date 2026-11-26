@@ -48,3 +48,20 @@ values beyond JavaScript's safe integer range. The request supplies logical
 `rule_id`; it does not fabricate persisted `id`, timestamps or user audit fields.
 
 Define zero/missing-weight behavior and check that allocated children reconcile to the amount. Local construction does not execute an allocation.
+
+## Other weight sources Fabric accepts
+
+The constructor builds the Column profile and the Row profile with the
+CurrentYear period. Fabric's rule engine also accepts the sources below; copy
+them from a rule saved in the product instead of writing them by hand.
+
+- A Row reference's `weights_from` can be a `Period`: `CurrentYear`,
+  `PreviousYear`, `PreviousQuarter`, `PreviousMonth`, `PreviousDay`, or `Custom`
+  with a period range. For a range, the reference can add `operation`: `Average`
+  or `ApplyAsRange`.
+- A Row reference's `weights_from` can instead be a `Column`: `SelfColumn` or a
+  column hierarchy member ID.
+- A Column reference can add `weights_from_row` (a row ID) and
+  `weights_from_period` (one of the periods above).
+- Other references are `Equal`, `SelfWeight` and `ManualInput`, which carries
+  per-member weights.

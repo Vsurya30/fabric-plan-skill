@@ -55,15 +55,16 @@ class TableTests(unittest.TestCase):
         a=column_config(**args);b=column_config(**args)
         self.assertNotEqual(a['recordGuid'],b['recordGuid']);self.assertEqual(a['columnGuid'],'ProductKey');self.assertEqual(a['displayName'],'Title')
         link=a['columnMeta']['optionLinking']['lookupConfig'][0]
-        self.assertEqual((link['id'],link['linkingColumn']),('ProductKey','Key'))
+        self.assertEqual((link['id'],link['linkingColumn']),('Key','ProductKey'))
     def test_missing_or_nonunique_lookup_rejected(self):
         meta=self.metadata();meta[0]['columns'][0]['isPrimaryKey']=False
         with self.assertRaises(ValueError):column_config(db(),'database-lookup',lookup=self.lookup(),lookup_catalog=meta)
         with self.assertRaises(ValueError):column_config(db(),'database-lookup',lookup=self.lookup(),lookup_catalog=[])
-    def test_identity_is_readonly_displayed_not_mandatory(self):
-        # The product shows every column, including an identity key, on the Columns tab.
+    def test_identity_is_readonly_displayed_and_mandatory_when_not_null(self):
+        # The product shows every column, including an identity key, on the Columns tab,
+        # and makes a NOT NULL or primary-key column mandatory.
         c=column_config(db('RowKey',identity=True),'integer')
-        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,0,0))
+        self.assertEqual((c['allowEdit'],c['hideColumn'],c['mandatory']),(0,0,1))
     def test_date_decimal_keep_physical_metadata(self):
         for kind,typ in [('date','date'),('decimal','decimal')]:
             source=db('Value',typ);c=column_config(source,kind)

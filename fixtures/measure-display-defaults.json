@@ -5,7 +5,8 @@
   "operation": {
     "format": {
       "13": "auto"
-    }
+    },
+    "order": 0
   },
   "globalModeObserved": {
     "formatType": "default",

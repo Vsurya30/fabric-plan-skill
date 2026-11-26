@@ -32,7 +32,8 @@ def cat(): return {'dimensions':[field_fixture('Region'),field_fixture('Employee
 def contribution(name='Workforce'):
     return Query(name,'source-'+name,cat()).load_planning().pivot(['Region','Version'],['Month'],{'Cost':'sum'}).result({'currency':'USD','sign':'expense-positive','period':'month','version':'explicit'})
 class IdentityTests(unittest.TestCase):
-    def test_upstream_272_vectors(self):
+    def test_synthetic_272_vectors(self):
+        # Synthetic byte patterns, not the xxHash project's sanity buffer; they pin XXH3-64, seed 0.
         for v in load(ROOT/'fixtures/xxh3-vectors.json'):
             data=v['text'].encode() if 'text' in v else bytes((i*137+19)%256 for i in range(v['length']))
             self.assertEqual(str(xxh3(data)),v['expected'],v.get('length',v.get('text')))

@@ -31,19 +31,20 @@ type the product assigns when a table is added:
 
 | SQL type | PowerTable column | Notes |
 |---|---|---|
-| `varchar`, `nvarchar`, `char`, `nchar`, `text` | Text (1) | Plain text. Never Single select by default |
 | `int`, `bigint`, `smallint`, `tinyint` | Number (6) | |
-| `decimal`, `numeric`, `float`, `real`, `money` | Decimal (13) | 2 decimals unless overridden |
+| `decimal`, `numeric`, `money`, `smallmoney`, `float`, `real` | Decimal (13) | `float` shows 1 decimal, the others 2, unless overridden |
 | `date` | Date (4) | |
-| `datetime`, `datetime2`, `smalldatetime` | Date time (12) | `timeZone: timezone-independent` keeps stored values unshifted; `user-local` treats them as UTC |
+| `datetime`, `datetime2`, `smalldatetime`, `datetimeoffset` | Date time (12) | Locale date-time format with no time zone, as the product sets it. Set `time_zone` to `timezone-independent` to keep stored values unshifted, or `user-local` to treat them as UTC |
 | `bit` | Checkbox (11) | Checked `1`, unchecked `0` |
+| Any other type, including the text types, `uniqueidentifier`, `xml`, `varbinary` and `time` | Text (1) | Plain text. The skill never picks Single select by default; with schema inference on, the product itself can make a foreign-key column a database lookup |
 
-Other SQL types (`uniqueidentifier`, `datetimeoffset`, `xml`, binary) have no
-default; choose a compatible kind explicitly or report the column.
+SQL Server `timestamp` and `rowversion` have no default; choose a compatible kind
+explicitly or report the column.
 
-Every column, including the primary key, is displayed (`hideColumn: 0`).
-Identity and computed columns are read-only and not mandatory; other `NOT NULL`
-columns are mandatory. Change presentation only on request, per column:
+Every column, including the primary key, is displayed (`hideColumn: 0`). As in
+the product's create-table flow, a `NOT NULL` or primary-key column is mandatory.
+Identity and computed columns are also read-only. Change presentation only on
+request, per column:
 
 ```json
 {"columns": {
@@ -177,8 +178,8 @@ Automations:
   exported automation of the same tenant. Scheduled, form-submitted, button,
   conditional-branch and sync automations are not authored here.
 
-An update that omits an existing `automations.json` or `approvals.json`
-deletes those records on import. Always patch a fresh export; never rebuild a
+An update that omits an existing `forms.json`, `automations.json` or
+`approvals.json` deletes those records on import. Always patch a fresh export; never rebuild a
 PowerTable folder from scratch for an existing Plan.
 
 Product exports omit each automation's `recordGuid`, so the import cannot match
@@ -220,7 +221,9 @@ required/default values and unique constraints.
 store the key and display the requested label, e.g. `DepartmentName`. Require
 compatible types and a unique target key. Repeated labels do not uniquely
 identify rows. A lookup configuration is not a join and must not overwrite the
-stored key. Preserve unrelated column metadata, editing and row actions.
+stored key. In each `lookupConfig` hop, `id` is the key column in the lookup
+table and `linkingColumn` is the preceding table's column that holds it.
+Preserve unrelated column metadata, editing and row actions.
 
 ```sh
 python plan.py repair-powertable-config --baseline current-definition.json --input repair-request.json --out candidate

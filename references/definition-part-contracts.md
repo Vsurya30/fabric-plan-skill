@@ -34,16 +34,20 @@ default is a product decision for the user, not an inference from the schemas.
 
 `planning-features` takes `sheet_guid`, an optional `visual_id`, and any of:
 
-- `writeback`: `writeback_type`, `destinations` (complete objects), and optional
-  `column_mapping` (measure GUID to column name), `excluded_measures`,
-  `skipped_dimensions` and `number_precision`.
+- `writeback`: `writeback_type`, `destinations` (each as Fabric exports it), and
+  optional `column_mapping` (measure GUID to column name), `excluded_measures`,
+  `skipped_dimensions` and `number_precision`. Fabric exports a `writeback.json`
+  for every Planning visual, and the constructor refuses an existing one, so it
+  applies only to a definition without one, such as a newly built Planning sheet.
 - `insert_rows`: a list with `name`, `dimension_id` (a row dimension of the
   visual), `row_type` (`StaticRow` or `CalculatedRow`), a `formula` for each
   calculated row, and optional `description`, `include_in_total` and
   `column_aggregation`.
 - `scenarios`: a list with `name`, `measure_ids` (measure GUIDs of the visual),
   `status` and `order`. Once the part has scenarios, an omitted `order` becomes
-  the highest order plus one.
+  the highest order plus one. The current Fabric Plan import neither reads nor
+  exports `scenarios.json`, so the command warns that these scenarios have no
+  effect after publishing.
 - `row_templates`: a list with `title`, `no_row_id` (the text written for a
   missing parent or previous row) and ordered `rows`, each with `title`,
   `include_in_total`, `disabled`, `distribute_parent_value_to_child`,
@@ -51,7 +55,10 @@ default is a product decision for the user, not an inference from the schemas.
 
 `powertable-features` takes `sheet_guid` and `approvals` with `rule_type`,
 `persist_flag`, `levels` (`name`, `description`), and optional
-`multi_level_enabled` (Boolean) and `filters` (`name`, `filter`, `order`). `cube-part` takes any of `partitions` (`name`, `dimensions`,
+`multi_level_enabled` (Boolean) and `filters` (`name`, `filter`, `order`). A
+`LOOKUP` rule also needs `lookup_config` (`tableName`, `approverColumn` and a
+`conditionalColumn` list of `columnName`/`lookupColumnName` pairs), copied as
+given. `cube-part` takes any of `partitions` (`name`, `dimensions`,
 `time_dimensions`, `measures`), `measures` (`name`, `type`, `config`),
 `measure_mappings` (`partition`, `measure`) and `input_mappings` (`measure`,
 `sheet_guid`, `measure_guid`, optional `visual_id` and `partition`). Names link
@@ -65,7 +72,9 @@ of that part, reviewed against the contract below, never a rebuild from a
 smaller hand-written object.
 
 The constructors do not compute a writeback `settingsHash`, a scenario
-`dimensionHash`, simulations or numeric cube service IDs. They do not position
+`dimensionHash`, simulations or numeric cube service IDs. The approval record's
+`approvalLevel` is the number of levels, which is how Fabric's own workflow API
+stores it: multi-level approval finishes only at that level. They do not position
 inserted rows, nest template rows, author `ForecastRow` or
 `PercentContributionRow` rows, or assign approver users.
 
@@ -74,16 +83,17 @@ inserted rows, nest template rows, author `ForecastRow` or
 **Writeback (`writeback.json`).** The article requires `writebackType` and
 `destinations`; the published schema requires only `$schema` and
 `writebackType`. Layout codes are `PIVOT_LONG` 2, `PIVOT_WIDE` 3, `DELTA_ONLY` 4
-and `DELTA_WIDE` 5. A schema destination needs `tableName`, `settings` (with
-`dbSchema`) and `settingsHash`, plus either `connectionId` or a portable
-`connection`. The structure manifest notes that exported writeback parts lack a
-destination member that the public schema requires, so do not "complete" an
-exported destination from the schema. Keep measure-to-column mappings,
-exclusions, filters, auto and snapshot writeback, scenario IDs, debounce,
-precision, string length and skipped dimensions. The article's own example
-destination has `connectionId`, `databaseId`, `tableName` and `schema` instead.
-The constructor copies one complete destination in either form as given, and
-reports `schema-conflict` for the article form.
+and `DELTA_WIDE` 5. Fabric exports each destination with `tableName`, a
+`settings` object and `connectionId` or `connectionIdVariable`; `settingsHash`
+can be empty. The import never reads the schema's portable `connection`, and a
+destination without `settings` (the article's `connectionId`/`databaseId`
+example) fails import on Fabric SQL-backed Plans. On those Plans the import keeps
+`tableName` only when `settings.database` is set; otherwise it keeps the existing
+table name or creates one. The constructor accepts only the exported form,
+copied as given, and reports `schema-conflict` when `settingsHash` or
+`connectionId` is absent. Keep measure-to-column mappings, exclusions, filters,
+auto and snapshot writeback, scenario IDs, debounce, precision, string length and
+skipped dimensions.
 
 **Inserted rows (`insertRows.json`).** The part wraps `rows`. Each row requires
 `id`, `visualId`, `rowMeta`, `name` and `dimensionId`; `rowMeta` requires `id`,
@@ -94,7 +104,8 @@ formulas and bindings.
 **Scenarios (`scenarios.json`).** The part wraps `scenarios`. Each scenario
 requires `name`, `status` (`ACTIVE` or `LOCK`) and `meta` with `measureIds`,
 `scenarioGuid` and `order`. `autoWritebackEnabled` is `ACTIVE` or `INACTIVE`.
-Keep simulation payloads and dimension hashes.
+Keep simulation payloads and dimension hashes. The current import ignores this
+part, and export doesn't write it.
 
 **Row templates (`modelTemplate.json`).** The part wraps
 `properties.dynamicRowTemplates`. Each template requires `id`, `title` and
@@ -112,12 +123,16 @@ shape this package writes. Keep the shape of the export in hand. Each entry
 requires `columnGuid`, `columnName`, `columnType`, `columnMeta` and
 `displayName`; edit, mandatory and hidden flags are `0` or `1`. `columnType`
 codes are `TEXT` 1, `SINGLE_SELECT` 2, `MULTI_SELECT` 3, `DATE` 4, `NUMBER` 6,
-`PERSON` 7, `CHECKBOX` 11, `DATETIME` 12, `DECIMAL` 13, `IMAGE` 14, `URL` 15,
-`EMAIL` 16, `FORMULA` 17, `BUTTON_COLUMN` 18, `CURRENCY` 19, `PHONE_NUMBER` 20,
-`RATING` 21, `ATTACHMENT` 22, `PERCENT_SLIDER` 23 and `PERCENT` 24. The visual
-column type is a separate code set: `BASE` 1, `SINGLE_SELECT` 3, `MULTI_SELECT` 4,
-`REFERENCE_COLUMN` 5, `FORMULA` 6, `ALTER_TABLE` 7, `RELATION_COLUMN` 8,
-`BUTTON_COLUMN` 9, `ATTACHMENT` 10 and `ROLLUP` 11.
+`PERSON` 7, `TIME` 8, `LAST_UPDATED_BY` 9, `LAST_UPDATED_AT` 10, `CHECKBOX` 11,
+`DATETIME` 12, `DECIMAL` 13, `IMAGE` 14, `URL` 15, `EMAIL` 16, `FORMULA` 17,
+`BUTTON_COLUMN` 18, `CURRENCY` 19, `PHONE_NUMBER` 20, `RATING` 21, `ATTACHMENT`
+22, `PERCENT_SLIDER` 23, `PERCENT` 24, `JSON_KEYS_ONLY` 26 and
+`JSON_STRICT_SCHEMA` 27. The visual column type is a separate code set: `BASE` 1,
+`DISPLAY` 2, `SINGLE_SELECT` 3, `MULTI_SELECT` 4, `REFERENCE_COLUMN` 5, `FORMULA`
+6, `ALTER_TABLE` 7, `RELATION_COLUMN` 8, `BUTTON_COLUMN` 9, `ATTACHMENT` 10 and
+`ROLLUP` 11. Column and table names may use Unicode letters, digits, spaces,
+underscores, brackets and hyphens, start with a letter, and stay within 128
+characters.
 
 **Source (`source.json`).** The article lists `connection`, `database`,
 database `schema` and `tableName`. The published schema requires only `$schema`
@@ -125,23 +140,27 @@ and also defines a `source` object; this package reads the source record
 identity from `source.recordGuid`. Keep whichever members the export has.
 
 **Settings (`sourceSettings.json`).** The article wraps a `settings` array; the
-published schema also defines `sourceSettings`, which this package reads. Setting
-names are `ROW_ADD`, `ROW_UPDATE`, `ROW_DELETE`, `ROW_IDENTIFIER`,
-`COMMENT_SETTINGS` and `SCD`; access is `ALL_USERS` or `SPECIFIC_USERS`. Never
-broaden row access by default.
+published schema also defines `sourceSettings`. Fabric's import reads
+`sourceSettings` or a bare array: a `settings` wrapper imports nothing and raises
+no error, so this package writes and reads `sourceSettings`. Setting names are
+`ROW_ADD`, `ROW_UPDATE`, `ROW_DELETE`, `ROW_IDENTIFIER`, `VISUAL_LAYOUT`,
+`COMMENT_SETTINGS` and `SCD`. Row access is all users, specific users or rule
+based, stored as `filterType` 1, 2 or 3. Never broaden row access by default.
 
 **Approvals (`approvals.json`).** The article requires `ruleType`: `DEFAULT` 10,
 `MANUAL` 20 or `LOOKUP` 30. `persistFlag` is `SAVE_AFTER_REVIEW` 10 or
 `SAVE_BEFORE_REVIEW` 20. Approval levels require `name`, `description` and
 `level`; routing filters require `name`, `filter` and `order`. Assigning
 approver users has no public route. The article lists these members at the top
-level, but the import reads `approvalLevels` and `approvalFilter` from one
-`approvals` record, so the constructor writes `ruleType`, `persistFlag`,
-`multiLevelEnabled` and both lists inside that record. No public source shows
-this nesting, so it is a reviewed deviation: the command warns about it, and the
-workflow must be confirmed in the product after publishing. `multiLevelEnabled`
-is written only when the request states `multi_level_enabled`; it is never
-inferred from the number of levels.
+level. Fabric's import reads them from one nested `approvals` record or from the
+top level, and its export writes the nested record, which the constructor
+follows: `ruleType`, `persistFlag`, `approvalLevel` (the number of levels),
+optional `multiLevelEnabled`, both lists and, for `LOOKUP`,
+`settings.lookupConfig`. No public source shows the nesting, so the command
+warns about it; confirm the workflow in the product after publishing.
+`multiLevelEnabled` is written only when the request states
+`multi_level_enabled`; it is never inferred from the number of levels. The
+PowerTable UI offers only `SAVE_AFTER_REVIEW`; the backend also accepts 20.
 
 **Automations (`automations.json`).** An object with an `automations` array.
 Each automation requires `name`, `triggerType` and `config`. Trigger codes are
@@ -150,12 +169,16 @@ Each automation requires `name`, `triggerType` and `config`. Trigger codes are
 `name`, `trigger`, `entryGroupId` and `groups`; each group requires `groupId`,
 `groupType`, `entryActionId` and `actions`, and each action requires
 `actionId`, `actionType` and `config`. Keep the links between groups and actions.
+Current Fabric also has a webhook action (`TRIGGER_WEBHOOK` 15); this package
+builds only create-record, update-record, mail and Teams actions.
 
 **Forms (`forms.json`).** The article describes a root array; the published
 schema wraps a `forms` array, which is the shape this package writes. Each form
-requires `title` and `layoutMeta` with `children` and `type: "form"`. Layouts
-are `default`, `tabs` or `sections`, and elements are `field`, `section` or
-`tab`, each with a `name`.
+requires `title` and `layoutMeta` with `children` and `type: "form"`. The
+product's layouts are `default` and `tabs`, and its layout elements are `form`,
+`field`, `group`, `tabItem` and `rowGroup`. The article's `sections` layout and
+`section`/`tab` elements don't appear in the product. New forms show the logo
+and allow multiple entries, as the product does.
 
 ## Intelligence properties
 

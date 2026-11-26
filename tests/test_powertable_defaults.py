@@ -43,10 +43,19 @@ class ColumnDefaults(unittest.TestCase):
         expected={'varchar':'text','nvarchar':'text','char':'text','nchar':'text','text':'text',
                   'int':'integer','bigint':'integer','smallint':'integer','decimal':'decimal','numeric':'decimal',
                   'float':'decimal','money':'decimal','date':'date','datetime':'datetime','datetime2':'datetime',
-                  'smalldatetime':'datetime','bit':'checkbox','NVARCHAR(MAX)':'text','datetime2(7)':'datetime'}
+                  'smalldatetime':'datetime','bit':'checkbox','NVARCHAR(MAX)':'text','datetime2(7)':'datetime',
+                  'smallmoney':'decimal','real':'decimal','datetimeoffset':'datetime',
+                  'uniqueidentifier':'text','xml':'text','varbinary':'text','time':'text'}
         for sql,kind in expected.items():self.assertEqual(default_kind(sql),kind,sql)
-        for sql in ('uniqueidentifier','datetimeoffset','xml','varbinary'):
+        for sql in ('timestamp','rowversion'):
             with self.assertRaisesRegex(ValueError,'No PowerTable default'):default_kind(sql)
+
+    def test_float_shows_one_decimal_and_other_decimal_types_two(self):
+        meta={'isIdentity':False,'isNullable':True,'isPrimaryKey':False,'isUnique':False,'isCompositeUnique':False}
+        for sql,places in (('float',1),('decimal',2),('money',2),('real',2)):
+            with self.subTest(sql=sql):
+                c=column_config({'name':'Value','dbMeta':{**meta,'type':sql}})
+                self.assertEqual(c['columnMeta']['noOfDecimals'],places)
 
     def test_catalog_table_gets_text_date_datetime_checkbox_and_displayed_key(self):
         _,raw,ids=table_from_request(request())
@@ -59,8 +68,9 @@ class ColumnDefaults(unittest.TestCase):
             self.assertNotIn('selectionMethod',meta)
         self.assertTrue(all(c['hideColumn']==0 for c in cols.values()))
         key=cols['EmployeeID']
-        self.assertEqual((key['allowEdit'],key['mandatory'],key['columnMeta']['isPrimaryKey']),(0,0,True))
-        self.assertEqual(cols['LastLogin']['columnMeta']['timeZone'],'timezone-independent')
+        # The product makes a NOT NULL or primary-key column mandatory, identity or not.
+        self.assertEqual((key['allowEdit'],key['mandatory'],key['columnMeta']['isPrimaryKey']),(0,1,True))
+        self.assertEqual((cols['LastLogin']['columnMeta']['format'],cols['LastLogin']['columnMeta']['timeZone']),('DEFAULT_LOCALE_TIME',''))
         self.assertEqual(cols['JoinDate']['columnMeta']['format'],'DEFAULT_LOCALE')
         self.assertNotIn('timeZone',cols['JoinDate']['columnMeta'])
         self.assertEqual((cols['Active']['columnMeta']['checkedValue'],cols['Active']['columnMeta']['unCheckedValue']),('1','0'))
@@ -94,7 +104,7 @@ class ColumnDefaults(unittest.TestCase):
         data=rows()+[row(9,'Tenure','int',4,10,0,computed=1)]
         table=catalog_table(data,UNIQUE,schema='dbo',table='Employee')
         cols={c['columnName']:c for c in table_column_configs(table)}
-        self.assertEqual((cols['Tenure']['allowEdit'],cols['Tenure']['mandatory']),(0,0))
+        self.assertEqual((cols['Tenure']['allowEdit'],cols['Tenure']['mandatory']),(0,1))
         with self.assertRaisesRegex(ValueError,'Computed'):table_column_configs(table,{'Tenure':{'allow_edit':True}})
 
 class CatalogAndParser(unittest.TestCase):

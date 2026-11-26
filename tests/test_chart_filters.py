@@ -34,7 +34,8 @@ class ChartFilterTests(unittest.TestCase):
         regs=p['superFilterAssignments']
         self.assertEqual(regs[1]['pivotAssignments'],[dim,a])
         self.assertEqual(regs[2]['pivotAssignments'],[dim,b])
-        self.assertEqual(regs[2]['configuration']['sheetDataItemAggregationType'],'max')
+        # A saved 'max' is written back as the product's 'maximum'.
+        self.assertEqual(regs[2]['configuration']['sheetDataItemAggregationType'],'maximum')
         self.assertEqual(regs[2]['bucketId'],'AC')
         # A dimension used to evaluate a measure is not its own field card.
         p['superFilterAssignments']=regs[1:]

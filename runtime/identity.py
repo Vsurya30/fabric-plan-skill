@@ -87,6 +87,10 @@ def native_id(value):
     if not isinstance(value,str) or not re.fullmatch(r'0|[1-9][0-9]*',value) or int(value)>MASK:
         raise ValueError('Native Id must be a decimal u64 string')
     return value
+AGGREGATION_ALIASES={'avg':'average','min':'minimum','max':'maximum'}
+def product_aggregation(value):
+    """The product's pivot aggregation name: avg, min and max become average, minimum and maximum."""
+    return AGGREGATION_ALIASES.get(value,value) if isinstance(value,str) else value
 def new_native_id(taken):
     """A random nonzero decimal u64 string that is not in ``taken``."""
     while True:
@@ -105,5 +109,5 @@ class Registry:
     def semantic(self,external_key,column_type='Measure',aggregation=None):
         if not external_key: raise ValueError('Missing exact assignment key')
         if column_type!='Measure' and not aggregation: raise ValueError('Non-measure source needs explicit aggregation')
-        prefix='' if column_type=='Measure' else aggregation.upper()+'__'
+        prefix='' if column_type=='Measure' else product_aggregation(aggregation).upper()+'__'
         return self.bind('semantic:'+prefix+external_key,str(xxh3(prefix+external_key)))

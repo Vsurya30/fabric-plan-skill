@@ -22,13 +22,15 @@ def record_kind(record):
 def sheet_column_id(record):
     """External From Sheets key from a fresh, owner-scoped native catalog.
 
-    Fabric SQL records expose a row id. OneLake records can omit it and use
-    measureGuid instead. Never fabricate a SQL key or mutate the source record.
+    Fabric SQL records expose a row id. OneLake records omit it; a record migrated
+    from Fabric SQL keeps that key as sqlPk, and a native OneLake record uses its
+    measureGuid. Never fabricate a SQL key or mutate the source record.
     An explicitly malformed id is an error, not a backend fallback signal.
     """
     record_kind(record)
     mid=native_id(record['measureGuid'])
     value=record.get('id')
+    if value is None:value=record.get('sqlPk')
     if value is None:return mid
     if isinstance(value,bool) or not isinstance(value,(str,int)):
         raise ValueError('Invalid explicit source column identity')

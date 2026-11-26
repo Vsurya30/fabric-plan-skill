@@ -6,13 +6,13 @@
   "is_updated": true,
   "created_at": "2026-01-01T00:00:00",
   "created_by": {
-    "email": "Example User",
-    "id": "planner@example.invalid"
+    "email": "planner@example.invalid",
+    "id": "00000000-0000-4000-8000-000000000101"
   },
   "updated_at": "2026-01-01T00:00:01",
   "updated_by": {
     "email": "planner@example.invalid",
-    "name": "Example User"
+    "id": "00000000-0000-4000-8000-000000000101"
   },
   "columns": "All",
   "rows": "All",

@@ -303,7 +303,7 @@
     "powertable-approvals": {
       "phase": "local",
       "description": "Add a PowerTable approval workflow (rule type, persist flag, optional multi-level flag, ordered levels and routing filters) as a new public definition part; approver users are not assigned.",
-      "inputs": "Fresh export without approvals.json, PowerTable sheet GUID, and the rule type, persist flag, levels and filter orders stated in the request; the multi-level flag is optional.",
+      "inputs": "Fresh export without approvals.json, PowerTable sheet GUID, and the rule type, persist flag, levels and filter orders stated in the request; the multi-level flag is optional, and a LOOKUP rule needs its lookup_config.",
       "command": "python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate",
       "symbols": [
         "runtime.powertable_features.approval_record",
@@ -312,8 +312,8 @@
     },
     "planning-writeback": {
       "phase": "local",
-      "description": "Add a Planning writeback configuration: layout, a complete destination copied as given, and measure-to-column mapping. settingsHash is never computed and no writeback runs.",
-      "inputs": "Fresh export without writeback.json, Planning sheet GUID, writeback_type, a complete destination copied from an export, and optional mapping, exclusions, skipped dimensions and precision.",
+      "description": "Add a Planning writeback configuration: layout, destinations copied as Fabric exports them, and measure-to-column mapping. settingsHash is never computed and no writeback runs. Fabric exports writeback.json for every Planning visual, so this applies only to a definition without one.",
+      "inputs": "A definition without writeback.json, such as a newly built Planning sheet; Planning sheet GUID; writeback_type; destinations as exported (tableName, settings, and connectionId or connectionIdVariable); and optional mapping, exclusions, skipped dimensions and precision.",
       "command": "python plan.py planning-features --baseline current-definition.json --input planning-features.request.json --out candidate",
       "symbols": [
         "runtime.planning_features.writeback_config",
@@ -332,7 +332,7 @@
     },
     "planning-scenarios": {
       "phase": "local",
-      "description": "Append scenario records (name, status, order and covered measures); simulations, dimension hashes and auto writeback are not generated.",
+      "description": "Append scenario records (name, status, order and covered measures); simulations, dimension hashes and auto writeback are not generated. The current Fabric import ignores scenarios.json, so the command warns that the scenarios have no effect after publishing.",
       "inputs": "Fresh export, Planning sheet GUID, scenario names, measure GUIDs of the visual, and the status and first order stated in the request.",
       "command": "python plan.py planning-features --baseline current-definition.json --input planning-features.request.json --out candidate",
       "symbols": [

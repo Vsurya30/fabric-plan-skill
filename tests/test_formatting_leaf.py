@@ -66,7 +66,7 @@ class FormattingTests(unittest.TestCase):
         req={'columnStyles':{'forecastOpen':{mode:{'background':'#FFFFDD','fontSize':14} for mode in ('read','edit')}}}
         r=compile_formatting(s,req)['state']['globalStyles']['columnStyle']
         self.assertEqual(r['locked']['edit']['future'],'keep')
-        self.assertTrue(set(SNAPSHOT['columnStyle'])<=set(r['locked']['read']))
+        self.assertNotIn('read',r['locked'])  # a missing mode stays missing: no Column Style
         self.assertTrue(set(SNAPSHOT['columnStyle'])<=set(r['locked']['edit']))
         self.assertIsNone(r['forecastOpen']['read']['borderSides']);self.assertEqual(r['forecastOpen']['read']['borderWidth'],3)
         self.assertEqual(r['forecastOpen']['read']['future'],7)
