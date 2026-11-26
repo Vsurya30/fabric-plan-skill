@@ -45,7 +45,7 @@ TEMPLATES = {
     'COLUMN_WATERFALL_HORIZONTAL': _template(min_buckets=2),
     'LINE': _template(measures={**_REFERENCES, 'AC': (1, 27)}),
     'AREA': _template(measures={**_REFERENCES, 'AC': (1, 27)}),
-    'STACKED_AREA': _template(stack=True, needs_stack=True),
+    'STACKED_AREA': _template(measures={'AC': (1, 1), 'FC': (0, 1)}, stack=True, needs_stack=True),
     'SCATTER_PLOT': _template(measures={'AC': (1, 1), 'PY': (1, 1)}, stack=True),
     'BUBBLE_PLOT': _template(measures={'AC': (1, 1), 'PY': (1, 1), 'PL': (1, 1)}, stack=True),
     'SIDE_BY_SIDE_WATERFALL': _template(measures={**_REFERENCES, 'PY': (1, 1)}, axis_max=1, min_buckets=2),
@@ -63,10 +63,13 @@ RECIPES = {
     'C08': ('Stacked Area', ('STACKED_AREA', 'AREA'), ('axis', 'AC')),
     'C09': ('Scatter', ('SCATTER_PLOT',), ('axis', 'AC', 'PY')),
     'C10': ('Bubble', ('BUBBLE_PLOT',), ('axis', 'AC', 'PY', 'PL')),
+    'C11': ('Related Driver Panels', ('LINE',), ('axis', 'AC')),
     'C12': ('Side-by-Side Waterfall', ('SIDE_BY_SIDE_WATERFALL',), ('axis', 'AC', 'PY')),
     'C13': ('Overlapped Column, date/forecast', ('COLUMN_VERTICAL',), ('axis', 'AC')),
 }
 
+# A panel recipe is one chart per measure: related drivers have their own scales, so each gets its own panel.
+PANEL_RECIPES = {'C11'}
 SPEC_KEYS = {'label', 'recipe', 'chartType', 'category', 'stack', 'measures', 'theme'}
 MEASURE_KEYS = {'field', 'aggregation', 'label'}
 
@@ -201,8 +204,7 @@ def resolve_chart_type(spec):
     chart_type = spec.get('chartType')
     if code is not None:
         if code not in RECIPES:
-            raise ValueError('Unknown IBCS recipe ' + repr(code) + '; the catalog has '
-                             + ', '.join(RECIPES) + ' (there is no C11)')
+            raise ValueError('Unknown IBCS recipe ' + repr(code) + '; the catalog has ' + ', '.join(RECIPES))
         allowed = RECIPES[code][1]
         if chart_type is None:
             chart_type = allowed[0]
@@ -238,6 +240,9 @@ def _check(code, chart_type, spec, measures):
         if missing:
             raise ValueError(code + ' (' + RECIPES[code][0] + ') needs bindings for '
                              + ', '.join(missing) + '; resolve them from the model before creating the chart')
+        if code in PANEL_RECIPES and sum(len(items) for items in measures.values()) != 1:
+            raise ValueError(code + ' (' + RECIPES[code][0] + ') takes one measure per panel; add one '
+                             + code + ' chart for each driver')
     for bucket, (low, high) in template['measures'].items():
         count = len(measures.get(bucket, []))
         if count < low:

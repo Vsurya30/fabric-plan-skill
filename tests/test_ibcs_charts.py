@@ -64,8 +64,8 @@ class RecipeCharts(unittest.TestCase):
             self.build(spec('C02', 'AC'))
 
     def test_unknown_recipe_and_template_are_refused(self):
-        with self.assertRaisesRegex(ValueError, 'no C11'):
-            self.build(spec('C11', 'AC'))
+        with self.assertRaisesRegex(ValueError, "Unknown IBCS recipe 'C14'; the catalog has C01, .*C11, C12, C13$"):
+            self.build(spec('C14', 'AC'))
         s = spec('C03', 'AC', 'PY', 'FC')
         del s['recipe']
         s['chartType'] = 'PIE_CHART'
@@ -84,9 +84,24 @@ class RecipeCharts(unittest.TestCase):
         actuals = [a for a in p['pivotAssignments'] if a['bucketId'] == 'AC']
         self.assertEqual([(a['order'], a['customName']) for a in actuals], [(0, 'Direct'), (1, 'Retail')])
 
+    def test_c11_is_one_line_panel_per_driver(self):
+        panels = [self.build({**spec('C11', 'AC'), 'label': label, 'measures': {'AC': field}})
+                  for label, field in (('Units', VALUES['AC']), ('Price', VALUES['PY']), ('Cost', VALUES['PL']))]
+        self.assertEqual([(p['chartType'], buckets(p)[1]) for p in panels],
+                         [('LINE', (VALUES['AC'], 'AC')), ('LINE', (VALUES['PY'], 'AC')), ('LINE', (VALUES['PL'], 'AC'))])
+        for extra in ({'AC': [VALUES['AC'], VALUES['PY']]}, {'AC': VALUES['AC'], 'PY': VALUES['PY']}):
+            with self.assertRaisesRegex(ValueError, 'C11 .Related Driver Panels. takes one measure per panel'):
+                self.build({**spec('C11', 'AC'), 'measures': extra})
+
     def test_native_stacked_area_needs_a_stack(self):
         with self.assertRaisesRegex(ValueError, 'STACKED_AREA needs a stack'):
             self.build(spec('C08', 'AC'))
+
+    def test_native_stacked_area_takes_only_an_actual_and_a_forecast(self):
+        self.assertEqual(self.build(spec('C08', 'AC', 'FC', 'stack'))['chartType'], 'STACKED_AREA')
+        for bucket in ('PY', 'PL'):
+            with self.assertRaisesRegex(ValueError, 'STACKED_AREA has no measure bucket ' + bucket):
+                self.build(spec('C08', 'AC', bucket, 'stack'))
 
     def test_stacked_template_without_stack_needs_two_measures(self):
         s = {'label': 'Stacked', 'chartType': 'STACKED_COLUMN_VERTICAL', 'category': 'Region[Region]',
@@ -267,6 +282,59 @@ class ChartTheme(unittest.TestCase):
             apply_chart_theme({**p, 'visualType': 10})
         with self.assertRaisesRegex(ValueError, 'appearance is not an object'):
             apply_chart_theme({**p, 'visualState': {**p['visualState'], APPEARANCE: '[]'}})
+
+
+# Charts on the pages of the IBCS business reporting templates: (page, recipe, chartType, bound buckets).
+# A chart without a recipe is built from its template alone, such as actual against previous year on a table page.
+TEMPLATE_PAGES = [
+    ('C01', 'C01', 'STACKED_COLUMN_VERTICAL', ('AC', 'PL', 'FC', 'stack')),
+    ('C02', 'C02', 'STACKED_COLUMN_HORIZONTAL', ('AC', 'stack')),
+    ('C03', 'C03', 'COLUMN_VERTICAL', ('AC', 'PY', 'PL', 'FC')),
+    ('C04', 'C04', 'COLUMN_HORIZONTAL', ('AC', 'PL')),
+    ('C05', 'C05', 'COLUMN_WATERFALL_VERTICAL', ('AC', 'PY', 'PL', 'FC')),
+    ('C06', 'C06', 'COLUMN_WATERFALL_HORIZONTAL', ('AC', 'PY', 'PL')),
+    ('C07', 'C07', 'LINE', ('AC',)),
+    ('C08', 'C08', 'STACKED_AREA', ('AC', 'stack')),
+    ('C09', 'C09', 'SCATTER_PLOT', ('AC', 'PY')),
+    ('C10', 'C10', 'BUBBLE_PLOT', ('AC', 'PY', 'PL')),
+    ('C11', 'C11', 'LINE', ('AC',)),
+    ('C12', 'C12', 'SIDE_BY_SIDE_WATERFALL', ('AC', 'PY', 'PL')),
+    ('C13', 'C13', 'COLUMN_VERTICAL', ('AC', 'PL')),
+    ('C13', 'C04', 'COLUMN_HORIZONTAL', ('AC', 'PL')),
+    ('T01', 'C04', 'COLUMN_HORIZONTAL', ('AC', 'PL')),
+    ('T01', None, 'COLUMN_HORIZONTAL', ('AC', 'PY')),
+    ('T02', 'C04', 'COLUMN_HORIZONTAL', ('AC', 'PL')),
+    ('T02', None, 'COLUMN_HORIZONTAL', ('AC', 'PY')),
+    ('T03', 'C04', 'COLUMN_HORIZONTAL', ('AC', 'PL')),
+    ('T04', 'C12', 'SIDE_BY_SIDE_WATERFALL', ('AC', 'PY')),
+]
+
+
+class TemplatePages(unittest.TestCase):
+    def test_every_template_page_chart_builds_with_the_ibcs_theme(self):
+        for page, code, chart_type, bound in TEMPLATE_PAGES:
+            with self.subTest(page=page, chartType=chart_type, bound=bound):
+                s = {'label': page + ' chart', 'category': 'Region[Region]',
+                     'measures': {b: VALUES[b] for b in bound if b in VALUES}}
+                s.update({'recipe': code} if code else {'chartType': chart_type})
+                if 'stack' in bound:
+                    s['stack'] = 'Product[Product]'
+                p = recipe_chart(model(), s, Registry())
+                self.assertEqual((p['chartType'], p['visualState']['chartType']), (chart_type, chart_type))
+                self.assertEqual(chart_theme(p), 'ibcs')
+                self.assertEqual(sorted(appearance(p)['measuresStyle']), sorted(b for b in bound if b in VALUES))
+                audit_chart_filters(p)
+
+    def test_template_pages_cover_every_recipe_and_only_supported_templates(self):
+        self.assertEqual({code for _, code, _, _ in TEMPLATE_PAGES if code}, set(RECIPES))
+        self.assertTrue({chart_type for _, _, chart_type, _ in TEMPLATE_PAGES} <= set(TEMPLATES))
+
+    def test_previous_year_beside_a_table_is_drawn_as_a_previous_period_not_a_plan(self):
+        s = {'label': 'AC vs PY', 'chartType': 'COLUMN_HORIZONTAL', 'category': 'Region[Region]',
+             'measures': {'AC': VALUES['AC'], 'PY': VALUES['PY']}}
+        styles = appearance(recipe_chart(model(), s, Registry()))['measuresStyle']
+        self.assertEqual((styles['PY']['pattern'], styles['PY']['fillColor']), ('solid', '#bfbfbf'))
+        self.assertNotIn('PL', styles)
 
 
 class RecipeGuide(unittest.TestCase):

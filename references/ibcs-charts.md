@@ -62,12 +62,15 @@ Add the chart to a dashboard's `charts` list. A chart that names `recipe` or `ch
 | C08 | Stacked Area | `STACKED_AREA`; mixed variant `AREA` | axis, AC, stack; mixed: axis, AC (one or more) |
 | C09 | Scatter | `SCATTER_PLOT` | axis, AC (x), PY (y) |
 | C10 | Bubble | `BUBBLE_PLOT` | axis, AC (x), PY (y), PL (size) |
+| C11 | Related Driver Panels | `LINE` | axis, AC (one panel per driver) |
 | C12 | Side-by-Side Waterfall | `SIDE_BY_SIDE_WATERFALL` | one axis field, AC, PY |
 | C13 | Overlapped Column, date/forecast | `COLUMN_VERTICAL` | axis, AC |
 
 C07 and C13 assume a date axis. The builder does not check the axis data type, so choose the period field yourself.
 
-The catalog has no C11. An unknown code is refused: find out which chart the user means instead of guessing an alias. `runtime.ibcs_charts.recipes()` returns this table, and `required_buckets(code, chartType)` returns the required bindings.
+C11 is a set of panels, not one chart. Add one C11 chart for each driver, all on the same axis field, each with a single measure in AC. Related drivers have their own scales, so they are not drawn as several lines in one chart. Connectors and shared scale bands between the panels are not authored.
+
+An unknown code is refused: find out which chart the user means instead of guessing an alias. `runtime.ibcs_charts.recipes()` returns this table, and `required_buckets(code, chartType)` returns the required bindings.
 
 Bucket names are chart roles, not business periods. In C09 and C10, PY and PL hold the y coordinate and the bubble size, not a prior year or a plan. Bind the measures the user names for each role. If a required binding cannot be resolved from the model, name it and ask; do not substitute a similar field.
 
@@ -75,6 +78,7 @@ Bucket names are chart roles, not business periods. In C09 and C10, PY and PL ho
 
 - The AC, PY, PL and FC buckets each take one field. The exception is AC on LINE and AREA, which takes up to 27.
 - Scatter has only AC and PY, and both are required. Bubble has AC, PY and PL, and all three are required.
+- The native stacked area has only AC and FC. It has no PY or PL bucket.
 - Stacked and 100% stacked charts (column or bar) need either a stack dimension or measures in at least two buckets. With two or more measures and no stack, the chart stacks the measures. With one measure and no stack, the chart renders as a plain column or bar, so the builder refuses that combination. The native stacked area always needs a stack.
 - Waterfalls and the side-by-side waterfall compare at least two measures in different buckets. The side-by-side waterfall takes a single axis field.
 - The category and the stack must be different dimensions. A semantic measure cannot be a dimension. The same value cannot be bound to two buckets.
@@ -154,6 +158,19 @@ Two optional dashboard keys turn a workspace into an IBCS page. Both are built b
 - `footnotes` takes a list of lines. Each becomes an 11px paragraph in the note slot. In the left-rail and stacked layouts that slot moves to the bottom of the page and grows with the number of lines. A custom layout places the note rectangle itself.
 - Footnotes and `note` share one slot, so give only one of them.
 - Threaded comments, and notes anchored to data cells or chart points, cannot be authored through a definition. Report them as unavailable.
+
+**Template pages.** Pages for the IBCS business reporting templates are composed like this.
+
+| Page | Content |
+|---|---|
+| C01–C10, C12 | One recipe chart |
+| C11 | One C11 line panel for each driver |
+| C13 | A C13 column chart by period, with a C04 bar chart by category beside it |
+| T01, T02 | A Matrix by hierarchy, with a bar chart for each comparison beside it |
+| T03 | A Matrix, with one C04 bar chart |
+| T04 | A Matrix, with a C12 side-by-side waterfall |
+
+Bind each value to the bucket of its scenario. A previous-year value in PL is drawn outlined, as a plan. C04 needs a plan in PL, so for actual against previous year build the bar chart from `"chartType": "COLUMN_HORIZONTAL"` with AC and PY.
 
 ## Plan theme
 
