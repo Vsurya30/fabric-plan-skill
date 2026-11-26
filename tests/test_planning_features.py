@@ -344,7 +344,9 @@ class Routing(unittest.TestCase):
 
 class CommandLine(PlanningFeatureTestCase):
     def run_command(self,request,command='planning-features'):
-        tmp=Path(self.enterContext(tempfile.TemporaryDirectory()))
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        tmp=Path(temporary.name)
         (tmp/'request.json').write_text(json.dumps(request),encoding='utf-8')
         (tmp/'baseline.json').write_text(json.dumps(self.envelope),encoding='utf-8')
         result=subprocess.run([sys.executable,str(ROOT/'plan.py'),command,'--baseline',str(tmp/'baseline.json'),

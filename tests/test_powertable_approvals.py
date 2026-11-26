@@ -128,7 +128,9 @@ class ApprovalWorkflow(unittest.TestCase):
         self.assertEqual((form['restrictMultipleEntry'],form['config']['showLogo']),(0,True))
 
     def test_powertable_features_command_adds_the_workflow(self):
-        tmp=Path(self.enterContext(tempfile.TemporaryDirectory()))
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        tmp=Path(temporary.name)
         (tmp/'request.json').write_text(json.dumps({'sheet_guid':self.ids['sheetGuid'],'approvals':workflow()}),encoding='utf-8')
         (tmp/'baseline.json').write_text(json.dumps(self.envelope),encoding='utf-8')
         result=subprocess.run([sys.executable,str(ROOT/'plan.py'),'powertable-features','--baseline',str(tmp/'baseline.json'),
