@@ -44,9 +44,9 @@ and are journaled like every other write.
 - `api delete` needs three facts that agree: `planId`, `confirmDeletePlanId`
   set to the same ID, and `name` set to the Plan's current display name, which
   is read back first. Any mismatch stops the run before the delete. Afterward
-  the command reads the Plan again and records `verifiedAbsent`: true for
-  `ItemNotFound`, false if the Plan is still returned, and null if the check
-  itself failed. Rerunning with the same `--run` and `--label` replays the
+  the command reads the Plan again and records `verifiedAbsent`: true only for
+  a 404 with `ItemNotFound`, false if the Plan is still returned, and null for
+  any other outcome, including a 404 with another error code. Rerunning with the same `--run` and `--label` replays the
   journaled delete instead of sending another.
 
 ```sh

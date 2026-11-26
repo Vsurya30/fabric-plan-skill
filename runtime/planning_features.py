@@ -8,9 +8,10 @@ it runs no writeback and moves no value.
 Product values have no defaults: each request states the writeback layout, the
 scenario status and first order, and every template-row flag.
 """
-import copy,secrets
+import copy
 from .construct import schema
 from .codec import parts,unpack,scoped_candidate
+from .identity import new_native_id
 
 WRITEBACK_TYPES={'PIVOT_LONG':2,'PIVOT_WIDE':3,'DELTA_ONLY':4,'DELTA_WIDE':5}
 ROW_TYPES=('StaticRow','CalculatedRow')
@@ -24,11 +25,8 @@ TEMPLATE_REQUEST={'title','rows','no_row_id'}
 TEMPLATE_ROW_REQUEST={'title',*TEMPLATE_ROW_FLAGS}
 
 def _native(taken):
-    """A new decimal u64 ID, the form exported row and scenario IDs take."""
-    while True:
-        value=str(secrets.randbits(64))
-        if value!='0' and value not in taken:
-            taken.add(value);return value
+    """A new decimal u64 ID, the form exported row and scenario IDs take; it joins ``taken``."""
+    value=new_native_id(taken);taken.add(value);return value
 
 def _given(value,key):
     return isinstance(value.get(key),str) and bool(value[key].strip())
@@ -126,15 +124,17 @@ def inserted_row(name=None,dimension_id=None,row_type=None,*,visual_id,row_dimen
         meta['column_aggregation']=column_aggregation
     return {'id':row_id,'visualId':visual_id,'name':name,'dimensionId':dimension_id,'rowMeta':meta}
 
-def _specs(items,label,allowed):
-    if not isinstance(items,list) or not items or any(not isinstance(i,dict) for i in items):raise ValueError(label+' must be a list of objects')
+def request_items(items,label,allowed):
+    """A request's non-empty list of objects, each using only the allowed fields."""
+    if not isinstance(items,list) or not items or any(not isinstance(i,dict) for i in items):
+        raise ValueError(label+' entries must be a non-empty list of objects')
     for spec in items:
         if set(spec)-allowed:raise ValueError('Unsupported '+label+' field: '+', '.join(sorted(set(spec)-allowed)))
     return items
 
 def _insert_rows(raw,path,items,visual_id,row_dimensions):
     from .validate import Schemas
-    _specs(items,'inserted-row',ROW_REQUEST)
+    request_items(items,'inserted-row',ROW_REQUEST)
     current=copy.deepcopy(raw.get(path) or {'$schema':schema('Planning/InsertRows'),'rows':[]})
     rows=current.get('rows')
     if not isinstance(rows,list):raise ValueError('Existing insertRows.json has no rows list')
@@ -166,7 +166,7 @@ def scenario_record(name=None,measure_ids=None,status=None,*,order,measures,take
     return {'name':name.strip(),'status':status,'meta':{'measureIds':list(measure_ids),'scenarioGuid':_native(taken),'order':order}}
 
 def _scenarios(raw,path,items,measures):
-    _specs(items,'scenario',SCENARIO_REQUEST)
+    request_items(items,'scenario',SCENARIO_REQUEST)
     current=copy.deepcopy(raw.get(path) or {'$schema':schema('planning/scenarios'),'scenarios':[]})
     records=current.get('scenarios')
     if not isinstance(records,list):raise ValueError('Existing scenarios.json has no scenarios list')
@@ -199,7 +199,7 @@ def row_template(title=None,rows=None,no_row_id=None,*,taken):
     if no_row_id is None:raise ValueError('no_row_id required: the parent_id of a top-level row and the previous_row_id of the '
                                           'first row are undocumented and have no default')
     if not isinstance(no_row_id,str):raise ValueError('no_row_id must be text')
-    _specs(rows,'template-row',TEMPLATE_ROW_REQUEST)
+    request_items(rows,'template-row',TEMPLATE_ROW_REQUEST)
     template={'id':_native(taken),'title':title.strip(),'rows':[]};titles=set();previous=no_row_id
     for values in rows:
         label=values.get('title')
@@ -222,7 +222,7 @@ def row_template(title=None,rows=None,no_row_id=None,*,taken):
     return template
 
 def _row_templates(raw,path,items):
-    _specs(items,'row-template',TEMPLATE_REQUEST)
+    request_items(items,'row-template',TEMPLATE_REQUEST)
     current=copy.deepcopy(raw.get(path) or {'$schema':schema('Planning/ModelTemplate'),'properties':{'dynamicRowTemplates':[]}})
     props=current.get('properties')
     templates=props.get('dynamicRowTemplates') if isinstance(props,dict) else None

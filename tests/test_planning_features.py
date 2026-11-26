@@ -305,7 +305,7 @@ class RowTemplates(PlanningFeatureTestCase):
                (template(template_row('Travel',default_value=0)),'default_value must be text'),
                (template(template_row('Travel',row_edit_mode=5)),'row_edit_mode must be text or null'),
                (template(template_row('Travel'),template_row('TRAVEL')),'Duplicate template row title'),
-               (template(),'template-row must be a list of objects'),
+               (template(),'template-row entries must be a non-empty list of objects'),
                (template(template_row('Travel',parent='Opex')),'Unsupported template-row field'),
                (template(template_row('Travel'),levels=2),'Unsupported row-template field'),
                (template(template_row('Travel'),title=' '),'title must be non-empty'),
@@ -332,11 +332,11 @@ class Routing(unittest.TestCase):
 
 
 class CommandLine(PlanningFeatureTestCase):
-    def run_command(self,request):
+    def run_command(self,request,command='planning-features'):
         tmp=Path(self.enterContext(tempfile.TemporaryDirectory()))
         (tmp/'request.json').write_text(json.dumps(request),encoding='utf-8')
         (tmp/'baseline.json').write_text(json.dumps(self.envelope),encoding='utf-8')
-        result=subprocess.run([sys.executable,str(ROOT/'plan.py'),'planning-features','--baseline',str(tmp/'baseline.json'),
+        result=subprocess.run([sys.executable,str(ROOT/'plan.py'),command,'--baseline',str(tmp/'baseline.json'),
                                '--input',str(tmp/'request.json'),'--out',str(tmp/'out')],capture_output=True,text=True,cwd=ROOT,
                               env={**os.environ,'FABRIC_SKILL_OFFLINE_TEST':'1'})
         return result,tmp/'out'
@@ -355,6 +355,23 @@ class CommandLine(PlanningFeatureTestCase):
         self.assertEqual(result.returncode,2)
         self.assertIn('writeback_type required',result.stderr)
         self.assertFalse(out.exists())
+
+    def test_malformed_request_fails_cleanly_without_a_candidate(self):
+        scenario={'name':'Base','measure_ids':[self.measures['Available Hours']],'status':'ACTIVE','order':1}
+        # The detail text comes from Python's signature binding, so only the field name is asserted.
+        cases=[('planning-features',{'sheet_guid':self.sheet,'insert_row':[]},'Invalid request',"'insert_row'"),
+               ('planning-features',{'scenarios':[scenario]},'Invalid request',"'sheet_guid'"),
+               ('planning-features',[],'Request must be a JSON object',''),
+               ('cube-part',{'sheet_guid':self.sheet},'Invalid request',"'sheet_guid'"),
+               ('powertable-features',{'sheet_guid':self.sheet,'approval':{}},'Invalid request',"'approval'")]
+        for command,request,error,field in cases:
+            with self.subTest(command=command,request=request):
+                result,out=self.run_command(request,command)
+                self.assertEqual(result.returncode,2,result.stderr)
+                self.assertIn('ValueError: '+error,result.stderr)
+                self.assertIn(field,result.stderr)
+                self.assertNotIn('Traceback',result.stderr)
+                self.assertFalse(out.exists())
 
 
 if __name__=='__main__':

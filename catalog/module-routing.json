@@ -302,8 +302,8 @@
     },
     "powertable-approvals": {
       "phase": "local",
-      "description": "Add a PowerTable approval workflow (rule type, persist flag, ordered levels and routing filters) as a new public definition part; approver users are not assigned.",
-      "inputs": "Fresh export without approvals.json, PowerTable sheet GUID, and the rule type, persist flag, levels and filter orders stated in the request.",
+      "description": "Add a PowerTable approval workflow (rule type, persist flag, optional multi-level flag, ordered levels and routing filters) as a new public definition part; approver users are not assigned.",
+      "inputs": "Fresh export without approvals.json, PowerTable sheet GUID, and the rule type, persist flag, levels and filter orders stated in the request; the multi-level flag is optional.",
       "command": "python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate",
       "symbols": [
         "runtime.powertable_features.approval_record",

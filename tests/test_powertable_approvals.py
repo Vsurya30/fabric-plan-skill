@@ -13,7 +13,7 @@ BASE='https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/'
 
 
 def workflow(**extra):
-    return {'rule_type':'MANUAL','persist_flag':'SAVE_BEFORE_REVIEW',
+    return {'rule_type':'MANUAL','persist_flag':'SAVE_BEFORE_REVIEW','multi_level_enabled':True,
             'levels':[{'name':'Manager','description':'Line manager'},{'name':'Finance','description':''}],
             'filters':[{'name':'All rows','filter':None,'order':0}],**extra}
 
@@ -53,10 +53,25 @@ class ApprovalWorkflow(unittest.TestCase):
         from runtime.powertable_features import APPROVAL_RULES,PERSIST_FLAGS
         self.assertEqual((APPROVAL_RULES,PERSIST_FLAGS),({'DEFAULT':10,'MANUAL':20,'LOOKUP':30},
                                                          {'SAVE_AFTER_REVIEW':10,'SAVE_BEFORE_REVIEW':20}))
-        candidate,_=self.add(approvals=workflow(rule_type='LOOKUP',persist_flag='SAVE_AFTER_REVIEW',filters=[],
-                                                levels=[{'name':'Owner','description':'Data owner'}]))
+        candidate,_=self.add(approvals=workflow(rule_type='LOOKUP',persist_flag='SAVE_AFTER_REVIEW',multi_level_enabled=False,
+                                                filters=[],levels=[{'name':'Owner','description':'Data owner'}]))
         record=unpack(candidate)[self.path]['approvals']
         self.assertEqual((record['ruleType'],record['persistFlag'],record['multiLevelEnabled'],record['approvalFilter']),(30,10,0,[]))
+
+    def test_multi_level_flag_is_written_only_as_stated(self):
+        one=[{'name':'Owner','description':''}];two=workflow()['levels']
+        for levels,flag,code in ((one,True,1),(two,False,0)):
+            with self.subTest(levels=len(levels),flag=flag):
+                candidate,_=self.add(approvals=workflow(levels=levels,multi_level_enabled=flag))
+                self.assertEqual(unpack(candidate)[self.path]['approvals']['multiLevelEnabled'],code)
+        # A request without the flag still works, and nothing is derived from the two levels.
+        request=workflow();request.pop('multi_level_enabled')
+        merged=unpack(self.add(approvals=request)[0])
+        self.assertNotIn('multiLevelEnabled',merged[self.path]['approvals'])
+        self.assertEqual(check_powertable_parts(merged,self.prefix)['approvals'],1)
+        self.assertEqual(next(i['status'] for i in schema_report(merged) if i['path']==self.path),'passed-public-schema')
+        with self.assertRaisesRegex(ValueError,'multi_level_enabled must be Boolean'):
+            self.add(approvals=workflow(multi_level_enabled=1))
 
     def test_rule_type_persist_flag_and_first_filter_order_have_no_default(self):
         cases=[({'rule_type':None},'rule_type required'),({'rule_type':'AUTO'},'DEFAULT, MANUAL or LOOKUP'),

@@ -68,6 +68,17 @@ class PlanItemTests(unittest.TestCase):
                          [('GET', PLANS + '/p'), ('DELETE', PLANS + '/p'), ('GET', PLANS + '/p')])
         self.assertIs(result['verifiedAbsent'], True)
 
+    def test_only_item_not_found_proves_absence(self):
+        cases = [(ok({'id': 'p', 'displayName': 'Budget'}), False),
+                 ({'status': 404, 'headers': {}, 'body': {'errorCode': 'WorkspaceNotFound'}}, None),
+                 ({'status': 404, 'headers': {}, 'body': None}, None),
+                 ({'status': 403, 'headers': {}, 'body': {'errorCode': 'InsufficientPrivileges'}}, None)]
+        for index, (check, expected) in enumerate(cases):
+            with self.subTest(check=check):
+                c = self.client([ok({'id': 'p', 'displayName': 'Budget'}), ok(), check])
+                result = plan_operation(c, 'w', 'delete', 'p', name='Budget', confirm_plan_id='p', label='delete-' + str(index))
+                self.assertIs(result['verifiedAbsent'], expected)
+
     def test_delete_refuses_an_unconfirmed_or_mismatched_target(self):
         c = self.client([ok({'id': 'p', 'displayName': 'Other'})])
         for kwargs in ({'name': 'Budget'}, {'name': 'Budget', 'confirm_plan_id': 'q'}, {'confirm_plan_id': 'p'}):

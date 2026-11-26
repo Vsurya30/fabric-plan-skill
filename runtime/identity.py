@@ -87,6 +87,11 @@ def native_id(value):
     if not isinstance(value,str) or not re.fullmatch(r'0|[1-9][0-9]*',value) or int(value)>MASK:
         raise ValueError('Native Id must be a decimal u64 string')
     return value
+def new_native_id(taken):
+    """A random nonzero decimal u64 string that is not in ``taken``."""
+    while True:
+        value=str(secrets.randbits(64))
+        if value!='0' and value not in taken: return value
 class Registry:
     def __init__(self,entries=None): self.entries=dict(entries or {})
     def bind(self,key,value):
@@ -96,9 +101,7 @@ class Registry:
         self.entries[key]=value; return value
     def custom(self,key):
         if key in self.entries: return self.entries[key]
-        while True:
-            v=str(secrets.randbits(64))
-            if v not in self.entries.values(): return self.bind(key,v)
+        return self.bind(key,new_native_id(set(self.entries.values())))
     def semantic(self,external_key,column_type='Measure',aggregation=None):
         if not external_key: raise ValueError('Missing exact assignment key')
         if column_type!='Measure' and not aggregation: raise ValueError('Non-measure source needs explicit aggregation')

@@ -99,6 +99,9 @@ class CubePart(unittest.TestCase):
         self.assertEqual([p for p in old if old[p]!=new[p]],[PATH])
         with self.assertRaisesRegex(ValueError,'already linked'):
             self.add(candidate,measure_mappings=[{'partition':'Breakdown 1','measure':'Available Hours'}])
+        # The exported mapping links partition 7 and measure 11 by numeric ID; that link counts too.
+        with self.assertRaisesRegex(ValueError,'Partition measure Plan is already linked to cube partition Breakdown 1'):
+            self.add(envelope,measure_mappings=[{'partition':'Breakdown 1','measure':'Plan'}])
 
     def test_names_and_references_resolve(self):
         cases=[({'partitions':[partition(),partition(name='BREAKDOWN 1')]},'partition named'),

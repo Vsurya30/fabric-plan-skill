@@ -50,8 +50,8 @@ default is a product decision for the user, not an inference from the schemas.
   `default_value` and `row_edit_mode`.
 
 `powertable-features` takes `sheet_guid` and `approvals` with `rule_type`,
-`persist_flag`, `levels` (`name`, `description`) and optional `filters` (`name`,
-`filter`, `order`). `cube-part` takes any of `partitions` (`name`, `dimensions`,
+`persist_flag`, `levels` (`name`, `description`), and optional
+`multi_level_enabled` (Boolean) and `filters` (`name`, `filter`, `order`). `cube-part` takes any of `partitions` (`name`, `dimensions`,
 `time_dimensions`, `measures`), `measures` (`name`, `type`, `config`),
 `measure_mappings` (`partition`, `measure`) and `input_mappings` (`measure`,
 `sheet_guid`, `measure_guid`, optional `visual_id` and `partition`). Names link
@@ -137,7 +137,11 @@ broaden row access by default.
 approver users has no public route. The article lists these members at the top
 level, but the import reads `approvalLevels` and `approvalFilter` from one
 `approvals` record, so the constructor writes `ruleType`, `persistFlag`,
-`multiLevelEnabled` and both lists inside that record.
+`multiLevelEnabled` and both lists inside that record. No public source shows
+this nesting, so it is a reviewed deviation: the command warns about it, and the
+workflow must be confirmed in the product after publishing. `multiLevelEnabled`
+is written only when the request states `multi_level_enabled`; it is never
+inferred from the number of levels.
 
 **Automations (`automations.json`).** An object with an `automations` array.
 Each automation requires `name`, `triggerType` and `config`. Trigger codes are

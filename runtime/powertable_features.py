@@ -7,8 +7,8 @@ fields and layout nodes reference a column by its columnConfigs ``recordGuid``;
 import maps it to the runtime ID.
 
 ``approvals.json`` carries one approval workflow record (rule type, persist flag,
-levels and routing filters). Approver users are not definition content and have
-no supported public route.
+multi-level flag, levels and routing filters). Approver users are not definition
+content and have no supported public route.
 
 An update that omits an existing ``automations.json`` or ``approvals.json``
 deletes those records on import, so always start from a fresh export.
@@ -30,7 +30,7 @@ EMAIL=re.compile(r'[^@\s]+@[^@\s]+\.[^@\s]+')
 FORM_CONFIG={'showTitle':bool,'showLogo':bool,'submissionMessage':str,'fieldLabel':str}
 APPROVAL_RULES={'DEFAULT':10,'MANUAL':20,'LOOKUP':30}
 PERSIST_FLAGS={'SAVE_AFTER_REVIEW':10,'SAVE_BEFORE_REVIEW':20}
-APPROVAL_REQUEST={'rule_type','persist_flag','levels','filters'}
+APPROVAL_REQUEST={'rule_type','persist_flag','multi_level_enabled','levels','filters'}
 
 def _text(value,label,limit=255,*,allow_empty=False):
     if not isinstance(value,str) or len(value)>limit or (not allow_empty and not value.strip()):
@@ -201,12 +201,14 @@ def automation_record(name,trigger,actions,columns,*,watch_columns=None,conditio
     if source_guid is not None:record['sourceId']=source_guid
     return record
 
-def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,filters=None):
-    """The one approvals.json record of a PowerTable: rule type, persist flag, levels and routing filters.
+def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,multi_level_enabled=None,filters=None):
+    """The one approvals.json record of a PowerTable: rule type, persist flag, multi-level flag, levels and routing filters.
 
     ``levels`` is an ordered list of ``{"name", "description"}``, numbered from 1.
     ``filters`` is a list of ``{"name", "filter": object|null, "order"}``. The
     import reads both lists from this record, so both are always written.
+    ``multi_level_enabled`` is optional: written as stated, left out when the
+    request omits it, and never inferred from the levels.
     """
     from .validate import Schemas
     if rule_type is None:raise ValueError('rule_type required; it has no default')
@@ -214,6 +216,7 @@ def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,f
     if persist_flag is None:raise ValueError('persist_flag required; it has no default')
     if not isinstance(persist_flag,str) or persist_flag not in PERSIST_FLAGS:
         raise ValueError('persist_flag must be SAVE_AFTER_REVIEW or SAVE_BEFORE_REVIEW')
+    if multi_level_enabled is not None and not isinstance(multi_level_enabled,bool):raise ValueError('multi_level_enabled must be Boolean')
     if not isinstance(levels,list) or not levels:raise ValueError('Name at least one approval level')
     approval_levels=[];names=set()
     for number,level in enumerate(levels,1):
@@ -237,7 +240,8 @@ def approval_record(rule_type=None,levels=None,*,source_guid,persist_flag=None,f
         names.add(name.casefold());orders.add(order)
         routing.append({'name':name,'filter':copy.deepcopy(item['filter']),'order':order})
     record={'recordGuid':guid(),'sourceId':source_guid,'ruleType':APPROVAL_RULES[rule_type],'persistFlag':PERSIST_FLAGS[persist_flag],
-            'multiLevelEnabled':1 if len(approval_levels)>1 else 0,'approvalLevels':approval_levels,'approvalFilter':routing}
+            **({} if multi_level_enabled is None else {'multiLevelEnabled':1 if multi_level_enabled else 0}),
+            'approvalLevels':approval_levels,'approvalFilter':routing}
     # The published schema types these members at the top level; check the record's values against those definitions.
     url=schema('PowerTable/Approvals')
     Schemas().check({'$schema':url,**{k:v for k,v in record.items() if k not in ('recordGuid','sourceId')}},url)

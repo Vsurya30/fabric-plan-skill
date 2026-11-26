@@ -194,7 +194,9 @@ travels with the definition: preserve it. When a PowerTable has none,
 `powertable-features` can add one from an `approvals` request with the rule
 type (`DEFAULT`, `MANUAL` or `LOOKUP`), persist flag (`SAVE_AFTER_REVIEW` or
 `SAVE_BEFORE_REVIEW`), ordered levels (name and description) and routing filters
-(name, filter object and order). It refuses to replace an existing workflow.
+(name, filter object and order). An optional `multi_level_enabled` sets whether
+multi-level approval is on; when the request omits it, the flag is not written.
+It refuses to replace an existing workflow.
 Approver users are not definition content. Assigning approver users has no
 supported public route. Do not use a workload endpoint, MWC token exchange,
 browser session or private CoreAPI call.

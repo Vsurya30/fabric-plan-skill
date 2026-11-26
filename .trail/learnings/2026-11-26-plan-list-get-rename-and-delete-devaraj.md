@@ -24,7 +24,7 @@ touches:
 ## Decided
 - The package now runs all seven public Plan operations. `api list`, `api get`, `api rename` and `api delete` were added on the user's decision after comparing this skill with the community fabric-planning-skill. This reverses the earlier rule that public commands were only export, create and update; the allowed list lives in `tests/test_discovery.py` (`test_catalog_exposes_only_local_or_public_operations`).
 - `api delete` requires three agreeing facts: `confirmDeletePlanId` equal to `planId`, `name` equal to the Plan's live display name (read by a GET before deleting), and `authorizedMutation`. Deleting the wrong Plan by a mistyped ID is the risk this guards against.
-- After deleting, the command reads the Plan again and records `verifiedAbsent`: true on 404, false if it is still returned, null if the check itself failed. A failed check never turns a successful delete into an error.
+- After deleting, the command reads the Plan again and records `verifiedAbsent`: true only for a 404 whose error code is `ItemNotFound`, false if it is still returned, null for any other outcome (another 404 code such as a missing workspace does not prove the Plan is gone). `HttpError` keeps the response body for this. A failed check never turns a successful delete into an error.
 - A resumed delete (same run and label) skips the name pre-check, because the Plan may already be gone; the journal replays the recorded DELETE instead of sending another.
 - Applying `.platform` metadata through the generic item update with `updateMetadata` is still not run here.
 

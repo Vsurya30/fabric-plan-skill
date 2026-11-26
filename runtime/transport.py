@@ -9,7 +9,7 @@ FABRIC_SKILL_HEADER='x-ms-fabric-skill'
 FABRIC_SKILL_NAME='fabric-plan-skill'
 class HttpError(RuntimeError):
     def __init__(self,status,body=None):
-        self.status=status
+        self.status=status; self.body=body
         self.category="authentication" if status in (401,403) else "http-error"
         super().__init__("HTTP "+str(status))
 def now(): return datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -202,8 +202,11 @@ def plan_operation(client,workspace,kind,plan_id=None,definition=None,name=None,
             current=client.request('GET',route).get('body') or {}
             if current.get('displayName')!=name: raise ValueError('Plan display name differs from the confirmed name; refusing to delete')
         deleted=client.request('DELETE',route,label=label)
+        # Only ItemNotFound proves absence; any other failure leaves the check unknown.
         try: client.request('GET',route); absent=False
-        except (HttpError,RuntimeError) as error: absent=True if getattr(error,'status',None)==404 else None
+        except (HttpError,RuntimeError) as error:
+            body=getattr(error,'body',None)
+            absent=True if getattr(error,'status',None)==404 and isinstance(body,dict) and body.get('errorCode')=='ItemNotFound' else None
         return {**deleted,'verifiedAbsent':absent}
     if kind in ('create','create-blank'):
         if not name or (kind=='create' and not definition): raise ValueError('Name and full definition required')

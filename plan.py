@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Portable single-file skill runtime. All paths are explicit; no ambient repository."""
-import argparse,sys,copy,re,subprocess,os
+import argparse,sys,copy,re,subprocess,os,inspect
 from pathlib import Path
 from runtime.codec import load,save,unpack,pack,parts,sha,dumps,safe_path,definition_hash
 from runtime.construct import build
 from runtime.validate import validate_plan,schema_report,require_public_schema_acceptance
 ROOT=Path(__file__).resolve().parent
+def checked_request(fn,request):
+    """Reject a request file that does not fit a local constructor, before anything runs."""
+    if not isinstance(request,dict): raise ValueError('Request must be a JSON object')
+    try: inspect.signature(fn).bind(None,**request)
+    except TypeError as e: raise ValueError('Invalid request: '+str(e)) from None
+    return request
 def main():
     p=argparse.ArgumentParser(description=__doc__); sp=p.add_subparsers(dest='cmd',required=True)
     ds=sp.add_parser('discover',help='Find bundled guides and supported operations for a business request; local/read-only')
@@ -111,19 +117,15 @@ def main():
             save(out/'definition.json',add_table_to_definition(load(args.baseline),declaration,new_parts))
             manifest['candidate']='definition.json'
         save(out/'changes.json',manifest);print(dumps(manifest))
-    elif args.cmd in ('powertable-features','repair-powertable-row-access'):
+    elif args.cmd in ('powertable-features','repair-powertable-row-access','planning-features','cube-part'):
         from runtime.powertable_features import add_features
         from runtime.powertable_config import backfill_row_access
-        request=load(args.input) if args.input else {}
-        fn=add_features if args.cmd=='powertable-features' else backfill_row_access
-        candidate,manifest=fn(load(args.baseline),**request)
-        out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
-        save(out/'definition.json',candidate);save(out/'changes.json',manifest);print(dumps(manifest))
-    elif args.cmd in ('planning-features','cube-part'):
         from runtime.planning_features import add_planning_features
         from runtime.cube_part import add_cube_part
-        fn=add_planning_features if args.cmd=='planning-features' else add_cube_part
-        candidate,manifest=fn(load(args.baseline),**load(args.input))
+        fn={'powertable-features':add_features,'repair-powertable-row-access':backfill_row_access,
+            'planning-features':add_planning_features,'cube-part':add_cube_part}[args.cmd]
+        request=checked_request(fn,load(args.input) if args.input else {})
+        candidate,manifest=fn(load(args.baseline),**request)
         out=Path(args.out);out.mkdir(parents=True,exist_ok=True)
         save(out/'definition.json',candidate);save(out/'changes.json',manifest);print(dumps(manifest))
     elif args.cmd=='usecase':

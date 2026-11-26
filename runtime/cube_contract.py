@@ -18,7 +18,8 @@ def _identifier_map(value, field):
     return result
 
 
-def _dimension(value, field, *, lookup=False):
+def dimension_record(value, field, *, lookup=False):
+    """A checked copy of one cube dimension; a lookup dimension cannot carry lookups."""
     allowed = {'id', 'label', 'dataType', 'type', 'distinctValueCount'}
     if not lookup:
         allowed.add('lookups')
@@ -34,13 +35,14 @@ def _dimension(value, field, *, lookup=False):
         if not isinstance(value['lookups'], list):
             raise ValueError(field + '.lookups must be an array')
         result['lookups'] = [
-            _dimension(item, field + '.lookups/' + str(index), lookup=True)
+            dimension_record(item, field + '.lookups/' + str(index), lookup=True)
             for index, item in enumerate(value['lookups'])
         ]
     return result
 
 
-def _reference(value, field):
+def reference_measure(value, field):
+    """A checked copy of one cube measure reference with exactly its six members."""
     required = {'id', 'label', 'type', 'isNative', 'aggregationType', 'dataType'}
     if not isinstance(value, dict) or set(value) != required:
         raise ValueError(field + ' has an invalid reference-measure contract')
@@ -64,11 +66,11 @@ def _partition(value, field):
         'name': _string(value['name'], field + '.name'),
         'dataAssignment': {
             'dimensions': [
-                _dimension(item, field + '.dimensions/' + str(index))
+                dimension_record(item, field + '.dimensions/' + str(index))
                 for index, item in enumerate(assignment['dimensions'])
             ],
             'timeDimensions': [
-                _dimension(item, field + '.timeDimensions/' + str(index), lookup=True)
+                dimension_record(item, field + '.timeDimensions/' + str(index), lookup=True)
                 for index, item in enumerate(assignment['timeDimensions'])
             ],
         },
@@ -89,7 +91,7 @@ def multi_dimension_settings(
         raise ValueError('Cube references and partitions must be arrays')
     result = {
         'referenceMeasures': [
-            _reference(value, 'referenceMeasures/' + str(index))
+            reference_measure(value, 'referenceMeasures/' + str(index))
             for index, value in enumerate(referenceMeasures)
         ],
         'newPartitions': [
@@ -109,7 +111,7 @@ def multi_dimension_settings(
         if not isinstance(nativeMeasureMapping, list):
             raise ValueError('nativeMeasureMapping must be an array')
         result['nativeMeasureMapping'] = [
-            _reference(value, 'nativeMeasureMapping/' + str(index))
+            reference_measure(value, 'nativeMeasureMapping/' + str(index))
             for index, value in enumerate(nativeMeasureMapping)
         ]
     if cubeModel is not None:

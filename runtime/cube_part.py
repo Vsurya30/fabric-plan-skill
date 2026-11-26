@@ -9,7 +9,8 @@ allocates nothing.
 import copy
 from .construct import schema,guid
 from .codec import parts,unpack,scoped_candidate
-from .cube_contract import _dimension,_reference
+from .cube_contract import dimension_record,reference_measure
+from .planning_features import request_items
 
 PATH='cube/cube.json'
 ARRAYS=('cubePartitions','cubePartitionMeasures','cubePartitionMeasureMappings','cubePartitionMeasureDataInputColumnMappings')
@@ -30,12 +31,12 @@ def cube_partition(name=None,dimensions=None,time_dimensions=None,measures=None)
     if not all(isinstance(v,list) for v in (dimensions,time_dimensions,measures)):
         raise ValueError('Cube partition dimensions, time_dimensions and measures must be arrays')
     if not dimensions and not time_dimensions:raise ValueError('A cube partition needs at least one dimension or time dimension')
-    dims=[_dimension(d,'dimensions/'+str(i),lookup=True) for i,d in enumerate(dimensions)]
-    times=[_dimension(d,'time_dimensions/'+str(i),lookup=True) for i,d in enumerate(time_dimensions)]
+    dims=[dimension_record(d,'dimensions/'+str(i),lookup=True) for i,d in enumerate(dimensions)]
+    times=[dimension_record(d,'time_dimensions/'+str(i),lookup=True) for i,d in enumerate(time_dimensions)]
     ids=[d['id'] for d in dims+times]
     if len(set(ids))!=len(ids):raise ValueError('Duplicate dimension in cube partition '+name)
     return {'recordGuid':guid(),'name':name,'dimensions':dims,'timeDimensions':times,
-            'measures':[_reference(m,'measures/'+str(i)) for i,m in enumerate(measures)],'rowCount':0}
+            'measures':[reference_measure(m,'measures/'+str(i)) for i,m in enumerate(measures)],'rowCount':0}
 
 def partition_measure(name=None,type=None,config=None):
     """One cubePartitionMeasures record; config is copied as given and checked against the published schema."""
@@ -51,12 +52,6 @@ def _find(records,name,label):
     if len(found)!=1:raise ValueError(('Several '+label+'s are named ' if found else 'No '+label+' named ')+str(name))
     return found[0]
 
-def _specs(items,label,allowed):
-    if not isinstance(items,list) or not items or any(not isinstance(i,dict) for i in items):raise ValueError(label+'s must be a list of objects')
-    for spec in items:
-        if set(spec)-allowed:raise ValueError('Unsupported '+label+' field: '+', '.join(sorted(set(spec)-allowed)))
-    return items
-
 def cube_records(raw,current,*,partitions=None,measures=None,measure_mappings=None,input_mappings=None):
     """New records for the four cube arrays, linked to new or existing records by name."""
     from .planning_features import planning_prefix
@@ -67,7 +62,7 @@ def cube_records(raw,current,*,partitions=None,measures=None,measure_mappings=No
             (measures,'measure',MEASURE_REQUEST,'cubePartitionMeasures',partition_measure,'partition measure')):
         if items is None:continue
         names={str(r.get('name','')).strip().casefold() for r in current[key] if isinstance(r,dict)}
-        for spec in _specs(items,label,allowed):
+        for spec in request_items(items,label,allowed):
             record=build(**spec)
             if record['name'].casefold() in names:raise ValueError('A '+existing+' named '+record['name']+' already exists')
             names.add(record['name'].casefold());new[key].append(record)
@@ -77,7 +72,7 @@ def cube_records(raw,current,*,partitions=None,measures=None,measure_mappings=No
     linked={(m.get('cubePartition_RefId') or partition_ids.get(m.get('cubePartitionId')),
              m.get('cubePartitionMeasure_RefId') or measure_ids.get(m.get('cubePartitionMeasureId')))
             for m in current['cubePartitionMeasureMappings'] if isinstance(m,dict)}
-    for spec in _specs(measure_mappings,'measure mapping',MAPPING_REQUEST) if measure_mappings is not None else []:
+    for spec in request_items(measure_mappings,'measure mapping',MAPPING_REQUEST) if measure_mappings is not None else []:
         partition=_find(all_partitions,spec.get('partition'),'cube partition');measure=_find(all_measures,spec.get('measure'),'partition measure')
         pair=(partition['recordGuid'],measure['recordGuid'])
         if pair in linked:raise ValueError('Partition measure '+measure['name']+' is already linked to cube partition '+partition['name'])
@@ -85,7 +80,7 @@ def cube_records(raw,current,*,partitions=None,measures=None,measure_mappings=No
         new['cubePartitionMeasureMappings'].append({'recordGuid':guid(),'cubePartition_RefId':pair[0],'cubePartitionMeasure_RefId':pair[1]})
     mapped={(m.get('visual_RefId'),m.get('dataInputColumnMeasureGuid'),m.get('cubePartitionMeasure_RefId'))
             for m in current['cubePartitionMeasureDataInputColumnMappings'] if isinstance(m,dict)}
-    for spec in _specs(input_mappings,'input mapping',INPUT_REQUEST) if input_mappings is not None else []:
+    for spec in request_items(input_mappings,'input mapping',INPUT_REQUEST) if input_mappings is not None else []:
         prefix,visual=planning_prefix(raw,spec.get('sheet_guid'),spec.get('visual_id'))
         column=spec.get('measure_guid')
         if column not in {c.get('measureGuid') for c in raw[prefix+'dataInput.json'].get('columns') or [] if isinstance(c,dict)}:
