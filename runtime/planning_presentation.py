@@ -162,11 +162,12 @@ def check_application(raw):
         vs=sheet['workloadItemEntityVisuals'];types={v['visualType'] for v in vs if not v.get('isEmbedded')}
         charts=[]
         for v in vs:
-            if v.get('isEmbedded') or v['visualType']!='ANALYTICS_PLUS':continue
+            # A tree in a chart slot counts as the page's chart.
+            if v.get('isEmbedded') or v['visualType'] not in ('ANALYTICS_PLUS','TREE'):continue
             p=raw[f'sheets/{sheet["recordGuid"]}/visuals/{v["visualId"]}/properties.json']['properties']
             if p.get('chartType',p.get('visualState',{}).get('chartType'))!='CARD' and any(a.get('dataRoleType')=='Grouping' for a in p.get('pivotAssignments',[])):
                 charts.append(v)
-        if {'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS'}<=types and charts:
+        if {'BI_TEXT','SUPER_FILTER'}<=types and charts:
             matrix_pages+='INFORIVER' in types
             for v in vs:
                 if v.get('isEmbedded') and v['visualType']=='PLANNING':covered.add(v['visualId'])

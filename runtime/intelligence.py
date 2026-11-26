@@ -28,8 +28,10 @@ def classify_visual(props):
     """
     chart_type = props.get('chartType', props.get('visualState', {}).get('chartType'))
     if chart_type in TREE_VISUAL_TYPES:
+        # Type 25 is the native tree; Analytics+ (type 50) has its own decomposition tree chart.
+        engine = {25: 'native tree', 50: 'Analytics+ chart'}.get(props.get('visualType'))
         return {'family': 'tree', 'chartType': chart_type,
-                'visual_type': TREE_VISUAL_TYPES[chart_type]}
+                'visual_type': TREE_VISUAL_TYPES[chart_type], 'engine': engine}
     if chart_type == 'CARD':
         return {'family': 'card', 'chartType': chart_type, 'visual_type': 'KPI card'}
     return None
@@ -43,7 +45,7 @@ def complete_card_state(props):
     observed = classify_visual(props)
     if observed and observed['family'] == 'tree':
         raise ValueError('Refusing to retype a ' + observed['visual_type'] +
-                         ' as a KPI card; no tree authoring route is bundled here')
+                         ' as a KPI card; build trees with the tree builder')
     from .construct import merge
     from .codec import loads
     defaults=load(Path(__file__).resolve().parents[1]/'fixtures/card-defaults.json')
@@ -182,8 +184,10 @@ def card(model,spec,registry, *, query_fields=()):
     return ensure_chart_filters(complete_card_state(p))
 
 def chart(model,spec,registry,*,query_fields=()):
-    """Dashboard chart: an IBCS recipe or named native template, else a column chart."""
+    """Dashboard chart: a tree, an IBCS recipe or named native template, else a column chart."""
     from .ibcs_charts import is_recipe_chart,recipe_chart
+    from .tree_visuals import is_tree,tree_visual
+    if is_tree(spec):return tree_visual(model,spec,registry,query_fields=query_fields)
     if is_recipe_chart(spec):return recipe_chart(model,spec,registry,query_fields=query_fields)
     return column_chart(model,spec,registry,query_fields=query_fields)
 
@@ -320,6 +324,7 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
     if set(spec)-allowed: raise ValueError('Unconsumed dashboard options')
     if spec['owner'] not in owners: raise ValueError('Dashboard source Planning owner unavailable')
     from .ibcs_report import check_story,footnote_text,matrix_table,message_title
+    from .tree_visuals import tree_requirements
     if 'table' in spec and not isinstance(spec['table'],dict): raise ValueError('The dashboard table must be an object')
     story=check_story(spec['ibcs']) if 'ibcs' in spec else None
     if story and story['footnotes'] and 'note' in spec: raise ValueError('Footnotes use the note slot; give either note or IBCS footnotes')
@@ -335,6 +340,7 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
         p['layerProperties']['order']=len(visuals);placements[vid]=r
         raw[f'sheets/{sid}/visuals/{vid}/properties.json']={'$schema':schema('Planning/Properties'),'properties':p}
         visuals.append({'visualId':vid,'visualType':kind,'isEmbedded':False})
+        return vid
     legend=[{'text':'INPUT / FORECAST   ','color':'#FFD889','bold':True},{'text':'POWER BI   ','color':'#8BC5FF','bold':True},
             {'text':'FORMULA   ','color':'#DCC3FF','bold':True},{'text':'FROM SHEETS','color':'#9FE0D7','bold':True}]
     if story and 'table' in spec:
@@ -349,7 +355,7 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
         banner=rich_text([[{'text':spec.get('title',spec['name']),'size':25,'color':'#FFFFFF','bold':True}],
             [{'text':spec.get('description',''),'color':'#D7E3ED'}],legend],name='Workspace header',banner=True)
     add('BI_TEXT','header',banner)
-    all_filters=[]
+    all_filters=[];trees={}
     for i,s in enumerate(spec['slicers']):
         slot=f'slicer:{i}'
         p=slicer(model,s,placement=slicer_placement(layout['rectangles'],slot))
@@ -363,7 +369,11 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
         p['visualState']['embeddedSuperFilter']={'superFilterAssignments':hidden}
         forward_filters(p,all_filters);add('ANALYTICS_PLUS',f'card:{i}',p)
     for i,c in enumerate(spec.get('charts',[])):
-        p=chart(model,c,registry,query_fields=query_fields);forward_filters(p,all_filters)
+        p=chart(model,c,registry,query_fields=query_fields)
+        if p['visualType']==25:
+            # Initial slicer scope is not seeded into a tree; that state is unobserved for trees.
+            trees[add('TREE',f'chart:{i}',p)]=tree_requirements(p);continue
+        forward_filters(p,all_filters)
         add('ANALYTICS_PLUS',f'chart:{i}',p)
     notes=footnote_text(spec['ibcs']) if story else None
     if notes:
@@ -390,4 +400,4 @@ def dashboard(model,spec,owners,registry, *, query_fields=(),page_count=1):
         grid='embedded-planning'
     declaration={'recordGuid':sid,'displayName':spec['name'],'sheetType':'REPORTING','isHidden':False,'workloadItemEntityVisuals':visuals}
     return declaration,raw,{'sheetGuid':sid,'name':spec['name'],'ownerGuid':owner['visualId'], 'placementIds':placement,
-        'placements':placements,'layout':layout,'grid':grid,'construction':'generated-selected-branches','runtime':'not-tested'}
+        'placements':placements,'layout':layout,'grid':grid,'treeRequirements':trees,'construction':'generated-selected-branches','runtime':'not-tested'}

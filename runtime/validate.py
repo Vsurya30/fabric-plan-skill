@@ -316,7 +316,7 @@ def public_schema_view(path,obj):
     """Normalize reviewed native extensions only for historical public schemas."""
     value=copy.deepcopy(obj); extensions=[]
     if path=='definition.json':
-        reporting_types={'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS','BI_RUNTIME_INPUT','INFORIVER'}
+        reporting_types={'BI_TEXT','SUPER_FILTER','ANALYTICS_PLUS','BI_RUNTIME_INPUT','INFORIVER','TREE'}
         normalized=False
         for sheet in value.get('sheets',[]):
             if sheet.get('sheetType')!='REPORTING':continue

@@ -1,7 +1,8 @@
 """Tree visual coverage on Intelligence dashboards: recognition, preservation, recorded gaps.
 
-The tree family is a visual type a real dashboard can hold. This package names it and
-protects it; it authors no tree definition part, and these tests keep that line honest.
+The tree family is a visual type a real dashboard can hold. This package names it,
+protects it, and builds decomposition and organization trees; row and measure trees
+stay recognition-only.
 """
 import json
 import unittest
@@ -45,11 +46,13 @@ class TreeVisualCoverageTests(unittest.TestCase):
         self.assertIn("Organizational tree", str(caught.exception))
         self.assertEqual(props["chartType"], "ORGANIZATION_TREE")
 
-    def test_tree_construction_is_recorded_as_a_capability_gap(self):
+    def test_tree_construction_is_no_longer_recorded_as_a_gap(self):
         gaps = json.loads((ROOT / "catalog" / "api-contract-gaps.json").read_text(encoding="utf-8"))
-        entry = next(item for item in gaps["capabilities"] if item["id"] == "tree-visual-authoring")
-        self.assertEqual(entry["status"], "no-public-route")
-        self.assertTrue(entry["publicPart"])
+        self.assertNotIn("tree-visual-authoring", {item["id"] for item in gaps["capabilities"]})
+        module = next(item for item in discover(query="create tree visual")["modules"]
+                      if item["id"] == "INTELLIGENCE-VISUAL-TYPES")
+        symbols = [symbol for operation in module["operations"] for symbol in operation["symbols"]]
+        self.assertIn("runtime.tree_visuals.tree_visual", symbols)
 
     def test_discovery_routes_tree_requests_to_the_coverage_guide(self):
         module = next(item for item in discover(query="decomposition tree")["modules"]

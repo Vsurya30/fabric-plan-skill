@@ -582,7 +582,7 @@
     },
     "intelligence": {
       "phase": "local",
-      "description": "Build native Intelligence dashboards with semantic slicers, KPI cards, column or IBCS recipe charts, Matrix tables, IBCS story text and Planning embeds.",
+      "description": "Build native Intelligence dashboards with semantic slicers, KPI cards, column or IBCS recipe charts, decomposition and organization trees, Matrix tables, IBCS story text and Planning embeds.",
       "inputs": "Application dashboards spec; model IDs, source owner names, chart fields and coherent canvas dimensions. See context-intelligence.md, ibcs-charts.md and fixtures/context-dashboard-spec.json.",
       "command": "python plan.py build --model current-model.json --spec dashboard.json --out draft",
       "symbols": [
@@ -594,7 +594,9 @@
         "runtime.ibcs_charts.recipe_chart",
         "runtime.ibcs_report.matrix_table",
         "runtime.ibcs_report.message_title",
-        "runtime.ibcs_report.set_plan_theme"
+        "runtime.ibcs_report.set_plan_theme",
+        "runtime.tree_visuals.tree_visual",
+        "runtime.tree_visuals.tree_requirements"
       ]
     },
     "navigator": {
@@ -2657,14 +2659,15 @@
     },
     {
       "id": "INTELLIGENCE-VISUAL-TYPES",
-      "name": "Cover every Intelligence dashboard visual type",
+      "name": "Build trees and cover every Intelligence dashboard visual type",
       "guides": [
         {
           "file": "intelligence-visual-types.md"
         }
       ],
       "operations": [
-        "visual-type-coverage"
+        "visual-type-coverage",
+        "intelligence"
       ],
       "aliases": [
         "decomposition tree",
@@ -2673,15 +2676,20 @@
         "measure tree",
         "tree visual",
         "visual type coverage",
-        "unknown visual type"
+        "unknown visual type",
+        "create tree visual",
+        "build a decomposition tree",
+        "organization tree visual",
+        "tree authoring",
+        "tree creation"
       ],
       "businessRequests": [
-        "The Intelligence dashboard skill must cover tree visuals, not only slicers, cards and charts.",
+        "Create a decomposition or organization tree on an Intelligence sheet.",
         "A dashboard already contains a decomposition or organizational tree that later edits must not flatten.",
         "A requested dashboard visual type is not one this package can build."
       ],
-      "prerequisites": "A current export or locally built properties for each dashboard visual being classified.",
-      "limitations": "Recognition and preservation only. No tree visual definition part is constructed here; see catalog/api-contract-gaps.json.",
+      "prerequisites": "Level dimensions and, for a decomposition tree, the measure it breaks down; current properties for each visual being classified.",
+      "limitations": "Builds decomposition and organization trees with their field roles. Fabric shows a tree only when the tenant switch for that tree type is on, and the parent identifier also needs parent-data mapping. Row and measure trees, node styling and layout settings are not written. Rendering is not tested.",
       "coverage": "local"
     },
     {

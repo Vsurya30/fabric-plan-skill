@@ -82,13 +82,14 @@ The observed reference workspace has four native slicers, three native KPI cards
 | Chart | `ANALYTICS_PLUS` / `50` | top-level `chartType` and `visualState.chartType` naming the same template (`COLUMN_VERTICAL` by default; an IBCS recipe selects its own). Buckets `axis`, `AC`/`PY`/`PL`/`FC` and, on stacked templates, `stack`. See the IBCS charts guide |
 | Banner/note | `BI_TEXT` / `202` | `visualState.text` as a serialized Lexical document |
 | Embedded plan | `PLANNING`, `isEmbedded: true` | Portable GUID reference to the direct owner plus post-import page-local runtime geometry |
+| Tree | `TREE` / `25` | Takes a chart slot when a chart spec has `tree`. `chartType` `DECOMPOSITION_TREE` or `ORGANIZATION_TREE` in both selectors. Roles `rows`, `ameasure` and, for an organization tree, `parentid`, `fieldid` and `columns`. See the visual type coverage guide |
 | Matrix table | `INFORIVER` / `10` | Replaces the embedded plan when the dashboard has `table`. Buckets `rows`, `columns`, `ameasure`, `pymeasure`, `plmeasure` and `fcmeasure`. See the IBCS charts guide |
 
-The table lists only the branches `runtime/intelligence.py` constructs. A dashboard can
-also hold a visual type outside it, such as a decomposition, organizational, row or
-measure tree. Read the Intelligence visual type coverage guide: classify the visual from
-its current properties, pass those properties through unchanged, and report construction
-as unavailable instead of adding a native type number this package has never exported.
+The table lists the dashboard branches this package constructs, including decomposition
+and organization trees. A dashboard can also hold a visual type outside it, such as a row
+or measure tree or another Analytics+ chart family. Read the Intelligence visual type
+coverage guide: classify the visual from its current properties, pass those properties
+through unchanged, and report construction of an unlisted type as unavailable.
 
 Ordinary slicers are **not** `isContextDimension` registrations. Use semantic dimension columns for slicers and grouping; use actual semantic measures or registered InfoBridge outputs for KPI values. Do not derive query-field IDs from labels. `card(..., query_fields=actual_catalog)` accepts a fully registered InfoBridge field. The composed `build/provision` path currently handles semantic KPI fields; query-backed cards must be added through the component path after query registration, then exported and checked. Do not substitute semantic actuals for plan KPIs without clearly labeling the changed meaning.
 
