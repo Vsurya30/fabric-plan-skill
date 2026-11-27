@@ -22,14 +22,17 @@ def retry_seconds(headers,default=2):
         except (ValueError,TypeError): return default
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): return None
-# The only public Fabric REST routes this client calls: the API base, Plan items and
-# definitions, semantic-model and SQL-database definitions, and long-running operations.
-PUBLIC_ROUTE=re.compile(r'/v1(?:'
-    r'|/workspaces/[^/]+/plans(?:/[^/]+(?:/(?:getDefinition|updateDefinition))?)?'
-    r'|/workspaces/[^/]+/semanticModels/[^/]+(?:/getDefinition)?'
-    r'|/workspaces/[^/]+/sqlDatabases/[^/]+/getDefinition'
-    r'|/operations/[^/]+(?:/result)?'
-    r')/?')
+# The only public Fabric REST routes this client calls, shared with tools/http.cjs.
+PUBLIC_ROUTE=re.compile(json.loads((Path(__file__).with_name('public_routes.json')).read_text(encoding='utf-8'))['pattern'])
+
+# Keys whose value is a credential: any key ending in one of these words, for example
+# accessToken, refresh_token or client_secret. Paging cursors end in "token" too but
+# carry no credential, and must stay in the journal so a labelled call can resume.
+SECRET_KEY_SUFFIXES=('token','secret','password','authorization')
+NOT_SECRET_KEYS={'continuationtoken','nextpagetoken','pagetoken'}
+def is_secret_key(key):
+    k=str(key).casefold()
+    return k not in NOT_SECRET_KEYS and k.endswith(SECRET_KEY_SUFFIXES)
 
 class Client:
     def __init__(self,base,token_env,allowed_hosts=None,journal=None,adapter=None,sleep=time.sleep):
@@ -44,7 +47,8 @@ class Client:
         p=urllib.parse.urlsplit(url)
         if p.scheme!='https' or p.netloc!='api.fabric.microsoft.com' or p.fragment:
             raise ValueError('Unapproved HTTPS endpoint')
-        if not PUBLIC_ROUTE.fullmatch(urllib.parse.unquote(p.path)):
+        # Match the raw path: no decoding or dot-segment normalisation before the check.
+        if not PUBLIC_ROUTE.match(p.path):
             raise ValueError('Expected a public Fabric API endpoint')
         return url
     def _token(self):
@@ -124,7 +128,7 @@ class Client:
                     if isinstance(x,dict):
                         result={}
                         for k,v in x.items():
-                            if any(s in k.casefold() for s in ('token','secret','password','authorization')):
+                            if is_secret_key(k):
                                 result[k]='<not-persisted>'; sensitive=True
                             else: result[k]=redact(v)
                         return result

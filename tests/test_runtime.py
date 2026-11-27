@@ -311,6 +311,18 @@ class TransportTests(unittest.TestCase):
         r=c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='token'); self.assertEqual(r['body']['Token'],'response-secret')
         self.assertTrue(all('response-secret' not in f.read_text() for f in Path(self.tmp.name).glob('*')))
         with self.assertRaises(RuntimeError): c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='token')
+    def test_paging_cursor_is_kept_so_labelled_call_resumes(self):
+        body={'value':[],'continuationToken':'page-2','continuationUri':None}
+        c=self.client([{'status':200,'headers':{},'body':body}])
+        first=c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='paged')
+        self.assertEqual(c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='paged'),first)
+        self.assertEqual(len(self.calls),1)
+    def test_secret_keys_are_matched_by_suffix(self):
+        from runtime.transport import is_secret_key
+        for k in ('Token','accessToken','refresh_token','client_secret','Password','Authorization','mwcToken'):
+            self.assertTrue(is_secret_key(k),k)
+        for k in ('continuationToken','tokenType','secretName','displayName','tokenEnvironment'):
+            self.assertFalse(is_secret_key(k),k)
 class SchemaTests(unittest.TestCase):
     def test_transitive_closure(self):
         s=Schemas()
