@@ -102,7 +102,7 @@ class PlanningIntegrityTests(unittest.TestCase):
             self.assertEqual(calls,[]);self.assertEqual(list(Path(folder).iterdir()),[])
 
     def test_builder_and_formatting_compiler_complete_defaults(self):
-        raw=build(load(ROOT/'fixtures/model.json'),load(ROOT/'fixtures/finance-spec.json'))['raw']
+        raw=build(load(ROOT/'assets/fixtures/model.json'),load(ROOT/'assets/fixtures/finance-spec.json'))['raw']
         count=0
         for path,v in raw.items():
             p=v.get('properties',{}) if isinstance(v,dict) else {}

@@ -14,7 +14,7 @@ ROOT=Path(__file__).resolve().parents[1]
 
 class OneLakeSheetBindings(unittest.TestCase):
     def setUp(self):
-        self.fixture=load(ROOT/'fixtures/onelake-linked-values.json')
+        self.fixture=load(ROOT/'assets/fixtures/onelake-linked-values.json')
         self.record=self.fixture['sourceRecord'];self.query=self.fixture['query']
         self.props={'pivotAssignments':[],'visualState':{'manage_measures':[{'id':self.record['measureGuid']}],
             'rowDimensions':[],'columnDimensions':[]}}
@@ -112,14 +112,14 @@ class OneLakeSheetBindings(unittest.TestCase):
             ids=[]
             for run in ('first','second'):
                 out=Path(tmp)/run
-                r=subprocess.run([sys.executable,str(ROOT/'examples/onelake-linked-values/build.py'),str(out)],cwd=tmp,capture_output=True,text=True)
+                r=subprocess.run([sys.executable,str(ROOT/'assets/examples/onelake-linked-values/build.py'),str(out)],cwd=tmp,capture_output=True,text=True)
                 self.assertEqual(r.returncode,0,r.stderr)
                 b=load(out/'construction.json');ids.append(b['identities'][0]['visualId'])
                 self.assertEqual(b['defaultsCheck']['hiddenPlanningOwners'],2)
                 evidence=load(out/'bindings.json')
                 self.assertEqual(evidence['direct']['id'],evidence['sourceRecord']['measureGuid'])
                 self.assertEqual(evidence['query']['queryId'],evidence['queryMetadata']['id'])
-                self.assertEqual(evidence['runtime'],'not-tested')
+                self.assertEqual(evidence['scripts/runtime'],'not-tested')
             self.assertNotEqual(*ids)
 
 if __name__=='__main__':unittest.main()

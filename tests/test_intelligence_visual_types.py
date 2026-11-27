@@ -47,7 +47,7 @@ class TreeVisualCoverageTests(unittest.TestCase):
         self.assertEqual(props["chartType"], "ORGANIZATION_TREE")
 
     def test_tree_construction_is_no_longer_recorded_as_a_gap(self):
-        gaps = json.loads((ROOT / "catalog" / "api-contract-gaps.json").read_text(encoding="utf-8"))
+        gaps = json.loads((ROOT / "assets/catalog" / "api-contract-gaps.json").read_text(encoding="utf-8"))
         self.assertNotIn("tree-visual-authoring", {item["id"] for item in gaps["capabilities"]})
         module = next(item for item in discover(query="create tree visual")["modules"]
                       if item["id"] == "INTELLIGENCE-VISUAL-TYPES")

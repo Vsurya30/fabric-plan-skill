@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def model():
-    return load(ROOT / 'fixtures/model.json')
+    return load(ROOT / 'assets/fixtures/model.json')
 
 
 def roles(p):

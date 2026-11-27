@@ -1,0 +1,76 @@
+# Smoke evaluation for fabric-plan-skill, following the skills-for-fabric layout:
+# tests/evals/<skill>/eval.yaml (smoke) beside tests/evals/<skill>-fulleval/eval.yaml.
+# Every stimulus is offline: no Fabric workspace, token or network call is needed.
+# UNMEASURED: budgets are generous first ceilings; tune them from the first CI run.
+name: fabric-plan-skill-smoke-eval
+description: Offline routing, local build and public-API boundary checks for fabric-plan-skill.
+tags:
+  type: integration
+  skill: fabric-plan-skill
+defaults:
+  runs: 1
+  timeout: 20m
+scoring: { threshold: 1.0 }
+stimuli:
+  - name: "FP-DISCOVER Route a forecast request to its guide"
+    tags: &tags { type: integration, tier: smoke, cost: llm, area: planning, mode: consumption }
+    constraints: &constraints { max_turns: 20, max_tokens: 300000, max_duration: 5m }
+    prompt: |
+      Using the Fabric Plan skill, which guide should I read to add a rolling
+      monthly forecast to a Planning sheet? Do not connect to any workspace.
+    graders:
+      - &invocation { type: skill-invocation, config: { required: [fabric-plan-skill] } }
+      - &completed { type: completed }
+      - &crash { type: output-not-matches, config: { pattern: '(?i)unhandled exception|traceback \(most recent call last\)|fatal error' } }
+      - &local_only
+        type: tool-calls
+        config:
+          disallowed:
+            - name: '(?i)(mcp|web_fetch|fetch_webpage|http_request|navigate_page)'
+            - name: '(?i)^(bash|powershell|shell|terminal|run_in_terminal|functions\.bash|functions\.powershell)$'
+              command: '(?i)\baz\s+(?:rest|login|account)\b|\bcurl\b|\bwget\b|Invoke-(?:RestMethod|WebRequest)|plan\.py["'']?\s+(?:api|provision)\b'
+      - { type: output-matches, config: { pattern: '(?i)forecast-(?:authoring|time-intelligence)' } }
+      - &token { type: token-budget, config: { max: 300000 } }
+      - &errors { type: error-count, config: { max: 0 } }
+      - &wall { type: wall-time, config: { max: 5m } }
+      - &turns { type: turn-count, config: { max: 20 } }
+      - &tools { type: tool-call-count, config: { max: 30 } }
+
+  - name: "FP-LOCAL-BUILD Build and validate an offline candidate"
+    tags: { type: integration, tier: smoke, cost: llm, area: planning, mode: authoring }
+    constraints: *constraints
+    prompt: |
+      Using the Fabric Plan skill, build a local candidate Plan from the bundled
+      sample model and finance spec into a folder named trial, then tell me
+      whether it validated. Do not create anything in a Fabric workspace.
+    graders:
+      - *invocation
+      - *completed
+      - *crash
+      - *local_only
+      - { type: output-matches, config: { pattern: '(?i)validat' } }
+      - { type: output-not-matches, config: { pattern: '(?i)\b(?:created|deployed|published) (?:it |the plan )?(?:in|to) (?:the |your )?workspace\b' } }
+      - *token
+      - *errors
+      - *wall
+      - *turns
+      - *tools
+
+  - name: "FP-UNSUPPORTED Report a capability with no public route"
+    tags: *tags
+    constraints: *constraints
+    prompt: |
+      Using the Fabric Plan skill, assign approver users to a PowerTable approval
+      workflow in my Plan. Explain what you can and cannot do.
+    graders:
+      - *invocation
+      - *completed
+      - *crash
+      - *local_only
+      - { type: output-matches, config: { pattern: '(?i)(?:no|not (?:a |an )?)(?:supported |documented )?public (?:route|api)|unavailable|not supported' } }
+      - { type: output-not-matches, config: { pattern: '(?i)generatemwctoken|/coreapi/' } }
+      - *token
+      - *errors
+      - *wall
+      - *turns
+      - *tools

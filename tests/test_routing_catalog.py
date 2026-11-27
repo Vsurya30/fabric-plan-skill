@@ -28,7 +28,7 @@ GAPS_EXEMPT = {"documentationNotBundled"}
 
 class RoutingCatalogBoundaries(unittest.TestCase):
     def test_catalog_names_no_private_route(self):
-        text = (ROOT / "catalog" / "module-routing.json").read_text(encoding="utf-8")
+        text = (ROOT / "assets/catalog" / "module-routing.json").read_text(encoding="utf-8")
         self.assertIsNone(ROUTE.search(text.lower()))
 
     def test_guides_name_no_private_route(self):
@@ -39,14 +39,14 @@ class RoutingCatalogBoundaries(unittest.TestCase):
     def test_shipped_text_points_only_at_bundled_guides(self):
         bundled = {path.name for path in (ROOT / "references").glob("*.md")}
         sources = {
-            "catalog/module-routing.json": (ROOT / "catalog" / "module-routing.json").read_text(
+            "assets/catalog/module-routing.json": (ROOT / "assets/catalog" / "module-routing.json").read_text(
                 encoding="utf-8"
             ),
             "SKILL.md": (ROOT / "SKILL.md").read_text(encoding="utf-8"),
             "README.md": (ROOT / "README.md").read_text(encoding="utf-8"),
         }
-        gaps = json.loads((ROOT / "catalog" / "api-contract-gaps.json").read_text(encoding="utf-8"))
-        sources["catalog/api-contract-gaps.json"] = json.dumps(
+        gaps = json.loads((ROOT / "assets/catalog" / "api-contract-gaps.json").read_text(encoding="utf-8"))
+        sources["assets/catalog/api-contract-gaps.json"] = json.dumps(
             {key: value for key, value in gaps.items() if key not in GAPS_EXEMPT}
         )
         for name, text in sources.items():

@@ -6,7 +6,7 @@ from runtime.rule_factories import new_rule,measure_weighted_rule,distribute_col
 
 class MeasureWeightedRules(unittest.TestCase):
     def test_row_current_year_matches_saved_planning_rule(self):
-        saved=load(Path(__file__).resolve().parents[1]/'fixtures/measure-weighted-row-rule.json')
+        saved=load(Path(__file__).resolve().parents[1]/'assets/fixtures/measure-weighted-row-rule.json')
         request=measure_weighted_rule(saved['rule_id'],saved['name'],['target'],'basis',
             {'target':'9007199254740993','basis':'18446744073709551615'},axis='Row',weights_period='CurrentYear')
         self.assertEqual(verify_saved_rule(request,[saved])['persistedId'],'102')
@@ -17,7 +17,7 @@ class MeasureWeightedRules(unittest.TestCase):
             with self.subTest(axis=axis,period=period),self.assertRaises(ValueError):
                 measure_weighted_rule('1','x',['target'],'basis',{'target':'2','basis':'3'},axis=axis,weights_period=period)
     def setUp(self):
-        self.saved=load(Path(__file__).resolve().parents[1]/'fixtures/measure-weighted-column-rule.json')
+        self.saved=load(Path(__file__).resolve().parents[1]/'assets/fixtures/measure-weighted-column-rule.json')
         self.request=measure_weighted_rule('9007199254741001','Distribute target using budget weights',
             ['target'],'budget',{'target':'9007199254740993','budget':'18446744073709551615'},axis='Column')
     def test_matches_independent_saved_shape(self):

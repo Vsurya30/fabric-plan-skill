@@ -11,7 +11,7 @@ from runtime.codec import loads
 ROOT=Path(__file__).resolve().parents[1]
 
 def decode_roles(payload,node):
-    result=subprocess.run([node,str(ROOT/'tools/decode-lzutf8.cjs')],input=payload,
+    result=subprocess.run([node,str(ROOT/'scripts/tools/decode-lzutf8.cjs')],input=payload,
                           text=True,encoding='utf-8',capture_output=True,timeout=30,check=True)
     return loads(result.stdout)
 

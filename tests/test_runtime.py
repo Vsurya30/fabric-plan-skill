@@ -1,7 +1,7 @@
 import unittest,copy,os,tempfile,socket,sys
 from pathlib import Path
 from decimal import Decimal
-ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT))
+ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT/'scripts'))
 from runtime.codec import *
 from runtime.identity import *
 from runtime.construct import build,navigator,acyclic
@@ -15,8 +15,8 @@ def setUpModule():
     def deny(*a,**k): raise RuntimeError('Network forbidden in offline suite')
     socket.create_connection=deny
     socket.socket.connect=deny
-def model(): return load(ROOT/'fixtures/model.json')
-def finance(): return load(ROOT/'fixtures/finance-spec.json')
+def model(): return load(ROOT/'assets/fixtures/model.json')
+def finance(): return load(ROOT/'assets/fixtures/finance-spec.json')
 def built(): return build(model(),finance())
 def page():
     def p(x,y,w,h): return {'position':{'x':x,'y':y},'dimension':{'width':w,'height':h},'unrelated':{'preserve':True}}
@@ -34,7 +34,7 @@ def contribution(name='Workforce'):
 class IdentityTests(unittest.TestCase):
     def test_synthetic_272_vectors(self):
         # Synthetic byte patterns, not the xxHash project's sanity buffer; they pin XXH3-64, seed 0.
-        for v in load(ROOT/'fixtures/xxh3-vectors.json'):
+        for v in load(ROOT/'assets/fixtures/xxh3-vectors.json'):
             data=v['text'].encode() if 'text' in v else bytes((i*137+19)%256 for i in range(v['length']))
             self.assertEqual(str(xxh3(data)),v['expected'],v.get('length',v.get('text')))
     def test_u64_reject_number(self):
@@ -71,7 +71,7 @@ class ConstructionTests(unittest.TestCase):
         b=built(); r=validate_plan(b['raw']); self.assertEqual(r['sheets'],4); self.assertEqual(r['measureRecords'],15)
         self.assertTrue(all('dataInput' not in p or b['raw'][p]['columns'] for p in b['raw']))
     def test_nonfinance_no_unrequested_features(self):
-        b=build(model(),load(ROOT/'fixtures/capacity-spec.json')); self.assertEqual(len(b['identities']),1)
+        b=build(model(),load(ROOT/'assets/fixtures/capacity-spec.json')); self.assertEqual(len(b['identities']),1)
         self.assertNotIn('connectedPlanning/infobridge.json',b['raw']); self.assertNotIn('bookmarks',b['raw']['planProperties.json']['properties'])
     def test_unknown_model_field(self):
         s=finance(); s['sheets'][0]['rows'][0]='Imaginary[Field]'
@@ -180,9 +180,9 @@ class BridgeTests(unittest.TestCase):
         with self.assertRaises(ValueError): validate_graph({'sources':[s]})
     def test_two_identity_domains(self):
         a=[{'sourceType':'InfoBridge','id':'old','sourceId':'field','queryId':'portable','bucketId':'ameasure','position':'preserve'}]
-        mp={('portable','field'):{'queryId':'runtime','id':'tbl[field]'}}
-        c=[{'sourceType':'InfoBridge','queryId':'runtime','id':'tbl[field]','sourceId':'native-field','tableId':'27'}]
-        out=reconcile_assignments(a,mp,c); self.assertEqual(out[0]['queryId'],'runtime'); self.assertEqual(out[0]['tableId'],'27'); self.assertEqual(out[0]['position'],'preserve')
+        mp={('portable','field'):{'queryId':'scripts/runtime','id':'tbl[field]'}}
+        c=[{'sourceType':'InfoBridge','queryId':'scripts/runtime','id':'tbl[field]','sourceId':'native-field','tableId':'27'}]
+        out=reconcile_assignments(a,mp,c); self.assertEqual(out[0]['queryId'],'scripts/runtime'); self.assertEqual(out[0]['tableId'],'27'); self.assertEqual(out[0]['position'],'preserve')
         with self.assertRaises(ValueError): reconcile_assignments(a,mp,[])
     def test_sql_rewrite_scoped(self):
         q={'meta':{'queries':['old'],'unrelated':'old'},'transformationSteps':[{'meta':{'value':{'sqlQuery':'SELECT * FROM {{query_id:old}}','caption':'old'}}}]}

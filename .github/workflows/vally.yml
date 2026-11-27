@@ -5,7 +5,8 @@ on:
     paths:
       - "SKILL.md"
       - "references/**"
-      - "runtime/**"
+      - "scripts/**"
+      - "assets/**"
       - "tests/evals/**"
       - ".github/workflows/vally.yml"
   push:
@@ -13,7 +14,8 @@ on:
     paths:
       - "SKILL.md"
       - "references/**"
-      - "runtime/**"
+      - "scripts/**"
+      - "assets/**"
       - "tests/evals/**"
       - ".github/workflows/vally.yml"
   workflow_dispatch:
@@ -37,12 +39,17 @@ jobs:
       - name: Install Vally
         run: npm install -g @microsoft/vally-cli@0.10.0
       - name: Lint evaluations
-        run: vally lint --eval-spec tests/evals/fabric-plan-skill-fulleval/eval.yaml --strict
+        run: |
+          for spec in tests/evals/fabric-plan-skill/eval.yaml tests/evals/fabric-plan-skill-fulleval/eval.yaml; do
+            vally lint --eval-spec "$spec" --strict
+          done
       - name: Run evaluations
         run: |
           mkdir -p vally-results
+          vally eval -e tests/evals/fabric-plan-skill/eval.yaml \
+            --junit --output-dir vally-results/smoke --workers 1
           vally eval -e tests/evals/fabric-plan-skill-fulleval/eval.yaml \
-            --junit --output-dir vally-results --workers 1
+            --junit --output-dir vally-results/fulleval --workers 1
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

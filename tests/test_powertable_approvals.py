@@ -24,7 +24,7 @@ def workflow(**extra):
 
 class ApprovalWorkflow(unittest.TestCase):
     def setUp(self):
-        model=load(ROOT/'fixtures/model.json');spec=load(ROOT/'fixtures/capacity-spec.json')
+        model=load(ROOT/'assets/fixtures/model.json');spec=load(ROOT/'assets/fixtures/capacity-spec.json')
         sheet,new,self.ids=table_from_request(table_request())
         self.envelope=add_table_to_definition(pack(build(model,spec)['raw']),sheet,new)
         self.prefix=next(k.rsplit('source.json',1)[0] for k in new if k.endswith('/source.json'))
@@ -133,7 +133,7 @@ class ApprovalWorkflow(unittest.TestCase):
         tmp=Path(temporary.name)
         (tmp/'request.json').write_text(json.dumps({'sheet_guid':self.ids['sheetGuid'],'approvals':workflow()}),encoding='utf-8')
         (tmp/'baseline.json').write_text(json.dumps(self.envelope),encoding='utf-8')
-        result=subprocess.run([sys.executable,str(ROOT/'plan.py'),'powertable-features','--baseline',str(tmp/'baseline.json'),
+        result=subprocess.run([sys.executable,str(ROOT/'scripts/plan.py'),'powertable-features','--baseline',str(tmp/'baseline.json'),
                                '--input',str(tmp/'request.json'),'--out',str(tmp/'out')],capture_output=True,text=True,cwd=ROOT,
                               env={**os.environ,'FABRIC_SKILL_OFFLINE_TEST':'1'})
         self.assertEqual(result.returncode,0,result.stderr)

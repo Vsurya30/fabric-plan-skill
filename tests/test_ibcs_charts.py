@@ -14,7 +14,7 @@ VALUES = {'AC': 'Metrics[Units]', 'PY': 'Metrics[Price]', 'PL': 'Metrics[Cost]',
 
 
 def model():
-    return load(ROOT / 'fixtures/model.json')
+    return load(ROOT / 'assets/fixtures/model.json')
 
 
 def spec(code, *buckets, **extra):

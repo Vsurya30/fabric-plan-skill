@@ -100,7 +100,7 @@ datetime column to hide the time; `datetime` is never valid on a `date` column.
 ```
 
 ```sh
-python plan.py powertable-table --input table.request.json --baseline current-definition.json --out candidate
+python scripts/plan.py powertable-table --input table.request.json --baseline current-definition.json --out candidate
 ```
 
 `rows`/`unique_rows` are the two query results (objects keyed by the selected
@@ -127,7 +127,7 @@ PowerTables saved without a selection show nothing on the Row access tab.
 Repair them on a fresh export; only enabled actions without a selection change:
 
 ```sh
-python plan.py repair-powertable-row-access --baseline current-definition.json --out candidate
+python scripts/plan.py repair-powertable-row-access --baseline current-definition.json --out candidate
 ```
 
 Pass `--input` with `{"sheet_guids": ["<sheet GUID>"]}` to limit the repair.
@@ -159,7 +159,7 @@ publish through the public API:
 ```
 
 ```sh
-python plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate
+python scripts/plan.py powertable-features --baseline current-definition.json --input features.request.json --out candidate
 ```
 
 Forms:
@@ -235,7 +235,7 @@ table and `linkingColumn` is the preceding table's column that holds it.
 Preserve unrelated column metadata, editing and row actions.
 
 ```sh
-python plan.py repair-powertable-config --baseline current-definition.json --input repair-request.json --out candidate
+python scripts/plan.py repair-powertable-config --baseline current-definition.json --input repair-request.json --out candidate
 ```
 
 This produces a local candidate using supplied metadata. Compare the complete

@@ -18,7 +18,7 @@ class BusinessIntentTests(unittest.TestCase):
             for op in ops:self.assertIn(op,d['actions'],kind)
 
     def test_hybrid_preserves_clauses_and_dependency_order(self):
-        b=json.loads((ROOT/'examples/business-intent/merit-review.json').read_text())
+        b=json.loads((ROOT/'assets/examples/business-intent/merit-review.json').read_text())
         b['requirements'].reverse() # business prose need not arrive in execution order
         r=plan_intent(b);self.assertTrue(r['readyForAuthoring'])
         self.assertTrue((ROOT/'references'/r['defaultPolicy']['source']).is_file())

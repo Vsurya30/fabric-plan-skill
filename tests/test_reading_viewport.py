@@ -41,7 +41,7 @@ class ReadingViewportTests(unittest.TestCase):
         from runtime.codec import load
         from runtime.public_alignment import check_placements
         from runtime.planning_presentation import build_application
-        fixture=Path(__file__).resolve().parents[1]/'fixtures'
+        fixture=Path(__file__).resolve().parents[1]/'assets/fixtures'
         spec=load(fixture/'context-dashboard-spec.json')
         for d in spec['dashboards']:
             d['viewport']={'width':1600,'height':1600}

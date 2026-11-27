@@ -78,7 +78,7 @@ class CurrentCFContractTests(unittest.TestCase):
   self.assertEqual(out,apply_negative_variance(out,AMOUNT))
 
  def test_standard_builder_constructs_a_fresh_complete_report_with_symbolic_rules(self):
-  model=load(ROOT/'fixtures/model.json');spec=load(ROOT/'examples/conditional-formatting/application.json')
+  model=load(ROOT/'assets/fixtures/model.json');spec=load(ROOT/'assets/examples/conditional-formatting/application.json')
   scoped=prepare_scope(application_defaults(model,spec),SUPPORTED,model)
   self.assertTrue(scoped['completeOriginalScope']);preflight(scoped['spec'])
   first=build_application(model,spec);second=build_application(model,spec)

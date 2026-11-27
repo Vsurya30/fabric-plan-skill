@@ -32,8 +32,8 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(leaves, guides)
         listing = render(discover(), compact=True)
         for file in guides:
-            self.assertIn('python plan.py reference ' + file, listing)
-            with patch.object(sys, 'argv', ['plan.py', 'reference', file]), redirect_stdout(io.StringIO()) as out:
+            self.assertIn('python scripts/plan.py reference ' + file, listing)
+            with patch.object(sys, 'argv', ['scripts/plan.py', 'reference', file]), redirect_stdout(io.StringIO()) as out:
                 plan.main()
             text = (root / file).read_text(encoding='utf-8-sig')
             self.assertEqual(out.getvalue().strip(), text.strip())
@@ -56,7 +56,7 @@ class DiscoveryTests(unittest.TestCase):
         for op in catalog()['actions'].values():
             for symbol in op['symbols']:
                 module,name=symbol.rsplit('.',1)
-                tree=ast.parse((ROOT/Path(*module.split('.')).with_suffix('.py')).read_text(encoding='utf-8-sig'))
+                tree=ast.parse((ROOT/'scripts'/Path(*module.split('.')).with_suffix('.py')).read_text(encoding='utf-8-sig'))
                 self.assertTrue(any(isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name==name for n in tree.body),symbol)
 
     def test_cli_parser_accepts_complete_advertised_commands(self):
@@ -96,11 +96,11 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(discover('zzzznotafeature')['count'], 0)
 
     def test_json_cli_is_read_only_and_portable(self):
-        result = subprocess.run([sys.executable, str(ROOT/'plan.py'), 'discover', '--module', 'F19', '--json'],
+        result = subprocess.run([sys.executable, str(ROOT/'scripts/plan.py'), 'discover', '--module', 'F19', '--json'],
                                 cwd=ROOT.parent, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         route = json.loads(result.stdout)['modules'][0]
-        self.assertIn('python plan.py reference measure-source-bindings.md',
+        self.assertIn('python scripts/plan.py reference measure-source-bindings.md',
                       {guide['command'] for guide in route['guides']})
         self.assertTrue(all(op['phase'] == 'local' for op in route['operations']))
 
@@ -109,7 +109,7 @@ class DiscoveryTests(unittest.TestCase):
         for name in ['../SKILL.md','intelligence/../../SKILL.md',str(ROOT/'SKILL.md'),
                      'intelligence\\index.md','intelligence/./index.md',
                      'intelligence/.private.md','.']:
-            with self.subTest(name=name), patch.object(sys,'argv',['plan.py','reference',name]):
+            with self.subTest(name=name), patch.object(sys,'argv',['scripts/plan.py','reference',name]):
                 with self.assertRaises(ValueError):
                     plan.main()
 
@@ -120,12 +120,12 @@ class DiscoveryTests(unittest.TestCase):
             root=Path(td); references=root/'references'; references.mkdir()
             (root/'outside.md').write_text('Not a bundled reference',encoding='utf-8')
             (references/'escape.md').symlink_to(root/'outside.md')
-            with patch.object(plan,'ROOT',root), patch.object(sys,'argv',['plan.py','reference','escape.md']):
+            with patch.object(plan,'ROOT',root/'scripts'), patch.object(sys,'argv',['scripts/plan.py','reference','escape.md']):
                 with self.assertRaisesRegex(ValueError,'bundled reference path'):
                     plan.main()
 
     def test_custom_time_axis_survives_scope_and_preflight(self):
-        model=load(ROOT/'fixtures/model.json')
+        model=load(ROOT/'assets/fixtures/model.json')
         for key,label in [('Calendar[FY]','FY'),('Calendar[FQ]','FQ')]:
             model['fields'].append(dict(id=key,tableName='Calendar',columnName=label,columnType='Column',dataType='Text'))
         spec=dict(name='Synthetic routed Forecast',requiredCapabilities=['planning.native-measure','planning.forecast'],sheets=[

@@ -8,7 +8,7 @@ from runtime.formula_syntax import equality_issues,check_formula,repair_equality
 from runtime.time_authoring import preferred_calendar_axis,prefer_forecast_axis,apply_time_axis,add_time_column,time_expression
 from runtime.discovery import discover
 ROOT=Path(__file__).resolve().parents[1]
-s=importlib.util.spec_from_file_location('time_example',ROOT/'examples/forecast-time-intelligence/build.py')
+s=importlib.util.spec_from_file_location('time_example',ROOT/'assets/examples/forecast-time-intelligence/build.py')
 example=importlib.util.module_from_spec(s);s.loader.exec_module(example)
 
 class FormulaEqualityTests(unittest.TestCase):

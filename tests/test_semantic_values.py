@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def model_spec():
-    model=load(ROOT/'fixtures/model.json')
+    model=load(ROOT/'assets/fixtures/model.json')
     model['fields']=[
         {'id':t+'['+c+']','tableName':t,'columnName':c,'dataType':d,'columnType':k}
         for t,c,d,k in [('Area','Name','String','Column'),('Area','Code','Int64','Column'),

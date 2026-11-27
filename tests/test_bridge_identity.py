@@ -9,7 +9,7 @@ from runtime.connected_components import bridge_consumer
 from runtime.planning_integrity import guard_write,check_properties,default_global_styles
 
 ROOT=Path(__file__).resolve().parents[1]
-EXAMPLE=ROOT/'examples/infobridge-lineage'
+EXAMPLE=ROOT/'assets/examples/infobridge-lineage'
 
 class PlanningLineageTests(unittest.TestCase):
     def request(self):return load(EXAMPLE/'planning-source.request.json')
