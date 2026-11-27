@@ -68,7 +68,7 @@ stimuli:
       - *completed
       - *crash
       - *local_only
-      - { type: output-matches, config: { pattern: '(?i)\bno\s+(?:supported\s+|documented\s+)?public\s+(?:route|api)|\bnot\s+(?:available|supported)|unavailable' } }
+      - { type: output-matches, config: { pattern: '(?i)\b(?:can[’'']?t|cannot|unable to)\b[^.]{0,80}\bassign|does not (?:expose|support)|\bno\s+(?:supported\s+|documented\s+)?public\s+(?:route|api)|\bnot\s+(?:available|supported)|unavailable' } }
       - { type: output-not-matches, config: { pattern: '(?i)generatemwctoken|/coreapi/' } }
       - *token
       - *errors
