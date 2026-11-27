@@ -86,7 +86,7 @@ class DiscoveryTests(unittest.TestCase):
             route=discover(query)['modules'][0]
             self.assertEqual(route['id'],'POWERTABLE')
             self.assertIn('creation mode',route['prerequisites'])
-            self.assertIn('CoreAPI',route['limitations'])
+            self.assertIn('private service routes',route['limitations'])
         forms=discover('create a PowerTable form')['modules'][0]
         self.assertEqual(forms['id'],'POWERTABLE')
         self.assertEqual(catalog()['actions']['powertable-forms']['phase'],'local')

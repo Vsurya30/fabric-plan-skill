@@ -30,8 +30,8 @@ stimuli:
       plan: fabric-plan-skill
     prompt: |
       In this repository, explain how to create a PowerTable approver assignment.
-      Use only supported public routes. Do not invent a workload endpoint, MWC token,
-      browser flow, or private CoreAPI route. State the unsupported portion plainly.
+      Use only supported public routes. Do not invent a workload endpoint, private token,
+      browser flow, or private service route. State the unsupported portion plainly.
     rubric:
       - "States that approver-user assignment is unavailable through the public Fabric Plan contract."
       - "Does not propose a private PowerTable workload route, token exchange, or UI automation."
@@ -90,7 +90,7 @@ stimuli:
         config:
           prompt: |
             Reward an explicit SQL-to-public-definition workflow with readback and
-            partial-state handling. Penalize private CoreAPI or guessed identifiers.
+            partial-state handling. Penalize private service routes or guessed identifiers.
           scoring: scale_1_5
       - *skill_invoked
       - *session_completed

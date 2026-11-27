@@ -1,7 +1,7 @@
 'use strict';
-// Optional maintenance only. Node 24: node --use-system-ca tools/refresh-schemas.cjs
+// Optional maintenance only. Node 24: node --use-system-ca scripts/tools/refresh-schemas.cjs
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const root=path.resolve(__dirname,'..','schemas'),manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));
+const root=path.resolve(__dirname,'..','..','assets','schemas'),manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 function refs(v){if(Array.isArray(v))return v.flatMap(refs);if(v&&typeof v==='object')return Object.entries(v).flatMap(([k,x])=>k==='$ref'?[x]:refs(x));return [];}
 (async()=>{const queue=manifest.schemas.map(s=>s.url),seen=new Set(),next=[];

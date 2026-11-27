@@ -22,6 +22,15 @@ def retry_seconds(headers,default=2):
         except (ValueError,TypeError): return default
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): return None
+# The only public Fabric REST routes this client calls: the API base, Plan items and
+# definitions, semantic-model and SQL-database definitions, and long-running operations.
+PUBLIC_ROUTE=re.compile(r'/v1(?:'
+    r'|/workspaces/[^/]+/plans(?:/[^/]+(?:/(?:getDefinition|updateDefinition))?)?'
+    r'|/workspaces/[^/]+/semanticModels/[^/]+(?:/getDefinition)?'
+    r'|/workspaces/[^/]+/sqlDatabases/[^/]+/getDefinition'
+    r'|/operations/[^/]+(?:/result)?'
+    r')/?')
+
 class Client:
     def __init__(self,base,token_env,allowed_hosts=None,journal=None,adapter=None,sleep=time.sleep):
         self.base=base.rstrip('/'); self.token_env=token_env
@@ -35,7 +44,7 @@ class Client:
         p=urllib.parse.urlsplit(url)
         if p.scheme!='https' or p.netloc!='api.fabric.microsoft.com' or p.fragment:
             raise ValueError('Unapproved HTTPS endpoint')
-        if {'coreapi','generatemwctokenv2'} & set(urllib.parse.unquote(p.path).lower().split('/')):
+        if not PUBLIC_ROUTE.fullmatch(urllib.parse.unquote(p.path)):
             raise ValueError('Expected a public Fabric API endpoint')
         return url
     def _token(self):
@@ -115,7 +124,7 @@ class Client:
                     if isinstance(x,dict):
                         result={}
                         for k,v in x.items():
-                            if k.casefold() in ('token','access_token','accesstoken','originalaadtoken','refresh_token','refreshtoken','mwctoken','authorization','password','client_secret'):
+                            if any(s in k.casefold() for s in ('token','secret','password','authorization')):
                                 result[k]='<not-persisted>'; sensitive=True
                             else: result[k]=redact(v)
                         return result

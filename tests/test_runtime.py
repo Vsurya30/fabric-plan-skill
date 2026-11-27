@@ -256,16 +256,16 @@ class TransportTests(unittest.TestCase):
         checkpoint=load(Path(self.tmp.name)/'update.operation.json')
         self.assertEqual((checkpoint['lastStatus'],checkpoint['phase'],checkpoint['error']),('Failed','failed',error))
     def test_read_throttle(self):
-        c=self.client([{'status':429,'headers':{'retry-after':'0'},'body':{}},{'status':200,'headers':{},'body':{'value':1}}]); self.assertEqual(c.request('GET','/x')['status'],200)
+        c=self.client([{'status':429,'headers':{'retry-after':'0'},'body':{}},{'status':200,'headers':{},'body':{'value':1}}]); self.assertEqual(c.request('GET','/workspaces/w/plans')['status'],200)
     def test_uncertain_create_not_repeated(self):
         c=self.client([TimeoutError()])
-        with self.assertRaises(RuntimeError): c.request('POST','/plans',{},label='create')
-        with self.assertRaisesRegex(RuntimeError,'UNCERTAIN'): c.request('POST','/plans',{},label='create')
+        with self.assertRaises(RuntimeError): c.request('POST','/workspaces/w/plans',{},label='create')
+        with self.assertRaisesRegex(RuntimeError,'UNCERTAIN'): c.request('POST','/workspaces/w/plans',{},label='create')
         self.assertEqual(len(self.calls),1)
     def test_rejected_write_not_success(self):
         c=self.client([{'status':403,'headers':{},'body':{}}])
         for _ in range(2):
-            with self.assertRaises(HttpError): c.request('POST','/plans',{},label='create')
+            with self.assertRaises(HttpError): c.request('POST','/workspaces/w/plans',{},label='create')
         self.assertEqual(len(self.calls),1)
     def test_untrusted_location(self):
         c=self.client([])
@@ -302,15 +302,15 @@ class TransportTests(unittest.TestCase):
             plan_operation(c,'w','update','p',definition=before,baseline_hash=definition_hash(before))
         self.assertEqual([url.rsplit('/',1)[-1] for _,url,_ in self.calls],['getDefinition'])
     def test_credentials_not_journaled(self):
-        c=self.client([{'status':201,'headers':{},'body':{'id':'new'}}]); c.request('POST','/plans',{},label='create')
+        c=self.client([{'status':201,'headers':{},'body':{'id':'new'}}]); c.request('POST','/workspaces/w/plans',{},label='create')
         self.assertTrue(all('mock-secret' not in f.read_text() for f in Path(self.tmp.name).glob('*')))
     def test_completed_create_resume(self):
-        c=self.client([{'status':201,'headers':{},'body':{'id':'new'}}]); first=c.request('POST','/plans',{},label='create'); self.assertEqual(c.request('POST','/plans',{},label='create'),first); self.assertEqual(len(self.calls),1)
-    def test_child_workload_token_not_persisted(self):
-        c=self.client([{'status':200,'headers':{},'body':{'Token':'child-workload-secret','TargetUriHost':'example.invalid'}}])
-        r=c.request('POST','/token',{},label='token'); self.assertEqual(r['body']['Token'],'child-workload-secret')
-        self.assertTrue(all('child-workload-secret' not in f.read_text() for f in Path(self.tmp.name).glob('*')))
-        with self.assertRaises(RuntimeError): c.request('POST','/token',{},label='token')
+        c=self.client([{'status':201,'headers':{},'body':{'id':'new'}}]); first=c.request('POST','/workspaces/w/plans',{},label='create'); self.assertEqual(c.request('POST','/workspaces/w/plans',{},label='create'),first); self.assertEqual(len(self.calls),1)
+    def test_token_in_response_not_persisted(self):
+        c=self.client([{'status':200,'headers':{},'body':{'Token':'response-secret','TargetUriHost':'example.invalid'}}])
+        r=c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='token'); self.assertEqual(r['body']['Token'],'response-secret')
+        self.assertTrue(all('response-secret' not in f.read_text() for f in Path(self.tmp.name).glob('*')))
+        with self.assertRaises(RuntimeError): c.request('POST','/workspaces/w/plans/p/getDefinition',{},label='token')
 class SchemaTests(unittest.TestCase):
     def test_transitive_closure(self):
         s=Schemas()

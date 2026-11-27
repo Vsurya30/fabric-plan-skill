@@ -53,8 +53,8 @@
       "measureGuid": "3631942492440468500"
     },
     "InfoBridge": {
-      "id": "4932b1b9-d71c-4411-8f38-9f0a08e5827d[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
-      "sourceId": "4932b1b9-d71c-4411-8f38-9f0a08e5827d[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
+      "id": "10000000-0000-4000-8000-000000000301[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
+      "sourceId": "10000000-0000-4000-8000-000000000301[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
       "bucketId": "ameasure",
       "columnName": "bridge",
       "dataType": "Double",
@@ -71,8 +71,8 @@
       "distinctValueCount": null,
       "tableName": "Query 1 -  Planning 1",
       "dataRoleType": "Measure",
-      "queryId": "4932b1b9-d71c-4411-8f38-9f0a08e5827d",
-      "measureGuid": "606834680891138661"
+      "queryId": "10000000-0000-4000-8000-000000000301",
+      "measureGuid": "5366211425043852021"
     }
   },
   "exportAssignments": {
@@ -97,7 +97,7 @@
       "sourceId": "4898815674451314253",
       "sourceType": "Visual",
       "tableName": "Planning 1",
-      "visualId": "01a1e80f-970a-7356-85a4-dff0e658b48b"
+      "visualId": "10000000-0000-4000-8000-000000000303"
     },
     "InfoBridge": {
       "aggregationType": "sum",
@@ -111,21 +111,21 @@
       "dataType": "Double",
       "distinctValueCount": null,
       "formatString": "",
-      "id": "4932b1b9-d71c-4411-8f38-9f0a08e5827d[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
+      "id": "10000000-0000-4000-8000-000000000301[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
       "isFlatHierarchy": false,
       "isRenamed": true,
-      "measureGuid": "606834680891138661",
+      "measureGuid": "5366211425043852021",
       "name": "Sum of bridge",
       "order": 1,
-      "queryId": "4932b1b9-d71c-4411-8f38-9f0a08e5827d",
-      "sourceId": "4932b1b9-d71c-4411-8f38-9f0a08e5827d[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
+      "queryId": "10000000-0000-4000-8000-000000000301",
+      "sourceId": "10000000-0000-4000-8000-000000000301[dc67b36c74eb8666f91a2a80cc7002c27c2ca14f93955bbbd1c5086c3631d51d]",
       "sourceType": "InfoBridge",
       "tableName": "Query 1 -  Planning 1"
     }
   },
   "query": {
-    "id": "4932b1b9-d71c-4411-8f38-9f0a08e5827d",
-    "sourceId": "af86ad80-6ae3-46c6-9e80-e98ab933b586",
+    "id": "10000000-0000-4000-8000-000000000301",
+    "sourceId": "10000000-0000-4000-8000-000000000302",
     "name": "Query 1 -  Planning 1",
     "status": 200,
     "meta": {

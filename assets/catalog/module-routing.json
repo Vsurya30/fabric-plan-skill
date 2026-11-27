@@ -1487,10 +1487,10 @@
         "Create PowerTable forms, automations and approval workflows in the Plan definition",
         "Repair a PowerTable with no Row access selection",
         "Report PowerTable approver-user assignment as unavailable without a public route",
-        "Distinguish supported public routes from private PowerTable CoreAPI modes"
+        "Distinguish supported public routes from private PowerTable service routes"
       ],
       "prerequisites": "Use sqldb-cli for authorized Fabric SQL discovery/DDL and re-read the committed catalog (PHYSICAL_METADATA_SQL and UNIQUE_METADATA_SQL). Supply physical schema, keys and an authorized source identity. Resolve a confirmed creation mode: 2 for an existing table, 1 for tables created by DDL (from scratch, file, template or snapshot). Author forms, automations and approval workflows on a fresh export.",
-      "limitations": "This skill does not execute SQL directly or call private CoreAPI routes. New tables need external sqldb-cli DDL followed by public Plan definition creation. Approver-user assignment, semantic-model live sync, and private creation modes have no supported public route. Scheduled, form-submitted and button automations are not authored.",
+      "limitations": "This skill does not execute SQL directly or call private service routes. New tables need external sqldb-cli DDL followed by public Plan definition creation. Approver-user assignment, semantic-model live sync, and private creation modes have no supported public route. Scheduled, form-submitted and button automations are not authored.",
       "coverage": "local"
     },
     {

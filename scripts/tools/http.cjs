@@ -3,8 +3,9 @@
 const fs=require('node:fs');
 (async()=>{const q=JSON.parse(fs.readFileSync(0,'utf8'));
 const u=new URL(q.url);if(u.origin!=='https://api.fabric.microsoft.com'||u.username||u.password||u.hash)throw Error('Invalid public Fabric URL');
-if(!/^Bearer \S+$/i.test(q.headers.Authorization) ||
-    decodeURIComponent(u.pathname).split('/').some(s=>['coreapi','generatemwctokenv2'].includes(s.toLowerCase())))
+// The public Fabric routes the Python client calls; keep in step with PUBLIC_ROUTE in runtime/transport.py.
+const PUBLIC_ROUTE=/^\/v1(?:|\/workspaces\/[^/]+\/plans(?:\/[^/]+(?:\/(?:getDefinition|updateDefinition))?)?|\/workspaces\/[^/]+\/semanticModels\/[^/]+(?:\/getDefinition)?|\/workspaces\/[^/]+\/sqlDatabases\/[^/]+\/getDefinition|\/operations\/[^/]+(?:\/result)?)\/?$/;
+if(!/^Bearer \S+$/i.test(q.headers.Authorization) || !PUBLIC_ROUTE.test(decodeURIComponent(u.pathname)))
     throw Error('Expected public Fabric bearer request');
 const r=await fetch(q.url,{method:q.method,headers:q.headers,redirect:'error',signal:AbortSignal.timeout(60000),...(q.bodyBase64===null?{}:{body:Buffer.from(q.bodyBase64,'base64')})});
 const bytes=Buffer.from(await r.arrayBuffer());if(bytes.length>64*1024*1024)throw Error('Response size limit');

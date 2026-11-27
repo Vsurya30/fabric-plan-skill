@@ -10,7 +10,7 @@ on:
       - "tests/evals/**"
       - ".github/workflows/vally.yml"
   push:
-    branches: [main, restructure-ms-layout]
+    branches: [main]
     paths:
       - "SKILL.md"
       - "references/**"

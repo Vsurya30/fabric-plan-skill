@@ -69,7 +69,7 @@ stimuli:
       - *crash
       - *local_only
       - { type: output-matches, config: { pattern: '(?i)\b(?:can[’'']?t|cannot|unable to)\b[^.]{0,80}\bassign|does not (?:expose|support)|\bno\s+(?:supported\s+|documented\s+)?public\s+(?:route|api)|\bnot\s+(?:available|supported)|unavailable' } }
-      - { type: output-not-matches, config: { pattern: '(?i)generatemwctoken|/coreapi/' } }
+      - { type: output-not-matches, config: { pattern: '(?i)api\.fabric\.microsoft\.com/(?!v1/(?:workspaces|operations|connections)/)\S+|(?:use|call|request) (?:a |the )?(?:workload|private) token' } }
       - *token
       - *errors
       - *wall

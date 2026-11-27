@@ -5,7 +5,7 @@ definition (`source.json`, `columnConfigs.json`, `sourceSettings.json`,
 `properties.json`, `forms.json`, `automations.json`) and the Fabric Plan
 lifecycle. The external `sqldb-cli` companion owns SQL catalog inspection, DDL,
 DML and read-only T-SQL:
-<https://github.com/gim-home/skills-for-fabric/tree/main/skills/sqldb-cli>.
+<https://github.com/microsoft/skills-for-fabric/tree/main/skills/sqldb-cli>.
 Install or attach it separately. A Plan-definition request alone never
 authorizes a database write.
 
@@ -21,7 +21,7 @@ authorizes a database write.
 Tables built through the file, template or snapshot routes record
 `creation_mode` 1 because the table is created by DDL. The product's 3/4/5 origins
 depend on upload tasks, sync records and templates owned by the workload service.
-Do not call private CoreAPI table-creation or other private workload routes to
+Do not call private service routes for table creation or other workload routes to
 imitate them, and do not present them as Fabric REST APIs.
 
 ## Contents
@@ -208,8 +208,8 @@ type (`DEFAULT`, `MANUAL` or `LOOKUP`), persist flag (`SAVE_AFTER_REVIEW` or
 multi-level approval is on; when the request omits it, the flag is not written.
 It refuses to replace an existing workflow.
 Approver users are not definition content. Assigning approver users has no
-supported public route. Do not use a workload endpoint, MWC token exchange,
-browser session or private CoreAPI call.
+supported public route. Do not use a workload endpoint, a private token exchange,
+a browser session or any other private service route.
 Report the workflow as partially configured: the definition can carry approval
 structure, but user assignment remains a manual product operation until a
 supported public API exists.
