@@ -129,6 +129,25 @@ The tests are offline and need no credentials:
 python scripts/plan.py test
 ```
 
+### Before you open a PR
+
+CI runs only the offline checks. Run the agent evals on your machine with your
+own Copilot model (macOS or Linux; needs Python 3.11+, Node.js 24+, `gh`, and
+`az` for connected runs):
+
+1. Copy `tests/evals/local.config.example.json` to `tests/evals/local.config.json`
+   (git-ignored). Set `githubAccount` to a `gh` login whose Copilot plan lists
+   the `model` and `judgeModel`.
+2. Run `tests/run-evals.sh --dry-run` to check the setup, then
+   `tests/run-evals.sh --full`. Add `--connected` (with `allowWrites: true` and
+   `az login`) to run against your test workspace.
+3. Paste the summary line it prints into the pull request.
+
+Results are written to `vally-results/` (git-ignored).
+
+How each tier, eval case and grader works, and how the evals stay safe in a
+shared workspace: [the evals guide in tests/evals/](tests/evals/).
+
 ## Safety
 
 - Workspace writes need an explicit destination file that names the workspace,

@@ -1,23 +1,9 @@
 name: Vally skill evaluations
 
+# Manual only. Evals run locally before a PR with tests/run-evals.sh, using each
+# developer's own Copilot model. Run this only from a repository whose Actions
+# token has Copilot access to the models the specs use.
 on:
-  pull_request:
-    paths:
-      - "SKILL.md"
-      - "references/**"
-      - "scripts/**"
-      - "assets/**"
-      - "tests/evals/**"
-      - ".github/workflows/vally.yml"
-  push:
-    branches: [main]
-    paths:
-      - "SKILL.md"
-      - "references/**"
-      - "scripts/**"
-      - "assets/**"
-      - "tests/evals/**"
-      - ".github/workflows/vally.yml"
   workflow_dispatch:
 
 permissions:
@@ -45,10 +31,12 @@ jobs:
           done
       - name: Stage the skill
         # Vally loads no skills unless --skill-dir names a folder of skill
-        # folders. The repository root is the skill, so copy it in under its name.
+        # folders. Copy only the shipped files (never tests/, which holds the
+        # eval rubrics and graders) under the skill's name.
         run: |
           mkdir -p "$RUNNER_TEMP/skills/fabric-plan-skill"
-          rsync -a --exclude .git --exclude vally-results ./ "$RUNNER_TEMP/skills/fabric-plan-skill/"
+          rsync -aR --exclude __pycache__ SKILL.md README.md LICENSE apm.yml references scripts assets \
+            "$RUNNER_TEMP/skills/fabric-plan-skill/"
       - name: Run evaluations
         run: |
           mkdir -p vally-results
