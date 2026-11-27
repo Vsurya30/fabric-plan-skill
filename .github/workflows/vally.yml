@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: "24"
       - name: Install Vally
-        run: npm install -g @microsoft/vally-cli@0.10.0
+        run: npm install -g @microsoft/vally-cli@0.20.0
       - name: Lint evaluations
         run: |
           for spec in tests/evals/fabric-plan-skill/eval.yaml tests/evals/fabric-plan-skill-fulleval/eval.yaml; do

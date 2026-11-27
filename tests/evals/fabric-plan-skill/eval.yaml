@@ -1,7 +1,8 @@
 # Smoke evaluation for fabric-plan-skill, following the skills-for-fabric layout:
 # tests/evals/<skill>/eval.yaml (smoke) beside tests/evals/<skill>-fulleval/eval.yaml.
 # Every stimulus is offline: no Fabric workspace, token or network call is needed.
-# UNMEASURED: budgets are generous first ceilings; tune them from the first CI run.
+# Measured locally with vally-cli 0.20.0 on 2026-11-27 (1 trial each); budgets are
+# still first ceilings. Run with --skill-dir pointing at a real copy of the skill.
 name: fabric-plan-skill-smoke-eval
 description: Offline routing, local build and public-API boundary checks for fabric-plan-skill.
 tags:
@@ -67,7 +68,7 @@ stimuli:
       - *completed
       - *crash
       - *local_only
-      - { type: output-matches, config: { pattern: '(?i)(?:no|not (?:a |an )?)(?:supported |documented )?public (?:route|api)|unavailable|not supported' } }
+      - { type: output-matches, config: { pattern: '(?i)\bno\s+(?:supported\s+|documented\s+)?public\s+(?:route|api)|\bnot\s+(?:available|supported)|unavailable' } }
       - { type: output-not-matches, config: { pattern: '(?i)generatemwctoken|/coreapi/' } }
       - *token
       - *errors
