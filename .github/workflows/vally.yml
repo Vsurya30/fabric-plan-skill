@@ -43,13 +43,23 @@ jobs:
           for spec in tests/evals/fabric-plan-skill/eval.yaml tests/evals/fabric-plan-skill-fulleval/eval.yaml; do
             vally lint --eval-spec "$spec" --strict
           done
+      - name: Stage the skill
+        # Vally loads no skills unless --skill-dir names a folder of skill
+        # folders. The repository root is the skill, so copy it in under its name.
+        run: |
+          mkdir -p "$RUNNER_TEMP/skills/fabric-plan-skill"
+          rsync -a --exclude .git --exclude vally-results ./ "$RUNNER_TEMP/skills/fabric-plan-skill/"
       - name: Run evaluations
         run: |
           mkdir -p vally-results
+          status=0
           vally eval -e tests/evals/fabric-plan-skill/eval.yaml \
-            --junit --output-dir vally-results/smoke --workers 1
+            --skill-dir "$RUNNER_TEMP/skills" \
+            --junit --output-dir vally-results/smoke --workers 1 || status=1
           vally eval -e tests/evals/fabric-plan-skill-fulleval/eval.yaml \
-            --junit --output-dir vally-results/fulleval --workers 1
+            --skill-dir "$RUNNER_TEMP/skills" \
+            --junit --output-dir vally-results/fulleval --workers 1 || status=1
+          exit $status
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
