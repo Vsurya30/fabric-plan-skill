@@ -1,4 +1,5 @@
 """Portable discovery and the executable command paths it exposes; no live APIs."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import ast
 from contextlib import redirect_stdout
 import copy

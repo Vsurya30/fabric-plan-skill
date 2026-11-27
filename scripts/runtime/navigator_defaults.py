@@ -9,6 +9,7 @@ import math
 from decimal import Decimal
 from pathlib import Path
 from .codec import load
+from .paths import ASSETS
 
 
 def _overlay(base, override):
@@ -58,7 +59,7 @@ def complete_defaults(state):
         raise ValueError('Navigator requires style.DEFAULT.shapeState') from None
     if not isinstance(shape, dict):
         raise ValueError('Navigator style.DEFAULT.shapeState must be an object')
-    seed = load(Path(__file__).resolve().parents[2]/'assets' / 'fixtures/navigator-builder-20261112.json')
+    seed = load(ASSETS / 'fixtures/navigator-builder-20261112.json')
     base = seed['style']['DEFAULT']['shapeState']
     for group in ('text', 'icon', 'padding'):
         shape[group] = _fill(base[group], shape.get(group, {}), 'style.DEFAULT.shapeState.' + group)

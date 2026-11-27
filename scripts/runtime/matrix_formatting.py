@@ -10,10 +10,10 @@ import re
 import uuid
 from decimal import Decimal
 from pathlib import Path
+from .paths import ASSETS
 
-ROOT = Path(__file__).resolve().parents[2]/'assets'
-SNAPSHOT = json.loads((ROOT/'fixtures/matrix-formatting-v1.json').read_text(encoding='utf-8'))
-CF_SNAPSHOT = json.loads((ROOT/'fixtures/matrix-cf-v2.json').read_text(encoding='utf-8'))
+SNAPSHOT = json.loads((ASSETS/'fixtures/matrix-formatting-v1.json').read_text(encoding='utf-8'))
+CF_SNAPSHOT = json.loads((ASSETS/'fixtures/matrix-cf-v2.json').read_text(encoding='utf-8'))
 CATEGORIES = {'locked', 'native', 'custom', 'forecastOpen', 'forecastClosed'}
 SCOPES = {'row','column','cell','measure','columnDimension','rowDimension','labelCellGroup',
           'rowGroup','rowMemberInDimension','columnMemberInDimension','columnHierarchy'}

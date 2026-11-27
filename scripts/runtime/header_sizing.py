@@ -7,6 +7,7 @@ from pathlib import Path
 from ctypes import wintypes
 from functools import lru_cache
 from html.parser import HTMLParser
+from .paths import ASSETS
 
 def styles(raw):
     return dict((k.strip().lower(),v.strip()) for k,v in
@@ -102,7 +103,7 @@ def line_count(p,width,fonts):
 
 class PortableFontWidths:
     def __init__(self):
-        path=Path(__file__).resolve().parents[2]/'assets'/'fixtures/arial-header-metrics.json'
+        path=ASSETS/'fixtures/arial-header-metrics.json'
         self.sizes=json.loads(path.read_text(encoding='utf-8'))['sizes']
     def width(self,text,size,bold):
         key=str(int(size)) if size==int(size) else str(size)

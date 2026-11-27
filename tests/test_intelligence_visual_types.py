@@ -4,6 +4,7 @@ The tree family is a visual type a real dashboard can hold. This package names i
 protects it, and builds decomposition and organization trees; row and measure trees
 stay recognition-only.
 """
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import json
 import unittest
 from pathlib import Path

@@ -2,12 +2,12 @@
 import copy
 from pathlib import Path
 from .codec import load,loads,dumps
+from .paths import ASSETS
 
-ROOT=Path(__file__).resolve().parents[2]/'assets'
 PREFIX='hiddenProperties_!!!_'
 
 def integrated_variance_config():
-    return copy.deepcopy(load(ROOT/'fixtures/integrated-variance-column.json')['measureConfig'])
+    return copy.deepcopy(load(ASSETS/'fixtures/integrated-variance-column.json')['measureConfig'])
 
 def apply_integrated_variance(properties):
     """Style one current numeric AC/PY comparison; preserve all field identities.
@@ -30,7 +30,7 @@ def apply_integrated_variance(properties):
         raise ValueError('Integrated comparison requires numeric assigned measures')
     if not any(a.get('dataRoleType')=='Grouping' for a in assignments):
         raise ValueError('Preserve/resolve the chart category assignment before choosing this chart')
-    fixture=load(ROOT/'fixtures/integrated-variance-column.json')
+    fixture=load(ASSETS/'fixtures/integrated-variance-column.json')
     out['chartType']=fixture['chartType']
     if 'chartType' in vs:vs['chartType']=fixture['chartType']
     def current(key):

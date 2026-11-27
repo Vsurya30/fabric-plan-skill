@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 from .codec import dumps
 from .surfaces import powertable_source
+from .paths import ASSETS
 
 def row_access_setting(name,source_id,enabled):
     from .construct import guid
@@ -38,7 +39,7 @@ def configured_table(name, table, connection, columns, *, explicit=False, creati
     source=powertable_source(table,connection,explicit)
     source['source'].update(creationMode=creation_mode,tableType=1)
     sid,vid=guid(),guid();prefix=f'sheets/{sid}/visuals/{vid}/'
-    state=load(Path(__file__).resolve().parents[2]/'assets'/'fixtures/powertable-presentation-defaults.json')
+    state=load(ASSETS/'fixtures/powertable-presentation-defaults.json')
     names=[c['columnName'] for c in columns]
     state.update(columnMeta={n:{'width':210 if n.endswith('Name') else 150} for n in names},
         manageMeasures=[{'id':n,'label':n,'measureType':'data','name':n,'order':i,'visible':True} for i,n in enumerate(names)],

@@ -1,4 +1,5 @@
 """Contract fixtures test compatibility, precision, and mutation/readback boundaries."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import base64,copy,os,tempfile,unittest,socket,subprocess
 from pathlib import Path
 from decimal import Decimal

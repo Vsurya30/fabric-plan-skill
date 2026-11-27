@@ -1,4 +1,5 @@
 """Planning writeback, inserted rows, scenarios and row templates as definition parts."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy,json,os,subprocess,sys,tempfile,unittest
 from pathlib import Path
 from runtime.codec import load,pack,parts,unpack

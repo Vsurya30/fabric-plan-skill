@@ -15,6 +15,7 @@
       "assets/catalog/",
       "assets/fixtures/",
       "assets/schemas/",
+      "assets/examples/five-usecases/",
       "assets/preservation-manifest.json"
     ],
     "manual-examples": [
@@ -24,6 +25,9 @@
       "tests/"
     ],
     "excluded-from-package": [
+      "_brief/",
+      "_build/",
+      "_samples/",
       ".changeset/",
       ".github/",
       ".trail/",
@@ -51,5 +55,8 @@
   "limits": {
     "references_markdown_max_bytes": 20000,
     "tracked_bytecode_allowed": false
+  },
+  "notes": {
+    "assets/examples/five-usecases/": "Runtime-required: scripts/runtime/usecases.py reads it. The rest of assets/examples/ is manual."
   }
 }

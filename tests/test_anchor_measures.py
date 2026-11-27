@@ -1,4 +1,5 @@
 """Offline preservation, owner evidence, business routing and native save boundary."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy
 import json
 from pathlib import Path

@@ -2,13 +2,13 @@
 import json
 from pathlib import Path
 import re
+from .paths import ASSETS
 
-ROOT = Path(__file__).resolve().parents[2]/'assets'
 STOP = set('a an and as at be by for from i in into is it me my of on or please the this to use want with'.split())
 
 
 def catalog():
-    data = json.loads((ROOT / 'catalog/module-routing.json').read_text(encoding='utf-8'))
+    data = json.loads((ASSETS / 'catalog/module-routing.json').read_text(encoding='utf-8'))
     for module in data['modules']:
         for guide in module['guides']:
             guide['command'] = 'python scripts/plan.py reference ' + guide['file']

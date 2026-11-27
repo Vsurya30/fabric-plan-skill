@@ -7,13 +7,14 @@ from pathlib import Path
 from .codec import load,sha,pointer_get,dumps
 from .identity import native_id
 from .construct import acyclic
+from .paths import ASSETS
 class SchemaGap(ValueError): pass
 class Invalid(ValueError): pass
 ANNOTATIONS={'$schema','$id','$comment','title','description','default','examples','readOnly','writeOnly','deprecated','definitions','$defs'}
 KEYS={'$ref','type','required','properties','additionalProperties','patternProperties','propertyNames','items','additionalItems','minItems','maxItems','uniqueItems','minProperties','maxProperties','minLength','maxLength','pattern','format','minimum','maximum','exclusiveMinimum','exclusiveMaximum','multipleOf','enum','const','anyOf','oneOf','allOf','not','if','then','else','dependencies','contains'}|ANNOTATIONS
 class Schemas:
     def __init__(self,root=None):
-        root=Path(root or Path(__file__).resolve().parents[2]/'assets'/'schemas'); self.docs={}; self.unavailable=[]
+        root=Path(root or ASSETS/'schemas'); self.docs={}; self.unavailable=[]
         for s in load(root/'manifest.json')['schemas']:
             if s['status']!='downloaded': self.unavailable.append(s); continue
             b=(root/s['file']).read_bytes()

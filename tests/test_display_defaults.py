@@ -1,4 +1,5 @@
 """Offline regressions: selection isolation, exact Auto wire and preservation."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy,json,tempfile,unittest
 from pathlib import Path
 from runtime.chart_filters import ensure_chart_filters,audit_chart_filters

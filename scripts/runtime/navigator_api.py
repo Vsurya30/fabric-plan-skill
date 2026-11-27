@@ -4,10 +4,11 @@ from pathlib import Path
 from .codec import load
 from .construct import merge
 from .navigator_defaults import complete_defaults
+from .paths import ASSETS
 
 def state(kind='BOOKMARK_TABS',*,page_target=None,bookmark_target=None,web_url=None,selected_pages=None,hidden_bookmarks=None,caption='View',palette=None):
     if kind not in ('NAVIGATOR_BUTTON','BOOKMARK_TABS','PAGE_NAVIGATOR_TABS'):raise ValueError('Navigator kind')
-    s=load(Path(__file__).resolve().parents[2]/'assets'/'fixtures/navigator-builder-20261112.json');s['type']=kind
+    s=load(ASSETS/'fixtures/navigator-builder-20261112.json');s['type']=kind
     button={'actionType':'NONE','bookmarkId':None,'webUrl':None,'pageDestinationId':None}
     targets=[x for x in (page_target,bookmark_target,web_url) if x is not None]
     if len(targets)>1 or (targets and kind!='NAVIGATOR_BUTTON'):raise ValueError('Button destinations are exclusive and require button kind')

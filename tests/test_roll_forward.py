@@ -1,4 +1,5 @@
 """Offline presentation/routing regressions; no native calculation assertions."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy,hashlib,json,subprocess,sys,tempfile,unittest
 from pathlib import Path
 from runtime.roll_forward import apply_totals_defaults,roll_forward_presentation,TOTALS_DEFAULTS

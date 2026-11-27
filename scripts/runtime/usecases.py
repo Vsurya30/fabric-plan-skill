@@ -8,9 +8,9 @@ from .codec import load,save,dumps,sha,parts,pack
 from .planning_presentation import build_application
 from .forecast_review import apply_negative_variance
 from .transport import Client
+from .paths import ASSETS
 
-ROOT=Path(__file__).resolve().parents[2]/'assets'
-CASES=ROOT/'examples/five-usecases'
+CASES=ASSETS/'examples/five-usecases'
 
 def catalog():return load(CASES/'index.json')
 

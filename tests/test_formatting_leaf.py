@@ -1,3 +1,4 @@
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy,json,unittest,subprocess,sys,tempfile
 from pathlib import Path
 from runtime.matrix_formatting import compile_formatting,format_values,pixel_size,SNAPSHOT

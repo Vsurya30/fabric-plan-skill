@@ -1,4 +1,5 @@
 """Independent tests of useful partial provisioning; mocked APIs only."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy
 import tempfile
 import unittest

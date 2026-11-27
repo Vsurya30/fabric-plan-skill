@@ -5,6 +5,7 @@ import copy, re, uuid, html
 from pathlib import Path
 from .codec import load, dumps, pack
 from .identity import Registry, native_id
+from .paths import ASSETS
 BASE='https://developer.microsoft.com/json-schemas/fabric/item/plan/definition/'
 GRAND_TOTAL_ROW_ID='16017913890930171270'
 def schema(name): return BASE+name+'/1.0.0/schema.json'
@@ -301,7 +302,7 @@ def build(model,spec,registry=None):
           'requiredCompletionGate':'runtime.application_defaults.require_delivery_phases',
           'liveImport':'not-run','runtimeCalculation':'not-run','rendered':'not-run'}}
 def navigator(recipe=1,patch=None):
-    fixtures=Path(__file__).resolve().parents[2]/'assets'/'fixtures'
+    fixtures=ASSETS/'fixtures'
     state=load(fixtures/'navigator-spec-1.json')
     if recipe!=1:
         p=load(fixtures/f'navigator-spec-{recipe}.json')

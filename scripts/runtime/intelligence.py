@@ -9,6 +9,7 @@ from .construct import field, guid, schema, sheet_properties
 from .codec import dumps,load
 from .semantic_values import semantic_value
 from .identity import product_aggregation
+from .paths import ASSETS
 
 TREE_VISUAL_TYPES = {'DECOMPOSITION_TREE': 'Decomposition tree',
                      'ORGANIZATION_TREE': 'Organizational tree',
@@ -48,7 +49,7 @@ def complete_card_state(props):
                          ' as a KPI card; build trees with the tree builder')
     from .construct import merge
     from .codec import loads
-    defaults=load(Path(__file__).resolve().parents[2]/'assets'/'fixtures/card-defaults.json')
+    defaults=load(ASSETS/'fixtures/card-defaults.json')
     p=copy.deepcopy(props);p['chartType']='CARD';vs=p.setdefault('visualState',{})
     vs['chartType']='CARD'
     vs['hiddenProperties_!!!_chartsMode']=dumps({'visualMode':'CARD','prevVisualMode':'CARD','isFromKpiSettings':False}).strip()

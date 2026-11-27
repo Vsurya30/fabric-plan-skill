@@ -1,4 +1,5 @@
 """Offline route/graph regressions, not tests of agent language understanding."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy,json,unittest
 from pathlib import Path
 from runtime.business_intent import plan_intent,ROUTES

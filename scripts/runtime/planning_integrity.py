@@ -9,10 +9,10 @@ import copy,json,math,re
 from decimal import Decimal
 from pathlib import Path
 from .codec import load,unpack
+from .paths import ASSETS
 
-ROOT=Path(__file__).resolve().parents[2]/'assets'
-DEFAULTS=load(ROOT/'fixtures/matrix-global-defaults.json')
-STYLE_DEFAULT=load(ROOT/'fixtures/matrix-formatting-v1.json')['columnStyle']
+DEFAULTS=load(ASSETS/'fixtures/matrix-global-defaults.json')
+STYLE_DEFAULT=load(ASSETS/'fixtures/matrix-formatting-v1.json')['columnStyle']
 CATEGORIES={'native','custom','locked','forecastOpen','forecastClosed'}
 
 def default_global_styles():

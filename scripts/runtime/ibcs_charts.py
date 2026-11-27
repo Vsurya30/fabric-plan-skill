@@ -16,8 +16,8 @@ references/ibcs-charts.md.
 import copy
 from functools import lru_cache
 from pathlib import Path
+from .paths import ASSETS
 
-ROOT = Path(__file__).resolve().parents[2]/'assets'
 APPEARANCE = 'hiddenProperties_!!!_appearance'
 # 'ibcs' saves the chart's own IBCS theme; 'plan' leaves the chart on the Plan theme.
 CHART_THEMES = ('ibcs', 'plan')
@@ -77,7 +77,7 @@ MEASURE_KEYS = {'field', 'aggregation', 'label'}
 @lru_cache(maxsize=1)
 def _ibcs_theme():
     from .codec import load
-    return load(ROOT / 'fixtures/ibcs-chart-theme.json')
+    return load(ASSETS / 'fixtures/ibcs-chart-theme.json')
 
 
 def ibcs_palette():

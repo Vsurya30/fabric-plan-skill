@@ -1,4 +1,5 @@
 """Regression: large portable IDs must not leak into native source selector slots."""
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'scripts'))  # runtime/ importable under unittest and pytest
 import copy,json,subprocess,sys,tempfile,unittest
 from pathlib import Path
 from runtime.codec import load,pack
