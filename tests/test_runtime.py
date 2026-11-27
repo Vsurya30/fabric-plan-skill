@@ -180,9 +180,9 @@ class BridgeTests(unittest.TestCase):
         with self.assertRaises(ValueError): validate_graph({'sources':[s]})
     def test_two_identity_domains(self):
         a=[{'sourceType':'InfoBridge','id':'old','sourceId':'field','queryId':'portable','bucketId':'ameasure','position':'preserve'}]
-        mp={('portable','field'):{'queryId':'scripts/runtime','id':'tbl[field]'}}
-        c=[{'sourceType':'InfoBridge','queryId':'scripts/runtime','id':'tbl[field]','sourceId':'native-field','tableId':'27'}]
-        out=reconcile_assignments(a,mp,c); self.assertEqual(out[0]['queryId'],'scripts/runtime'); self.assertEqual(out[0]['tableId'],'27'); self.assertEqual(out[0]['position'],'preserve')
+        mp={('portable','field'):{'queryId':'runtime','id':'tbl[field]'}}
+        c=[{'sourceType':'InfoBridge','queryId':'runtime','id':'tbl[field]','sourceId':'native-field','tableId':'27'}]
+        out=reconcile_assignments(a,mp,c); self.assertEqual(out[0]['queryId'],'runtime'); self.assertEqual(out[0]['tableId'],'27'); self.assertEqual(out[0]['position'],'preserve')
         with self.assertRaises(ValueError): reconcile_assignments(a,mp,[])
     def test_sql_rewrite_scoped(self):
         q={'meta':{'queries':['old'],'unrelated':'old'},'transformationSteps':[{'meta':{'value':{'sqlQuery':'SELECT * FROM {{query_id:old}}','caption':'old'}}}]}

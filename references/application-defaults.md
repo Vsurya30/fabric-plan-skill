@@ -142,5 +142,5 @@ Construction guards always apply. When validation is requested:
   formula results, edit behavior or slicer propagation; report that boundary.
 
 When the user explicitly skips validation, preserve that preference: save the
-authorized changes and report receipts without scripts/runtime/UI/post-save validation.
+authorized changes and report receipts without runtime/UI/post-save validation.
 An earlier skip does not override a later explicit request to validate.

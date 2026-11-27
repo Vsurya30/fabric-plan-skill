@@ -52,7 +52,7 @@ def build(destination):
     save(destination/'construction.json',b)
     save(destination/'definition.json',b['envelope'])
     save(destination/'bindings.json',{'storageProfile':'OneLake','sourceRecord':source,'direct':direct,
-        'queryMetadata':query,'query':qa,'scripts/runtime':'not-tested','network':'not-used'})
+        'queryMetadata':query,'query':qa,'runtime':'not-tested','network':'not-used'})
     return b
 
 if __name__=='__main__':

@@ -22,7 +22,7 @@ def main():
     else:rejected=False
     if not rejected:raise AssertionError('Stripped import incorrectly accepted')
     result={'completeBase':authored['importContract'],'referenceOnlyDetourRejected':True,
-            'scripts/runtime':'not-tested','liveWrites':0}
+            'runtime':'not-tested','liveWrites':0}
     save(out/'result.json',result);print(json.dumps(result))
 
 if __name__=='__main__':main()

@@ -119,7 +119,7 @@ class OneLakeSheetBindings(unittest.TestCase):
                 evidence=load(out/'bindings.json')
                 self.assertEqual(evidence['direct']['id'],evidence['sourceRecord']['measureGuid'])
                 self.assertEqual(evidence['query']['queryId'],evidence['queryMetadata']['id'])
-                self.assertEqual(evidence['scripts/runtime'],'not-tested')
+                self.assertEqual(evidence['runtime'],'not-tested')
             self.assertNotEqual(*ids)
 
 if __name__=='__main__':unittest.main()
